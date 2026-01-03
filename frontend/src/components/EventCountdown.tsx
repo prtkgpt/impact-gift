@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, isPast } from 'date-fns';
+import { differenceInSeconds, isPast } from 'date-fns';
 
 interface EventCountdownProps {
   eventDate: string;
-  eventTitle: string;
 }
 
 interface TimeLeft {
@@ -13,7 +12,7 @@ interface TimeLeft {
   seconds: number;
 }
 
-const EventCountdown: React.FC<EventCountdownProps> = ({ eventDate, eventTitle }) => {
+const EventCountdown: React.FC<EventCountdownProps> = ({ eventDate }) => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isEventPast, setIsEventPast] = useState(false);
 

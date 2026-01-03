@@ -164,7 +164,7 @@ const EventPage = () => {
 
           <div className="md:col-span-1">
             <div className="space-y-4 sticky top-4">
-              <EventCountdown eventDate={event.event_date} eventTitle={event.title} />
+              <EventCountdown eventDate={event.event_date} />
 
               <div className="card">
               <div className="mb-6">
