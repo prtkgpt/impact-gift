@@ -8,6 +8,7 @@ import authRoutes from './routes/auth';
 import charitiesRoutes from './routes/charities';
 import eventsRoutes from './routes/events';
 import donationsRoutes from './routes/donations';
+import setupRoutes from './routes/setup';
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/charities', charitiesRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/donations', donationsRoutes);
+app.use('/api/setup', setupRoutes);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
