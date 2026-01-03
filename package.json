@@ -14,7 +14,14 @@
     "dev:frontend": "cd frontend && npm run dev",
     "build": "npm run build:backend && npm run build:frontend",
     "build:backend": "cd backend && npm run build",
-    "build:frontend": "cd frontend && npm run build"
+    "build:frontend": "cd frontend && npm run build",
+    "docker:build": "docker build -t impact-gift .",
+    "docker:dev": "docker-compose up",
+    "docker:dev:build": "docker-compose up --build",
+    "docker:down": "docker-compose down",
+    "deploy:vercel": "cd frontend && vercel --prod",
+    "deploy:railway": "railway up",
+    "db:setup": "cd backend && npm run db:setup"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

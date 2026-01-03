@@ -1,0 +1,21 @@
+# Development Dockerfile with multi-stage for docker-compose
+
+# Backend stage
+FROM node:18-alpine AS backend
+
+WORKDIR /app/backend
+
+COPY backend/package*.json ./
+RUN npm install
+
+COPY backend/ ./
+
+# Frontend stage
+FROM node:18-alpine AS frontend
+
+WORKDIR /app/frontend
+
+COPY frontend/package*.json ./
+RUN npm install
+
+COPY frontend/ ./
