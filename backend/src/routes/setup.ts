@@ -124,4 +124,44 @@ router.get('/complete-pending-donations', async (req: Request, res: Response) =>
   }
 });
 
+// Add new features: employer matching, event updates, tax receipts
+router.get('/add-new-features', async (req: Request, res: Response) => {
+  try {
+    // Add employer matching columns to donations table
+    await query(`
+      ALTER TABLE donations
+      ADD COLUMN IF NOT EXISTS has_employer_match BOOLEAN DEFAULT false,
+      ADD COLUMN IF NOT EXISTS employer_name VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS match_status VARCHAR(50) DEFAULT 'pending',
+      ADD COLUMN IF NOT EXISTS receipt_url VARCHAR(500)
+    `);
+
+    // Create event_updates table
+    await query(`
+      CREATE TABLE IF NOT EXISTS event_updates (
+        id SERIAL PRIMARY KEY,
+        event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create index for event_updates
+    await query('CREATE INDEX IF NOT EXISTS idx_event_updates_event_id ON event_updates(event_id)');
+
+    res.json({
+      success: true,
+      message: 'New features added successfully!',
+      features: ['employer_matching', 'event_updates', 'tax_receipts']
+    });
+  } catch (error: any) {
+    console.error('Error adding new features:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to add new features'
+    });
+  }
+});
+
 export default router;

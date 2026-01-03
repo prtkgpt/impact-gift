@@ -51,6 +51,18 @@ export interface Donation {
   message?: string;
   stripe_payment_intent_id?: string;
   status: 'pending' | 'completed' | 'failed';
+  has_employer_match?: boolean;
+  employer_name?: string;
+  match_status?: 'pending' | 'confirmed' | 'declined';
+  receipt_url?: string;
+  created_at: Date;
+}
+
+export interface EventUpdate {
+  id: number;
+  event_id: number;
+  title: string;
+  content: string;
   created_at: Date;
 }
 
@@ -69,4 +81,12 @@ export interface CreateDonationInput {
   donor_email?: string;
   amount: number;
   message?: string;
+  has_employer_match?: boolean;
+  employer_name?: string;
+}
+
+export interface CreateEventUpdateInput {
+  event_id: number;
+  title: string;
+  content: string;
 }

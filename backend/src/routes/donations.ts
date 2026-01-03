@@ -15,7 +15,9 @@ router.post(
     body('amount').isFloat({ min: 1 }),
     body('donor_name').trim().notEmpty(),
     body('donor_email').optional().isEmail(),
-    body('message').optional()
+    body('message').optional(),
+    body('has_employer_match').optional().isBoolean(),
+    body('employer_name').optional().trim()
   ],
   async (req: Request, res: Response) => {
     try {
@@ -24,7 +26,7 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { event_id, amount, donor_name, donor_email, message } = req.body;
+      const { event_id, amount, donor_name, donor_email, message, has_employer_match, employer_name } = req.body;
 
       const eventResult = await query(
         'SELECT e.*, c.name as charity_name FROM events e JOIN charities c ON e.charity_id = c.id WHERE e.id = $1 AND e.is_active = true',
@@ -44,16 +46,18 @@ router.post(
           event_id: event_id.toString(),
           donor_name,
           donor_email: donor_email || '',
-          charity_name: event.charity_name
+          charity_name: event.charity_name,
+          has_employer_match: has_employer_match ? 'true' : 'false',
+          employer_name: employer_name || ''
         },
         description: `Donation to ${event.charity_name} for ${event.title}`
       });
 
       const donationResult = await query(
-        `INSERT INTO donations (event_id, donor_name, donor_email, amount, message, stripe_payment_intent_id, status)
-         VALUES ($1, $2, $3, $4, $5, $6, 'pending')
+        `INSERT INTO donations (event_id, donor_name, donor_email, amount, message, stripe_payment_intent_id, status, has_employer_match, employer_name, match_status)
+         VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7, $8, $9)
          RETURNING *`,
-        [event_id, donor_name, donor_email || null, amount, message || null, paymentIntent.id]
+        [event_id, donor_name, donor_email || null, amount, message || null, paymentIntent.id, has_employer_match || false, employer_name || null, has_employer_match ? 'pending' : null]
       );
 
       res.json({
