@@ -126,7 +126,7 @@ const EventPage = () => {
                       <div className="flex justify-between items-start mb-2">
                         <span className="font-medium">{donation.donor_name}</span>
                         <span className="font-bold text-primary-600">
-                          ${donation.amount.toFixed(2)}
+                          ${Number(donation.amount).toFixed(2)}
                         </span>
                       </div>
                       {donation.message && (
@@ -148,7 +148,7 @@ const EventPage = () => {
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Total Raised</span>
                   <span className="text-3xl font-bold text-primary-600">
-                    ${event.total_raised?.toFixed(2) || '0.00'}
+                    ${Number(event.total_raised || 0).toFixed(2)}
                   </span>
                 </div>
                 {event.goal_amount && (
@@ -160,7 +160,7 @@ const EventPage = () => {
                       />
                     </div>
                     <p className="text-sm text-gray-600">
-                      {progressPercentage.toFixed(0)}% of ${event.goal_amount.toFixed(2)} goal
+                      {progressPercentage.toFixed(0)}% of ${Number(event.goal_amount).toFixed(2)} goal
                     </p>
                   </>
                 )}
