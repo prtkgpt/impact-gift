@@ -8,7 +8,6 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "migrate": "node -r ts-node/register src/database/migrate.ts",
-    "postinstall": "npm run build",
     "db:setup": "psql $DATABASE_URL < src/database/schema.sql",
     "db:reset": "psql $DATABASE_URL -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' && npm run db:setup"
   },
