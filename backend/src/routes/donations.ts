@@ -110,6 +110,57 @@ router.post('/webhook', async (req: Request, res: Response) => {
   res.json({ received: true });
 });
 
+// Get all pending donations for debugging
+router.get('/pending', async (req: Request, res: Response) => {
+  try {
+    const result = await query(
+      `SELECT d.*, e.slug, e.title as event_title
+       FROM donations d
+       JOIN events e ON d.event_id = e.id
+       WHERE d.status = 'pending'
+       ORDER BY d.created_at DESC
+       LIMIT 50`
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching pending donations:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Temporary endpoint to manually mark donation as completed (for testing)
+router.post('/mark-completed/:paymentIntentId', async (req: Request, res: Response) => {
+  try {
+    const { paymentIntentId } = req.params;
+
+    // Verify the payment with Stripe
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.status === 'succeeded') {
+      await query(
+        'UPDATE donations SET status = $1 WHERE stripe_payment_intent_id = $2 RETURNING *',
+        ['completed', paymentIntentId]
+      );
+
+      return res.json({
+        success: true,
+        message: 'Donation marked as completed',
+        paymentStatus: paymentIntent.status
+      });
+    } else {
+      return res.json({
+        success: false,
+        message: 'Payment not succeeded yet',
+        paymentStatus: paymentIntent.status
+      });
+    }
+  } catch (error) {
+    console.error('Error marking donation as completed:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Get donation receipt details
 router.get('/receipt/:donationId', async (req: Request, res: Response) => {
   try {
