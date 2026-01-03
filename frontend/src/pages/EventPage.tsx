@@ -3,12 +3,16 @@ import { useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
+import { Helmet } from 'react-helmet-async';
 import api from '../utils/api';
 import { Event, Donation } from '../types';
 import toast from 'react-hot-toast';
 import DonationForm from '../components/DonationForm';
 import EventUpdates from '../components/EventUpdates';
 import EmployerMatchDashboard from '../components/EmployerMatchDashboard';
+import ShareButtons from '../components/ShareButtons';
+import EventCountdown from '../components/EventCountdown';
+import Leaderboard from '../components/Leaderboard';
 import { useAuth } from '../contexts/AuthContext';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
@@ -79,8 +83,32 @@ const EventPage = () => {
 
   const isOwner = user && event && user.id === event.user_id;
 
+  const pageUrl = window.location.href;
+  const shareTitle = `${event.first_name} ${event.last_name} is fundraising for ${event.charity_name}`;
+  const shareDescription = `Help ${event.first_name} reach their goal of $${Number(event.goal_amount || 0).toFixed(2)} for ${event.charity_name}! ${event.donation_count} donors have already contributed $${Number(event.total_raised || 0).toFixed(2)}.`;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <Helmet>
+        <title>{event.title} - Impact Gift</title>
+        <meta name="description" content={shareDescription} />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:title" content={shareTitle} />
+        <meta property="og:description" content={shareDescription} />
+        {event.charity_logo && <meta property="og:image" content={event.charity_logo} />}
+
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content={pageUrl} />
+        <meta property="twitter:title" content={shareTitle} />
+        <meta property="twitter:description" content={shareDescription} />
+        {event.charity_logo && <meta property="twitter:image" content={event.charity_logo} />}
+      </Helmet>
+
+      <div className="min-h-screen bg-gray-50">
       <div className="bg-gradient-to-r from-primary-500 to-primary-700 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center mb-4">
@@ -127,45 +155,7 @@ const EventPage = () => {
               )}
             </div>
 
-            {donations.length > 0 && (
-              <div className="card">
-                <h2 className="text-2xl font-bold mb-4">💬 Donor Wall</h2>
-                <div className="space-y-4">
-                  {donations.map((donation) => (
-                    <div key={donation.id} className="border-b pb-4 last:border-b-0 hover:bg-gray-50 -mx-4 px-4 py-3 transition-colors">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <span className="font-medium text-lg">{donation.donor_name}</span>
-                          {donation.has_employer_match && donation.employer_name && (
-                            <div className="inline-flex items-center gap-1 ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
-                              💼 {donation.employer_name} Match Pending
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <span className="font-bold text-primary-600 text-xl">
-                            ${Number(donation.amount).toFixed(2)}
-                          </span>
-                          {donation.has_employer_match && (
-                            <p className="text-xs text-blue-600 font-medium">
-                              +${Number(donation.amount).toFixed(2)} potential
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      {donation.message && (
-                        <p className="text-gray-700 text-sm mt-2 bg-gray-100 p-3 rounded-lg italic">
-                          "{donation.message}"
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-500 mt-2">
-                        {format(new Date(donation.created_at), 'MMM dd, yyyy')}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <Leaderboard donations={donations} event={event} />
 
             {isOwner && <EmployerMatchDashboard eventId={event.id} />}
 
@@ -173,7 +163,10 @@ const EventPage = () => {
           </div>
 
           <div className="md:col-span-1">
-            <div className="card sticky top-4">
+            <div className="space-y-4 sticky top-4">
+              <EventCountdown eventDate={event.event_date} eventTitle={event.title} />
+
+              <div className="card">
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Total Raised</span>
@@ -228,22 +221,26 @@ const EventPage = () => {
               )}
 
               <div className="mt-6 pt-6 border-t">
+                <ShareButtons event={event} />
+
                 <button
                   onClick={() => {
                     const url = window.location.href;
                     navigator.clipboard.writeText(url);
                     toast.success('Link copied to clipboard!');
                   }}
-                  className="btn btn-secondary w-full"
+                  className="btn btn-secondary w-full mt-3"
                 >
-                  📋 Share Event Link
+                  📋 Copy Link
                 </button>
               </div>
+            </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    </>
   );
 };
 

@@ -104,17 +104,20 @@ router.get('/:slug/donations', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
 
-    const eventResult = await query('SELECT id FROM events WHERE slug = $1', [slug]);
+    const eventResult = await query('SELECT id, event_date, created_at as event_created_at FROM events WHERE slug = $1', [slug]);
     if (eventResult.rows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
 
+    const event = eventResult.rows[0];
+
     const result = await query(
-      `SELECT donor_name, amount, message, created_at
+      `SELECT id, donor_name, donor_email, amount, message, created_at,
+              has_employer_match, employer_name, match_status
        FROM donations
        WHERE event_id = $1 AND status = 'completed'
-       ORDER BY created_at DESC`,
-      [eventResult.rows[0].id]
+       ORDER BY amount DESC, created_at ASC`,
+      [event.id]
     );
 
     res.json(result.rows);
