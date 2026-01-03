@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
+import { Link } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 
@@ -13,6 +14,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ eventId, onSuccess, onCance
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
+  const [donationId, setDonationId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     donor_name: '',
     donor_email: '',
@@ -48,7 +50,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ eventId, onSuccess, onCance
         employer_name: formData.has_employer_match ? formData.employer_name : undefined
       });
 
-      const { clientSecret } = response.data;
+      const { clientSecret, donation } = response.data;
 
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) {
@@ -68,6 +70,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ eventId, onSuccess, onCance
       if (error) {
         toast.error(error.message || 'Payment failed');
       } else if (paymentIntent.status === 'succeeded') {
+        setDonationId(donation.id);
         toast.success('Thank you for your donation!');
         onSuccess();
       }
@@ -77,6 +80,29 @@ const DonationForm: React.FC<DonationFormProps> = ({ eventId, onSuccess, onCance
       setLoading(false);
     }
   };
+
+  if (donationId) {
+    return (
+      <div className="text-center space-y-4 p-6 bg-green-50 border border-green-200 rounded-lg">
+        <div className="text-5xl mb-2">🎉</div>
+        <h3 className="text-xl font-bold text-green-900">Donation Successful!</h3>
+        <p className="text-green-700">Thank you for your generous contribution!</p>
+        <Link
+          to={`/receipt/${donationId}`}
+          target="_blank"
+          className="inline-block btn btn-primary mt-4"
+        >
+          📄 View Receipt
+        </Link>
+        <button
+          onClick={onCancel}
+          className="block btn btn-secondary w-full mt-2"
+        >
+          Close
+        </button>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

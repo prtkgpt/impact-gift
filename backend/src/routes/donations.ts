@@ -110,4 +110,32 @@ router.post('/webhook', async (req: Request, res: Response) => {
   res.json({ received: true });
 });
 
+// Get donation receipt details
+router.get('/receipt/:donationId', async (req: Request, res: Response) => {
+  try {
+    const { donationId } = req.params;
+
+    const result = await query(
+      `SELECT d.*, e.title as event_title, e.event_date,
+              c.name as charity_name, c.description as charity_description, c.website_url as charity_website,
+              u.first_name, u.last_name, u.email as organizer_email
+       FROM donations d
+       JOIN events e ON d.event_id = e.id
+       JOIN charities c ON e.charity_id = c.id
+       JOIN users u ON e.user_id = u.id
+       WHERE d.id = $1 AND d.status = 'completed'`,
+      [donationId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Receipt not found or donation not completed' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching receipt:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;
