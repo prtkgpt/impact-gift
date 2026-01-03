@@ -75,7 +75,7 @@ const Dashboard = () => {
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-600">Total Raised</span>
                   <span className="text-2xl font-bold text-primary-600">
-                    ${event.total_raised?.toFixed(2) || '0.00'}
+                    ${Number(event.total_raised || 0).toFixed(2)}
                   </span>
                 </div>
                 {event.goal_amount && (
@@ -83,14 +83,14 @@ const Dashboard = () => {
                     <div
                       className="bg-primary-600 h-2 rounded-full"
                       style={{
-                        width: `${Math.min((Number(event.total_raised) / event.goal_amount) * 100, 100)}%`
+                        width: `${Math.min((Number(event.total_raised) / Number(event.goal_amount)) * 100, 100)}%`
                       }}
                     />
                   </div>
                 )}
                 <p className="text-xs text-gray-600 mt-2">
                   {event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}
-                  {event.goal_amount && ` • Goal: $${event.goal_amount.toFixed(2)}`}
+                  {event.goal_amount && ` • Goal: $${Number(event.goal_amount).toFixed(2)}`}
                 </p>
               </div>
 
