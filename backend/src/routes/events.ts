@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { query } from '../database/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
@@ -70,7 +70,7 @@ router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) =
   }
 });
 
-router.get('/:slug', async (req, res: Response) => {
+router.get('/:slug', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
 
@@ -100,7 +100,7 @@ router.get('/:slug', async (req, res: Response) => {
   }
 });
 
-router.get('/:slug/donations', async (req, res: Response) => {
+router.get('/:slug/donations', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
 
