@@ -47,6 +47,17 @@ export interface Donation {
   donor_email?: string;
   amount: number;
   message?: string;
+  has_employer_match?: boolean;
+  employer_name?: string;
+  match_status?: 'pending' | 'confirmed' | 'declined';
+  created_at: string;
+}
+
+export interface EventUpdate {
+  id: number;
+  event_id: number;
+  title: string;
+  content: string;
   created_at: string;
 }
 
@@ -65,4 +76,12 @@ export interface CreateDonationInput {
   donor_email?: string;
   amount: number;
   message?: string;
+  has_employer_match?: boolean;
+  employer_name?: string;
+}
+
+export interface CreateEventUpdateInput {
+  event_id: number;
+  title: string;
+  content: string;
 }

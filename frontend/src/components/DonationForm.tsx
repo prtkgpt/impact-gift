@@ -17,7 +17,9 @@ const DonationForm: React.FC<DonationFormProps> = ({ eventId, onSuccess, onCance
     donor_name: '',
     donor_email: '',
     amount: '',
-    message: ''
+    message: '',
+    has_employer_match: false,
+    employer_name: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,7 +43,9 @@ const DonationForm: React.FC<DonationFormProps> = ({ eventId, onSuccess, onCance
         donor_name: formData.donor_name,
         donor_email: formData.donor_email || undefined,
         amount,
-        message: formData.message || undefined
+        message: formData.message || undefined,
+        has_employer_match: formData.has_employer_match,
+        employer_name: formData.has_employer_match ? formData.employer_name : undefined
       });
 
       const { clientSecret } = response.data;
@@ -135,6 +139,45 @@ const DonationForm: React.FC<DonationFormProps> = ({ eventId, onSuccess, onCance
           value={formData.message}
           onChange={(e) => setFormData({ ...formData, message: e.target.value })}
         />
+      </div>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={formData.has_employer_match}
+            onChange={(e) => setFormData({ ...formData, has_employer_match: e.target.checked, employer_name: e.target.checked ? formData.employer_name : '' })}
+            className="mt-1"
+          />
+          <div>
+            <span className="text-sm font-medium text-gray-900 block">
+              💼 My employer offers matching donations
+            </span>
+            <span className="text-xs text-gray-600">
+              Double your impact! We'll help you track this for employer matching.
+            </span>
+          </div>
+        </label>
+
+        {formData.has_employer_match && (
+          <div className="mt-3">
+            <label htmlFor="employer_name" className="block text-sm font-medium text-gray-700 mb-1">
+              Employer Name *
+            </label>
+            <input
+              id="employer_name"
+              type="text"
+              required={formData.has_employer_match}
+              className="input"
+              placeholder="e.g., Google, Microsoft, Apple"
+              value={formData.employer_name}
+              onChange={(e) => setFormData({ ...formData, employer_name: e.target.value })}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              This will be displayed on the event page to show potential matching donations.
+            </p>
+          </div>
+        )}
       </div>
 
       <div>
