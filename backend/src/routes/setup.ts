@@ -103,4 +103,25 @@ router.get('/init-database', async (req: Request, res: Response) => {
   }
 });
 
+// Temporary endpoint to complete pending donations for testing (until webhook is set up)
+router.get('/complete-pending-donations', async (req: Request, res: Response) => {
+  try {
+    const result = await query(
+      `UPDATE donations SET status = 'completed' WHERE status = 'pending' RETURNING *`
+    );
+
+    res.json({
+      success: true,
+      message: `Completed ${result.rows.length} pending donation(s)`,
+      donations: result.rows
+    });
+  } catch (error: any) {
+    console.error('Error completing donations:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to complete donations'
+    });
+  }
+});
+
 export default router;
