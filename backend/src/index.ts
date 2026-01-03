@@ -10,6 +10,7 @@ import eventsRoutes from './routes/events';
 import donationsRoutes from './routes/donations';
 import setupRoutes from './routes/setup';
 import eventUpdatesRoutes from './routes/eventUpdates';
+import employerMatchingRoutes from './routes/employerMatching';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use('/api/events', eventsRoutes);
 app.use('/api/donations', donationsRoutes);
 app.use('/api/setup', setupRoutes);
 app.use('/api/event-updates', eventUpdatesRoutes);
+app.use('/api/employer-matching', employerMatchingRoutes);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);

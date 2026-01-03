@@ -122,15 +122,22 @@ const DonationForm: React.FC<DonationFormProps> = ({ eventId, onSuccess, onCance
 
       <div>
         <label htmlFor="donor_email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email (Optional)
+          Email {formData.has_employer_match ? '*' : '(Optional)'}
         </label>
         <input
           id="donor_email"
           type="email"
+          required={formData.has_employer_match}
           className="input"
+          placeholder={formData.has_employer_match ? "Required for match tracking" : ""}
           value={formData.donor_email}
           onChange={(e) => setFormData({ ...formData, donor_email: e.target.value })}
         />
+        {formData.has_employer_match && (
+          <p className="text-xs text-gray-500 mt-1">
+            We'll email you instructions for submitting your match request to your employer
+          </p>
+        )}
       </div>
 
       <div>

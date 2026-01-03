@@ -8,6 +8,7 @@ import { Event, Donation } from '../types';
 import toast from 'react-hot-toast';
 import DonationForm from '../components/DonationForm';
 import EventUpdates from '../components/EventUpdates';
+import EmployerMatchDashboard from '../components/EmployerMatchDashboard';
 import { useAuth } from '../contexts/AuthContext';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
@@ -165,6 +166,8 @@ const EventPage = () => {
                 </div>
               </div>
             )}
+
+            {isOwner && <EmployerMatchDashboard eventId={event.id} />}
 
             <EventUpdates eventId={event.id} isOwner={!!isOwner} />
           </div>
