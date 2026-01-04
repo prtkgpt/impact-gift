@@ -251,7 +251,7 @@ router.post(
       if (resend) {
         try {
           await resend.emails.send({
-            from: 'Impact Gift <noreply@impactgift.com>',
+            from: 'Impact Gift <onboarding@resend.dev>',
             to: email,
             subject: 'Reset Your Password - Impact Gift',
             html: `
