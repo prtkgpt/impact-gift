@@ -197,4 +197,31 @@ router.get('/add-google-oauth', async (req: Request, res: Response) => {
   }
 });
 
+// Add password reset support
+router.get('/add-password-reset', async (req: Request, res: Response) => {
+  try {
+    // Add password reset columns to users table
+    await query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP
+    `);
+
+    // Create index for reset_token
+    await query('CREATE INDEX IF NOT EXISTS idx_users_reset_token ON users(reset_token)');
+
+    res.json({
+      success: true,
+      message: 'Password reset support added successfully!',
+      changes: ['reset_token column', 'reset_token_expires column', 'reset_token index']
+    });
+  } catch (error: any) {
+    console.error('Error adding password reset:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to add password reset support'
+    });
+  }
+});
+
 export default router;

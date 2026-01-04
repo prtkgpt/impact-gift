@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { body, validationResult } from 'express-validator';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
@@ -202,6 +203,98 @@ router.get(
     } catch (error) {
       console.error('OAuth callback error:', error);
       res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
+    }
+  }
+);
+
+// Forgot password - generate reset token
+router.post(
+  '/forgot-password',
+  [body('email').isEmail().normalizeEmail()],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { email } = req.body;
+
+      const result = await query('SELECT * FROM users WHERE email = $1', [email]);
+
+      // Always return success to prevent email enumeration
+      if (result.rows.length === 0) {
+        return res.json({ message: 'If that email exists, a password reset link has been sent.' });
+      }
+
+      const user = result.rows[0];
+
+      // Don't allow password reset for Google-only users
+      if (!user.password_hash) {
+        return res.json({ message: 'If that email exists, a password reset link has been sent.' });
+      }
+
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour
+
+      await query(
+        'UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE email = $3',
+        [resetToken, resetTokenExpires, email]
+      );
+
+      // In production, send email here
+      // For now, return the reset link (remove this in production)
+      const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+      res.json({
+        message: 'If that email exists, a password reset link has been sent.',
+        resetUrl // Remove this in production when email is set up
+      });
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
+// Reset password with token
+router.post(
+  '/reset-password',
+  [
+    body('token').trim().notEmpty(),
+    body('password').isLength({ min: 6 })
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { token, password } = req.body;
+
+      const result = await query(
+        'SELECT * FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()',
+        [token]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid or expired reset token' });
+      }
+
+      const user = result.rows[0];
+      const password_hash = await bcrypt.hash(password, 10);
+
+      await query(
+        'UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2',
+        [password_hash, user.id]
+      );
+
+      res.json({ message: 'Password reset successfully' });
+    } catch (error) {
+      console.error('Reset password error:', error);
+      res.status(500).json({ error: 'Server error' });
     }
   }
 );
