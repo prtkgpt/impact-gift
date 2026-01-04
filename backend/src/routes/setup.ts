@@ -164,4 +164,37 @@ router.get('/add-new-features', async (req: Request, res: Response) => {
   }
 });
 
+// Add Google OAuth support
+router.get('/add-google-oauth', async (req: Request, res: Response) => {
+  try {
+    // Add google_id column to users table
+    await query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS google_id VARCHAR(255) UNIQUE,
+      ADD COLUMN IF NOT EXISTS profile_picture VARCHAR(500)
+    `);
+
+    // Make password_hash nullable for Google OAuth users
+    await query(`
+      ALTER TABLE users
+      ALTER COLUMN password_hash DROP NOT NULL
+    `);
+
+    // Create index for google_id
+    await query('CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id)');
+
+    res.json({
+      success: true,
+      message: 'Google OAuth support added successfully!',
+      changes: ['google_id column', 'profile_picture column', 'password_hash nullable']
+    });
+  } catch (error: any) {
+    console.error('Error adding Google OAuth:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to add Google OAuth support'
+    });
+  }
+});
+
 export default router;

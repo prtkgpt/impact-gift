@@ -2,10 +2,80 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { query } from '../database/db';
 import { User, UserPayload } from '../types';
 
 const router = Router();
+
+// Configure Google OAuth Strategy
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: `${process.env.BACKEND_URL}/api/auth/google/callback`,
+        scope: ['profile', 'email']
+      },
+      async (accessToken, refreshToken, profile, done) => {
+        try {
+          const email = profile.emails?.[0]?.value;
+          const googleId = profile.id;
+          const firstName = profile.name?.givenName || '';
+          const lastName = profile.name?.familyName || '';
+          const profilePicture = profile.photos?.[0]?.value || null;
+
+          if (!email) {
+            return done(new Error('No email found in Google profile'));
+          }
+
+          // Check if user exists with this Google ID
+          let userResult = await query(
+            'SELECT * FROM users WHERE google_id = $1',
+            [googleId]
+          );
+
+          let user;
+
+          if (userResult.rows.length > 0) {
+            // User exists with Google ID
+            user = userResult.rows[0];
+          } else {
+            // Check if user exists with this email
+            userResult = await query(
+              'SELECT * FROM users WHERE email = $1',
+              [email]
+            );
+
+            if (userResult.rows.length > 0) {
+              // User exists with email, link Google account
+              const updateResult = await query(
+                'UPDATE users SET google_id = $1, profile_picture = $2 WHERE email = $3 RETURNING *',
+                [googleId, profilePicture, email]
+              );
+              user = updateResult.rows[0];
+            } else {
+              // Create new user
+              const insertResult = await query(
+                `INSERT INTO users (email, first_name, last_name, google_id, profile_picture)
+                 VALUES ($1, $2, $3, $4, $5)
+                 RETURNING *`,
+                [email, firstName, lastName, googleId, profilePicture]
+              );
+              user = insertResult.rows[0];
+            }
+          }
+
+          done(null, user);
+        } catch (error) {
+          done(error as Error);
+        }
+      }
+    )
+  );
+}
 
 router.post(
   '/signup',
@@ -72,6 +142,12 @@ router.post(
       }
 
       const user: User = result.rows[0];
+
+      // Check if user signed up with Google (no password)
+      if (!user.password_hash) {
+        return res.status(401).json({ error: 'Please sign in with Google' });
+      }
+
       const isValidPassword = await bcrypt.compare(password, user.password_hash);
 
       if (!isValidPassword) {
@@ -95,6 +171,37 @@ router.post(
     } catch (error) {
       console.error('Login error:', error);
       res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
+// Google OAuth routes
+router.get('/google', passport.authenticate('google', { session: false }));
+
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { session: false, failureRedirect: `${process.env.FRONTEND_URL}/login?error=auth_failed` }),
+  (req: Request, res: Response) => {
+    try {
+      const user = req.user as any;
+
+      // Generate JWT token
+      const token = jwt.sign(
+        {
+          id: user.id,
+          email: user.email,
+          first_name: user.first_name,
+          last_name: user.last_name
+        } as UserPayload,
+        process.env.JWT_SECRET!,
+        { expiresIn: '7d' }
+      );
+
+      // Redirect to frontend with token
+      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
     }
   }
 );

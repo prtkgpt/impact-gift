@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import CreateEvent from './pages/CreateEvent';
 import EventPage from './pages/EventPage';
 import Receipt from './pages/Receipt';
+import OAuthCallback from './pages/OAuthCallback';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -33,6 +34,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/auth/callback" element={<OAuthCallback />} />
               <Route
                 path="/dashboard"
                 element={
