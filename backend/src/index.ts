@@ -3,7 +3,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import passport from 'passport';
 
 import authRoutes from './routes/auth';
 import charitiesRoutes from './routes/charities';
@@ -28,7 +27,6 @@ app.use(morgan('dev'));
 app.use('/api/donations/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(passport.initialize());
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
