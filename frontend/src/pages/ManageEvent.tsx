@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
-import { Event, Guest, EmailTemplate, Donation } from '../types';
+import { Event, Guest, Donation } from '../types';
 
 const ManageEvent = () => {
   const { slug } = useParams<{ slug: string }>();
