@@ -3,7 +3,6 @@ import { body, validationResult } from 'express-validator';
 import Stripe from 'stripe';
 import { query } from '../database/db';
 import {
-  sendManualDonationInstructions,
   sendDonationNotificationToOrganizer,
   sendThankYouEmail
 } from '../services/email';
@@ -145,7 +144,6 @@ router.post('/webhook', async (req: Request, res: Response) => {
           organizerEmail: eventData.organizer_email,
           donorName: donation.donor_name,
           amount: Number(donation.amount),
-          donationMethod: 'stripe',
           eventTitle: eventData.title,
           eventUrl,
           message: donation.message
@@ -218,144 +216,6 @@ router.post('/mark-completed/:paymentIntentId', async (req: Request, res: Respon
     res.status(500).json({ error: 'Server error' });
   }
 });
-
-// Manual donation endpoint for Venmo/Zelle/PayPal
-router.post(
-  '/manual',
-  [
-    body('event_id').isInt(),
-    body('amount').isFloat({ min: 1 }),
-    body('donor_name').trim().notEmpty(),
-    body('donor_email').isEmail(),
-    body('donation_method').isIn(['venmo', 'zelle', 'paypal']),
-    body('message').optional(),
-    body('recipient_contact_email').optional().isEmail(),
-    body('recipient_contact_phone').optional().trim(),
-    body('occasion').optional().trim()
-  ],
-  async (req: Request, res: Response) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const {
-        event_id,
-        amount,
-        donor_name,
-        donor_email,
-        donation_method,
-        message,
-        recipient_contact_email,
-        recipient_contact_phone,
-        occasion
-      } = req.body;
-
-      // Get event and organizer details
-      const eventResult = await query(
-        `SELECT e.*, u.first_name, u.last_name, u.email as organizer_email, u.phone_number as organizer_phone
-         FROM events e
-         JOIN users u ON e.user_id = u.id
-         WHERE e.id = $1 AND e.is_active = true`,
-        [event_id]
-      );
-
-      if (eventResult.rows.length === 0) {
-        return res.status(404).json({ error: 'Event not found' });
-      }
-
-      const event = eventResult.rows[0];
-
-      // Create pending donation record
-      const donationResult = await query(
-        `INSERT INTO donations (
-          event_id, donor_name, donor_email, amount, message, status,
-          donation_method, recipient_contact_email, recipient_contact_phone, occasion
-         )
-         VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7, $8, $9)
-         RETURNING *`,
-        [
-          event_id,
-          donor_name,
-          donor_email,
-          amount,
-          message || null,
-          donation_method,
-          recipient_contact_email || null,
-          recipient_contact_phone || null,
-          occasion || null
-        ]
-      );
-
-      const donation = donationResult.rows[0];
-
-      // Get charities for payment instructions
-      const charitiesResult = await query(
-        `SELECT c.*, ec.custom_instructions
-         FROM event_charities ec
-         JOIN charities c ON ec.charity_id = c.id
-         WHERE ec.event_id = $1`,
-        [event_id]
-      );
-
-      // Prepare payment instructions
-      let paymentInstructions = '';
-      if (donation_method === 'venmo') {
-        paymentInstructions = `Venmo: @${event.first_name}-${event.last_name}`;
-      } else if (donation_method === 'zelle') {
-        paymentInstructions = `Zelle: ${event.organizer_email}${event.organizer_phone ? ` or ${event.organizer_phone}` : ''}`;
-      } else if (donation_method === 'paypal') {
-        paymentInstructions = `PayPal: ${event.organizer_email}`;
-      }
-
-      const organizerName = `${event.first_name} ${event.last_name}`;
-      const eventUrl = `${process.env.FRONTEND_URL}/event/${event.slug}`;
-
-      // Send payment instructions to donor
-      await sendManualDonationInstructions({
-        donorName: donor_name,
-        donorEmail: donor_email,
-        amount,
-        donationMethod: donation_method,
-        eventTitle: event.title,
-        organizerName,
-        organizerEmail: event.organizer_email,
-        charities: charitiesResult.rows,
-        paymentInstructions,
-        eventUrl,
-        message
-      });
-
-      // Notify event organizer
-      await sendDonationNotificationToOrganizer({
-        organizerName,
-        organizerEmail: event.organizer_email,
-        donorName: donor_name,
-        amount,
-        donationMethod: donation_method,
-        eventTitle: event.title,
-        eventUrl,
-        message
-      });
-
-      res.json({
-        success: true,
-        donation,
-        paymentInstructions,
-        charities: charitiesResult.rows,
-        organizer: {
-          name: organizerName,
-          email: event.organizer_email,
-          phone: event.organizer_phone
-        }
-      });
-    } catch (error) {
-      console.error('Error creating manual donation:', error);
-      res.status(500).json({ error: 'Server error' });
-    }
-  }
-);
 
 // Get donation receipt details
 router.get('/receipt/:donationId', async (req: Request, res: Response) => {

@@ -18,6 +18,7 @@ export interface Charity {
   description: string;
   category: string;
   website_url: string;
+  donation_url?: string;
   logo_url: string;
   payment_instructions?: string;
   custom_instructions?: string; // From event_charities junction table

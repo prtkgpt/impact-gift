@@ -25,6 +25,7 @@ export interface Charity {
   description: string;
   category: string;
   website_url: string;
+  donation_url?: string;
   logo_url: string;
   payment_instructions?: string;
   stripe_account_id?: string;

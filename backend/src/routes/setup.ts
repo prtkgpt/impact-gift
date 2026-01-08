@@ -375,4 +375,38 @@ router.get('/migrate-phase1', async (req: Request, res: Response) => {
   }
 });
 
+// Phase 2 Migration: Add donation_url to charities for direct charity donations
+router.get('/migrate-phase2-direct-donations', async (req: Request, res: Response) => {
+  try {
+    const changes = [];
+
+    // Add donation_url to charities table
+    await query(`
+      ALTER TABLE charities
+      ADD COLUMN IF NOT EXISTS donation_url VARCHAR(500)
+    `);
+    changes.push('Added donation_url to charities');
+
+    // Update existing charities to use website_url as donation_url if not set
+    await query(`
+      UPDATE charities
+      SET donation_url = COALESCE(donation_url, website_url || '/donate')
+      WHERE donation_url IS NULL
+    `);
+    changes.push('Set default donation_url for existing charities');
+
+    res.json({
+      success: true,
+      message: 'Phase 2 direct donations migration completed successfully!',
+      changes
+    });
+  } catch (error: any) {
+    console.error('Phase 2 migration error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to complete Phase 2 direct donations migration'
+    });
+  }
+});
+
 export default router;
