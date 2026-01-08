@@ -138,6 +138,97 @@ router.post(
   }
 );
 
+// Update guest details
+router.put(
+  '/:guestId',
+  authenticate,
+  [
+    body('name').optional().trim(),
+    body('email').optional().isEmail().normalizeEmail()
+  ],
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { guestId } = req.params;
+      const { name, email } = req.body;
+
+      // At least one field must be provided
+      if (!name && !email) {
+        return res.status(400).json({ error: 'At least one field (name or email) must be provided' });
+      }
+
+      // Verify the user owns the event for this guest
+      const guestCheck = await query(
+        `SELECT g.*, e.user_id
+         FROM guests g
+         JOIN events e ON g.event_id = e.id
+         WHERE g.id = $1`,
+        [guestId]
+      );
+
+      if (guestCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Guest not found' });
+      }
+
+      if (guestCheck.rows[0].user_id !== req.user!.id) {
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+
+      const guest = guestCheck.rows[0];
+
+      // If email is being changed, check for conflicts
+      if (email && email !== guest.email) {
+        const conflictCheck = await query(
+          'SELECT id FROM guests WHERE event_id = $1 AND email = $2 AND id != $3',
+          [guest.event_id, email, guestId]
+        );
+
+        if (conflictCheck.rows.length > 0) {
+          return res.status(400).json({ error: 'A guest with this email already exists for this event' });
+        }
+      }
+
+      // Build update query dynamically based on provided fields
+      const updates = [];
+      const values = [];
+      let paramCount = 1;
+
+      if (name !== undefined) {
+        updates.push(`name = $${paramCount}`);
+        values.push(name);
+        paramCount++;
+      }
+
+      if (email !== undefined) {
+        updates.push(`email = $${paramCount}`);
+        values.push(email);
+        paramCount++;
+      }
+
+      updates.push('updated_at = CURRENT_TIMESTAMP');
+      values.push(guestId);
+
+      const result = await query(
+        `UPDATE guests
+         SET ${updates.join(', ')}
+         WHERE id = $${paramCount}
+         RETURNING *`,
+        values
+      );
+
+      console.log(`Guest ${guestId} updated successfully`);
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Error updating guest:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
 // Remove a guest from an event
 router.delete('/:guestId', authenticate, async (req: AuthRequest, res: Response) => {
   try {

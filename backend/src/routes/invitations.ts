@@ -185,13 +185,15 @@ router.post(
         if (resend) {
           try {
             await resend.emails.send({
-              from: 'Impact Gift <onboarding@resend.dev>',
+              from: 'Impact Gift <noreply@giftwithimpact.com>',
               to: guest.email,
               replyTo: event.user_email,
               subject: subject,
               text: personalizedBody,
               html: personalizedBody.replace(/\n/g, '<br>')
             });
+
+            console.log(`✅ Email sent to ${guest.email}`);
 
             // Mark as sent
             await query(
@@ -205,10 +207,15 @@ router.post(
 
             sentCount++;
           } catch (emailError: any) {
-            console.error(`Failed to send email to ${guest.email}:`, emailError);
+            console.error(`❌ Failed to send email to ${guest.email}:`, emailError);
+            console.error('Resend error details:', {
+              message: emailError.message,
+              statusCode: emailError.statusCode,
+              name: emailError.name
+            });
             errors_list.push({
               email: guest.email,
-              error: emailError.message
+              error: emailError.message || 'Email delivery failed'
             });
           }
         } else {
@@ -246,6 +253,102 @@ router.post(
       res.json(response);
     } catch (error) {
       console.error('Error sending invitations:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
+// Resend invitation to a specific guest
+router.post(
+  '/resend/:guestId',
+  authenticate,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { guestId } = req.params;
+
+      // Get guest and verify ownership
+      const guestResult = await query(
+        `SELECT g.*, e.slug, e.title, e.user_id, u.first_name, u.last_name, u.email as user_email
+         FROM guests g
+         JOIN events e ON g.event_id = e.id
+         JOIN users u ON e.user_id = u.id
+         WHERE g.id = $1`,
+        [guestId]
+      );
+
+      if (guestResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Guest not found' });
+      }
+
+      const guest = guestResult.rows[0];
+
+      if (guest.user_id !== req.user!.id) {
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+
+      // Get email template
+      const templateResult = await query(
+        'SELECT * FROM email_templates WHERE event_id = $1',
+        [guest.event_id]
+      );
+
+      let subject, bodyTemplate;
+      if (templateResult.rows.length > 0) {
+        subject = templateResult.rows[0].subject;
+        bodyTemplate = templateResult.rows[0].body;
+      } else {
+        subject = `You're invited to support my ${guest.title}!`;
+        bodyTemplate = `Dear Family and Friends,\n\nI'm so excited to celebrate my ${guest.title} with you!\n\nI would humbly request that you please don't bring any kind of gift (boxed or otherwise). Your presence and blessings would be the best gift.\n\nI know not everyone heeds such requests :) So if you must give a gift, may I request you please make a donation to the charities that I support.\n\nYou can view the event and donate here:\n{{EVENT_LINK}}\n\nThank you so much. Look forward to celebrating with you!\n\nWith love,\n{{YOUR_NAME}}`;
+      }
+
+      const eventUrl = `${process.env.FRONTEND_URL}/event/${guest.slug}`;
+      const senderName = `${guest.first_name} ${guest.last_name}`;
+
+      const personalizedBody = bodyTemplate
+        .replace(/\{\{EVENT_LINK\}\}/g, eventUrl)
+        .replace(/\{\{YOUR_NAME\}\}/g, senderName)
+        .replace(/\{\{GUEST_NAME\}\}/g, guest.name || 'Friend');
+
+      if (resend) {
+        try {
+          await resend.emails.send({
+            from: 'Impact Gift <noreply@giftwithimpact.com>',
+            to: guest.email,
+            replyTo: guest.user_email,
+            subject: subject,
+            text: personalizedBody,
+            html: personalizedBody.replace(/\n/g, '<br>')
+          });
+
+          console.log(`✅ Resent invitation to ${guest.email}`);
+
+          // Update invitation sent timestamp
+          await query(
+            `UPDATE guests
+             SET invitation_sent = true,
+                 invitation_sent_at = CURRENT_TIMESTAMP,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = $1`,
+            [guestId]
+          );
+
+          res.json({
+            success: true,
+            message: `Invitation resent to ${guest.email}`
+          });
+        } catch (emailError: any) {
+          console.error(`❌ Failed to resend email to ${guest.email}:`, emailError);
+          res.status(500).json({
+            error: emailError.message || 'Failed to send email'
+          });
+        }
+      } else {
+        res.status(500).json({
+          error: 'Email service not configured'
+        });
+      }
+    } catch (error) {
+      console.error('Error resending invitation:', error);
       res.status(500).json({ error: 'Server error' });
     }
   }

@@ -23,6 +23,11 @@ const ManageEvent = () => {
   const [emailBody, setEmailBody] = useState('');
   const [showPreview, setShowPreview] = useState(false);
 
+  // Edit guest state
+  const [editingGuestId, setEditingGuestId] = useState<number | null>(null);
+  const [editEmail, setEditEmail] = useState('');
+  const [editName, setEditName] = useState('');
+
   useEffect(() => {
     fetchEventData();
   }, [slug]);
@@ -115,6 +120,45 @@ const ManageEvent = () => {
       toast.success('Guest removed');
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to remove guest');
+    }
+  };
+
+  const resendInvitation = async (guestId: number) => {
+    try {
+      const response = await api.post(`/invitations/resend/${guestId}`);
+      toast.success(response.data.message);
+      await fetchEventData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to resend invitation');
+    }
+  };
+
+  const startEditGuest = (guest: Guest) => {
+    setEditingGuestId(guest.id);
+    setEditEmail(guest.email);
+    setEditName(guest.name || '');
+  };
+
+  const cancelEdit = () => {
+    setEditingGuestId(null);
+    setEditEmail('');
+    setEditName('');
+  };
+
+  const updateGuest = async (guestId: number) => {
+    try {
+      const response = await api.put(`/guests/${guestId}`, {
+        email: editEmail,
+        name: editName || undefined
+      });
+
+      setGuests(guests.map(g => g.id === guestId ? response.data : g));
+      setEditingGuestId(null);
+      setEditEmail('');
+      setEditName('');
+      toast.success('Guest updated successfully!');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to update guest');
     }
   };
 
@@ -326,34 +370,104 @@ const ManageEvent = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {guests.map((guest) => (
-                      <tr key={guest.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{guest.email}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{guest.name || '-'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            guest.invitation_sent
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {guest.invitation_sent ? 'Invited' : 'Pending'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {guest.has_donated ? (
-                            <span className="text-green-600 font-medium">${guest.donated_amount?.toFixed(2)}</span>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                          <button
-                            onClick={() => removeGuest(guest.id)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
+                      editingGuestId === guest.id ? (
+                        // Edit mode
+                        <tr key={guest.id} className="bg-blue-50">
+                          <td className="px-6 py-4">
+                            <input
+                              type="email"
+                              className="input text-sm py-1"
+                              value={editEmail}
+                              onChange={(e) => setEditEmail(e.target.value)}
+                              placeholder="Email"
+                            />
+                          </td>
+                          <td className="px-6 py-4">
+                            <input
+                              type="text"
+                              className="input text-sm py-1"
+                              value={editName}
+                              onChange={(e) => setEditName(e.target.value)}
+                              placeholder="Name"
+                            />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              guest.invitation_sent
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {guest.invitation_sent ? 'Invited' : 'Pending'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            {guest.has_donated ? (
+                              <span className="text-green-600 font-medium">${guest.donated_amount?.toFixed(2)}</span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
+                            <button
+                              onClick={() => updateGuest(guest.id)}
+                              className="text-green-600 hover:text-green-800 font-medium"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={cancelEdit}
+                              className="text-gray-600 hover:text-gray-800"
+                            >
+                              Cancel
+                            </button>
+                          </td>
+                        </tr>
+                      ) : (
+                        // View mode
+                        <tr key={guest.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">{guest.email}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">{guest.name || '-'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              guest.invitation_sent
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {guest.invitation_sent ? 'Invited' : 'Pending'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            {guest.has_donated ? (
+                              <span className="text-green-600 font-medium">${guest.donated_amount?.toFixed(2)}</span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
+                            {guest.invitation_sent && (
+                              <button
+                                onClick={() => resendInvitation(guest.id)}
+                                className="text-blue-600 hover:text-blue-800"
+                                title="Resend invitation"
+                              >
+                                Resend
+                              </button>
+                            )}
+                            <button
+                              onClick={() => startEditGuest(guest)}
+                              className="text-primary-600 hover:text-primary-800"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => removeGuest(guest.id)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      )
                     ))}
                   </tbody>
                 </table>
