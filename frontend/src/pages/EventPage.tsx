@@ -99,56 +99,56 @@ const EventPage = () => {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="relative bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 text-white py-20 overflow-hidden">
+      <div className="relative bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 text-white py-12 sm:py-16 lg:py-20 overflow-hidden">
         {/* Decorative background elements */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 translate-y-1/2"></div>
+        <div className="absolute inset-0 opacity-10 overflow-hidden">
+          <div className="absolute top-0 left-0 w-64 h-64 sm:w-96 sm:h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-white rounded-full translate-x-1/2 translate-y-1/2"></div>
         </div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex items-start space-x-6 mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:space-x-6 space-y-4 sm:space-y-0 mb-6">
             {event.charity_logo && (
               <div className="flex-shrink-0">
                 <img
                   src={event.charity_logo}
                   alt={event.charity_name}
-                  className="w-20 h-20 rounded-2xl shadow-xl bg-white p-2 ring-4 ring-white/20"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl shadow-xl bg-white p-2 ring-4 ring-white/20"
                 />
               </div>
             )}
-            <div className="flex-1">
-              <h1 className="text-5xl font-extrabold mb-3 tracking-tight leading-tight">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-2 sm:mb-3 tracking-tight leading-tight break-words">
                 {event.title}
               </h1>
-              <p className="text-xl opacity-95 font-light">
+              <p className="text-base sm:text-lg lg:text-xl opacity-95 font-light">
                 {event.first_name} {event.last_name} is fundraising for{' '}
                 <span className="font-semibold">{event.charity_name}</span>
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-4 text-white/90">
-            <span className="inline-flex items-center px-4 py-2 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-white/90">
+            <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm">
               📅 {format(new Date(event.event_date), 'MMMM dd, yyyy')}
             </span>
-            <span className="inline-flex items-center px-4 py-2 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm capitalize">
+            <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm capitalize">
               🎉 {event.event_type}
             </span>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="md:col-span-2 space-y-8">
-            <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-8 border border-gray-100">
-              <h2 className="text-3xl font-bold mb-5 text-gray-900">About This Event</h2>
-              <p className="text-gray-700 leading-relaxed text-lg whitespace-pre-wrap">{event.description}</p>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+          <div className="md:col-span-2 space-y-6 lg:space-y-8">
+            <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-5 text-gray-900">About This Event</h2>
+              <p className="text-gray-700 leading-relaxed text-base sm:text-lg whitespace-pre-wrap">{event.description}</p>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-8 border border-gray-100">
-              <h2 className="text-3xl font-bold mb-5 text-gray-900">About {event.charity_name}</h2>
-              <p className="text-gray-700 mb-6 leading-relaxed text-lg">{event.charity_description}</p>
+            <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-5 text-gray-900">About {event.charity_name}</h2>
+              <p className="text-gray-700 mb-6 leading-relaxed text-base sm:text-lg">{event.charity_description}</p>
               {event.charity_website && (
                 <a
                   href={event.charity_website}
@@ -172,23 +172,23 @@ const EventPage = () => {
           </div>
 
           <div className="md:col-span-1">
-            <div className="space-y-6 sticky top-4">
+            <div className="space-y-4 sm:space-y-6 md:sticky md:top-4">
               <EventCountdown eventDate={event.event_date} />
 
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                <div className="p-8">
-                  <div className="mb-8">
-                    <div className="flex justify-between items-baseline mb-3">
-                      <span className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Raised</span>
-                      <span className="text-4xl font-bold text-primary-600">
+                <div className="p-6 sm:p-8">
+                  <div className="mb-6 sm:mb-8">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-3 gap-2">
+                      <span className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide">Total Raised</span>
+                      <span className="text-3xl sm:text-4xl font-bold text-primary-600">
                         ${Number(event.total_raised || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                     {event.goal_amount && (
                       <>
-                        <div className="w-full bg-gray-100 rounded-full h-4 mb-3 overflow-hidden shadow-inner">
+                        <div className="w-full bg-gray-100 rounded-full h-3 sm:h-4 mb-3 overflow-hidden shadow-inner">
                           <div
-                            className="bg-gradient-to-r from-primary-500 to-primary-600 h-4 rounded-full transition-all duration-500 ease-out shadow-sm"
+                            className="bg-gradient-to-r from-primary-500 to-primary-600 h-3 sm:h-4 rounded-full transition-all duration-500 ease-out shadow-sm"
                             style={{ width: `${progressPercentage}%` }}
                           />
                         </div>
@@ -198,15 +198,15 @@ const EventPage = () => {
                       </>
                     )}
                     <p className="text-sm text-gray-500 mt-3 flex items-center">
-                      <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                       </svg>
                       {event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}
                     </p>
                     {potentialMatching > 0 && (
-                      <div className="mt-5 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+                      <div className="mt-4 sm:mt-5 p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
                         <p className="text-xs text-blue-700 font-semibold mb-2 uppercase tracking-wide">💼 Employer Matching</p>
-                        <p className="text-lg text-blue-900 font-bold">
+                        <p className="text-base sm:text-lg text-blue-900 font-bold">
                           ${potentialMatching.toFixed(2)} <span className="text-sm font-normal">potential match</span>
                         </p>
                         <p className="text-xs text-blue-600 mt-1.5">
@@ -219,7 +219,7 @@ const EventPage = () => {
                   {!showDonationForm ? (
                     <button
                       onClick={() => setShowDonationForm(true)}
-                      className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold text-lg py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                      className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold text-base sm:text-lg py-3 sm:py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
                     >
                       💝 Make a Donation
                     </button>
@@ -231,7 +231,7 @@ const EventPage = () => {
                   )}
                 </div>
 
-                <div className="px-8 py-6 bg-gray-50 border-t border-gray-100">
+                <div className="px-6 sm:px-8 py-5 sm:py-6 bg-gray-50 border-t border-gray-100">
                   <ShareButtons event={event} />
 
                   <button
@@ -240,7 +240,7 @@ const EventPage = () => {
                       navigator.clipboard.writeText(url);
                       toast.success('Link copied to clipboard!');
                     }}
-                    className="btn btn-secondary w-full mt-4 py-3 font-semibold hover:bg-gray-200 transition-colors"
+                    className="btn btn-secondary w-full mt-4 py-3 font-semibold hover:bg-gray-200 transition-colors active:scale-95"
                   >
                     📋 Copy Link
                   </button>
