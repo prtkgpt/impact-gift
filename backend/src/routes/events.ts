@@ -15,7 +15,10 @@ router.post(
     body('description').optional(),
     body('event_type').isIn(['birthday', 'wedding', 'anniversary', 'graduation', 'other']),
     body('event_date').isISO8601(),
-    body('charity_id').isInt(),
+    body('start_date').optional().isISO8601(),
+    body('end_date').optional().isISO8601(),
+    body('charity_id').optional().isInt(),
+    body('charity_ids').optional().isArray(),
     body('goal_amount').optional().isFloat({ min: 0 })
   ],
   async (req: AuthRequest, res: Response) => {
@@ -25,22 +28,75 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { title, description, event_type, event_date, charity_id, goal_amount }: CreateEventInput = req.body;
+      const { title, description, event_type, event_date, start_date, end_date, charity_id, charity_ids, goal_amount }: CreateEventInput = req.body;
       const slug = generateSlug(title);
 
-      const charityCheck = await query('SELECT id FROM charities WHERE id = $1', [charity_id]);
-      if (charityCheck.rows.length === 0) {
-        return res.status(400).json({ error: 'Invalid charity ID' });
+      // Support both single charity (legacy) and multiple charities (new feature)
+      const charityList = charity_ids || (charity_id ? [charity_id] : []);
+
+      if (charityList.length === 0) {
+        return res.status(400).json({ error: 'At least one charity must be selected' });
       }
 
+      // Verify all charities exist
+      for (const cid of charityList) {
+        const charityCheck = await query('SELECT id FROM charities WHERE id = $1', [cid]);
+        if (charityCheck.rows.length === 0) {
+          return res.status(400).json({ error: `Invalid charity ID: ${cid}` });
+        }
+      }
+
+      // Create the event (charity_id can be null for multi-charity events)
       const result = await query(
-        `INSERT INTO events (user_id, title, description, event_type, event_date, charity_id, goal_amount, slug)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `INSERT INTO events (user_id, title, description, event_type, event_date, start_date, end_date, charity_id, goal_amount, slug)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING *`,
-        [req.user!.id, title, description || '', event_type, event_date, charity_id, goal_amount || null, slug]
+        [
+          req.user!.id,
+          title,
+          description || '',
+          event_type,
+          event_date,
+          start_date || event_date,
+          end_date || event_date,
+          charityList.length === 1 ? charityList[0] : null,
+          goal_amount || null,
+          slug
+        ]
       );
 
-      res.status(201).json(result.rows[0]);
+      const newEvent = result.rows[0];
+
+      // Add charities to event_charities junction table
+      for (const cid of charityList) {
+        await query(
+          `INSERT INTO event_charities (event_id, charity_id)
+           VALUES ($1, $2)
+           ON CONFLICT (event_id, charity_id) DO NOTHING`,
+          [newEvent.id, cid]
+        );
+      }
+
+      // Fetch the complete event with charities
+      const eventWithCharities = await query(
+        `SELECT e.*,
+                json_agg(
+                  json_build_object(
+                    'id', c.id,
+                    'name', c.name,
+                    'logo_url', c.logo_url,
+                    'custom_instructions', ec.custom_instructions
+                  )
+                ) as charities
+         FROM events e
+         LEFT JOIN event_charities ec ON e.id = ec.event_id
+         LEFT JOIN charities c ON ec.charity_id = c.id
+         WHERE e.id = $1
+         GROUP BY e.id`,
+        [newEvent.id]
+      );
+
+      res.status(201).json(eventWithCharities.rows[0]);
     } catch (error) {
       console.error('Error creating event:', error);
       res.status(500).json({ error: 'Server error' });

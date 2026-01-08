@@ -224,4 +224,155 @@ router.get('/add-password-reset', async (req: Request, res: Response) => {
   }
 });
 
+// Phase 1 Migration: User profiles, multiple charities, guest lists, email system
+router.get('/migrate-phase1', async (req: Request, res: Response) => {
+  try {
+    const changes = [];
+
+    // 1. Add phone number and address to users table
+    await query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS phone_number VARCHAR(20),
+      ADD COLUMN IF NOT EXISTS address TEXT
+    `);
+    changes.push('Added phone_number and address to users');
+
+    // 2. Add start_date and end_date to events table
+    await query(`
+      ALTER TABLE events
+      ADD COLUMN IF NOT EXISTS start_date DATE,
+      ADD COLUMN IF NOT EXISTS end_date DATE
+    `);
+    changes.push('Added start_date and end_date to events');
+
+    // Update existing events to have start_date = created_at and end_date = event_date
+    await query(`
+      UPDATE events
+      SET start_date = COALESCE(start_date, created_at::date),
+          end_date = COALESCE(end_date, event_date)
+    `);
+
+    // 3. Add payment instructions to charities table
+    await query(`
+      ALTER TABLE charities
+      ADD COLUMN IF NOT EXISTS payment_instructions TEXT
+    `);
+    changes.push('Added payment_instructions to charities');
+
+    // Update existing charities with default payment instructions
+    await query(`
+      UPDATE charities
+      SET payment_instructions = COALESCE(payment_instructions, 'Please visit our website for donation instructions: ' || website_url)
+    `);
+
+    // 4. Create event_charities junction table
+    await query(`
+      CREATE TABLE IF NOT EXISTS event_charities (
+        id SERIAL PRIMARY KEY,
+        event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
+        charity_id INTEGER REFERENCES charities(id) ON DELETE CASCADE,
+        custom_instructions TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(event_id, charity_id)
+      )
+    `);
+    changes.push('Created event_charities junction table');
+
+    // Migrate existing event-charity relationships
+    await query(`
+      INSERT INTO event_charities (event_id, charity_id, custom_instructions)
+      SELECT id, charity_id, NULL
+      FROM events
+      WHERE charity_id IS NOT NULL
+      ON CONFLICT DO NOTHING
+    `);
+    changes.push('Migrated existing event-charity relationships');
+
+    // 5. Create guests table
+    await query(`
+      CREATE TABLE IF NOT EXISTS guests (
+        id SERIAL PRIMARY KEY,
+        event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
+        email VARCHAR(255) NOT NULL,
+        name VARCHAR(255),
+        invitation_sent BOOLEAN DEFAULT false,
+        invitation_sent_at TIMESTAMP,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(event_id, email)
+      )
+    `);
+    changes.push('Created guests table');
+
+    // 6. Create email_templates table
+    await query(`
+      CREATE TABLE IF NOT EXISTS email_templates (
+        id SERIAL PRIMARY KEY,
+        event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
+        subject VARCHAR(500) NOT NULL,
+        body TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    changes.push('Created email_templates table');
+
+    // 7. Add donation method tracking
+    await query(`
+      ALTER TABLE donations
+      ADD COLUMN IF NOT EXISTS donation_method VARCHAR(50) DEFAULT 'stripe',
+      ADD COLUMN IF NOT EXISTS recipient_contact_email VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS recipient_contact_phone VARCHAR(20),
+      ADD COLUMN IF NOT EXISTS occasion VARCHAR(255)
+    `);
+    changes.push('Added donation method tracking columns');
+
+    // 8. Add charity_id to donations
+    await query(`
+      ALTER TABLE donations
+      ADD COLUMN IF NOT EXISTS charity_id INTEGER REFERENCES charities(id)
+    `);
+    changes.push('Added charity_id to donations');
+
+    // Update existing donations with charity from event
+    await query(`
+      UPDATE donations d
+      SET charity_id = e.charity_id
+      FROM events e
+      WHERE d.event_id = e.id AND d.charity_id IS NULL
+    `);
+
+    // 9. Create indexes
+    await query('CREATE INDEX IF NOT EXISTS idx_event_charities_event_id ON event_charities(event_id)');
+    await query('CREATE INDEX IF NOT EXISTS idx_event_charities_charity_id ON event_charities(charity_id)');
+    await query('CREATE INDEX IF NOT EXISTS idx_guests_event_id ON guests(event_id)');
+    await query('CREATE INDEX IF NOT EXISTS idx_guests_email ON guests(email)');
+    await query('CREATE INDEX IF NOT EXISTS idx_guests_status ON guests(status)');
+    await query('CREATE INDEX IF NOT EXISTS idx_email_templates_event_id ON email_templates(event_id)');
+    await query('CREATE INDEX IF NOT EXISTS idx_donations_charity_id ON donations(charity_id)');
+    changes.push('Created all necessary indexes');
+
+    res.json({
+      success: true,
+      message: 'Phase 1 migration completed successfully!',
+      features: [
+        'User profiles (phone, address)',
+        'Multiple charities per event',
+        'Event start and end dates',
+        'Guest list management',
+        'Email templates',
+        'Alternative donation methods (Venmo/Zelle/PayPal)'
+      ],
+      changes
+    });
+  } catch (error: any) {
+    console.error('Phase 1 migration error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to complete Phase 1 migration'
+    });
+  }
+});
+
 export default router;
