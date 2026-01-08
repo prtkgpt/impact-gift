@@ -13,22 +13,35 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 router.post(
   '/signup',
   [
-    body('email').isEmail().normalizeEmail(),
-    body('password').isLength({ min: 6 }),
-    body('first_name').trim().notEmpty(),
-    body('last_name').trim().notEmpty()
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('first_name').trim().notEmpty().withMessage('First name is required'),
+    body('last_name').trim().notEmpty().withMessage('Last name is required')
   ],
   async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        console.log('Validation errors:', errors.array());
+        return res.status(400).json({
+          error: errors.array()[0].msg,
+          errors: errors.array()
+        });
       }
 
       const { email, password, first_name, last_name } = req.body;
 
+      console.log('Signup attempt for email:', email);
+
+      // Check JWT_SECRET is configured
+      if (!process.env.JWT_SECRET) {
+        console.error('JWT_SECRET not configured!');
+        return res.status(500).json({ error: 'Server configuration error - please contact support' });
+      }
+
       const existingUser = await query('SELECT * FROM users WHERE email = $1', [email]);
       if (existingUser.rows.length > 0) {
+        console.log('Email already exists:', email);
         return res.status(400).json({ error: 'Email already registered' });
       }
 
@@ -46,10 +59,28 @@ router.post(
         { expiresIn: '7d' }
       );
 
+      console.log('User created successfully:', user.email);
       res.status(201).json({ token, user });
-    } catch (error) {
-      console.error('Signup error:', error);
-      res.status(500).json({ error: 'Server error' });
+    } catch (error: any) {
+      console.error('Signup error details:', {
+        message: error.message,
+        code: error.code,
+        detail: error.detail,
+        stack: error.stack
+      });
+
+      // Provide more specific error messages
+      if (error.code === '23505') {
+        return res.status(400).json({ error: 'Email already registered' });
+      }
+      if (error.code === '42P01') {
+        return res.status(500).json({ error: 'Database not initialized - please contact support' });
+      }
+      if (error.code === 'ECONNREFUSED') {
+        return res.status(500).json({ error: 'Database connection error - please try again later' });
+      }
+
+      res.status(500).json({ error: 'Server error - please try again or contact support' });
     }
   }
 );
