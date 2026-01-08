@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard';
 import CreateEvent from './pages/CreateEvent';
 import EventPage from './pages/EventPage';
 import Receipt from './pages/Receipt';
+import Profile from './pages/Profile';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -50,6 +51,14 @@ function App() {
                 element={
                   <PrivateRoute>
                     <CreateEvent />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute>
+                    <Profile />
                   </PrivateRoute>
                 }
               />
