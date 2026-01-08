@@ -1,21 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { format } from 'date-fns';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements } from '@stripe/react-stripe-js';
 import { Helmet } from 'react-helmet-async';
 import api from '../utils/api';
 import { Event, Donation } from '../types';
 import toast from 'react-hot-toast';
-import DonationForm from '../components/DonationForm';
+import DonationMethodSelector from '../components/DonationMethodSelector';
 import EventUpdates from '../components/EventUpdates';
 import EmployerMatchDashboard from '../components/EmployerMatchDashboard';
 import ShareButtons from '../components/ShareButtons';
 import EventCountdown from '../components/EventCountdown';
 import Leaderboard from '../components/Leaderboard';
 import { useAuth } from '../contexts/AuthContext';
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 
 const EventPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -211,13 +207,11 @@ const EventPage = () => {
                   Make a Donation
                 </button>
               ) : (
-                <Elements stripe={stripePromise}>
-                  <DonationForm
-                    eventId={event.id}
-                    onSuccess={handleDonationComplete}
-                    onCancel={() => setShowDonationForm(false)}
-                  />
-                </Elements>
+                <DonationMethodSelector
+                  event={event}
+                  onSuccess={handleDonationComplete}
+                  onCancel={() => setShowDonationForm(false)}
+                />
               )}
 
               <div className="mt-6 pt-6 border-t">
