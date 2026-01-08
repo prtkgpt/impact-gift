@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { Charity, CreateEventInput } from '../types';
 import toast from 'react-hot-toast';
+import RequestCharityModal from '../components/RequestCharityModal';
 
 const CreateEvent = () => {
   const [charities, setCharities] = useState<Charity[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedCharityIds, setSelectedCharityIds] = useState<number[]>([]);
+  const [showRequestModal, setShowRequestModal] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -178,9 +180,18 @@ const CreateEvent = () => {
 
           {/* Select Multiple Charities */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Select Charities * (Select one or more)
-            </label>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Select Charities * (Select one or more)
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowRequestModal(true)}
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+              >
+                + Request a Charity
+              </button>
+            </div>
             <div className="grid md:grid-cols-2 gap-3 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
               {charities.map((charity) => (
                 <div
@@ -261,6 +272,16 @@ const CreateEvent = () => {
           </div>
         </form>
       </div>
+
+      {showRequestModal && (
+        <RequestCharityModal
+          onClose={() => setShowRequestModal(false)}
+          onSuccess={() => {
+            setShowRequestModal(false);
+            fetchCharities(); // Refresh charities list
+          }}
+        />
+      )}
     </div>
   );
 };

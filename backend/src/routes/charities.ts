@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../database/db';
+import { AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -30,6 +31,84 @@ router.get('/:id', async (req: Request, res: Response) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error fetching charity:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Submit a charity request
+router.post('/request', async (req: AuthRequest, res: Response) => {
+  try {
+    const {
+      charity_name,
+      website_url,
+      description,
+      category,
+      contact_email,
+      reason
+    } = req.body;
+
+    // Validate required fields
+    if (!charity_name || !website_url || !description) {
+      return res.status(400).json({
+        error: 'Missing required fields: charity_name, website_url, and description are required'
+      });
+    }
+
+    // Get user_id from auth (optional - can be null for anonymous requests)
+    const user_id = req.user?.id || null;
+
+    const result = await query(
+      `INSERT INTO charity_requests (
+        user_id,
+        charity_name,
+        website_url,
+        description,
+        category,
+        contact_email,
+        reason,
+        status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
+      RETURNING *`,
+      [user_id, charity_name, website_url, description, category, contact_email, reason]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Charity request submitted successfully! We will review it and add it to our platform if approved.',
+      request: result.rows[0]
+    });
+  } catch (error: any) {
+    console.error('Error submitting charity request:', error);
+    res.status(500).json({ error: 'Failed to submit charity request' });
+  }
+});
+
+// Get all charity requests (for admin view - should add auth middleware)
+router.get('/requests', async (req: Request, res: Response) => {
+  try {
+    const { status } = req.query;
+
+    let queryStr = `
+      SELECT
+        cr.*,
+        u.first_name || ' ' || u.last_name as requester_name,
+        u.email as requester_email
+      FROM charity_requests cr
+      LEFT JOIN users u ON cr.user_id = u.id
+    `;
+
+    const params: any[] = [];
+    if (status) {
+      queryStr += ' WHERE cr.status = $1';
+      params.push(status);
+    }
+
+    queryStr += ' ORDER BY cr.created_at DESC';
+
+    const result = await query(queryStr, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching charity requests:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

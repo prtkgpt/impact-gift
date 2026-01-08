@@ -568,4 +568,49 @@ router.get('/add-curated-charities', async (req: Request, res: Response) => {
   }
 });
 
+// Create charity_requests table for user-submitted charity nominations
+router.get('/create-charity-requests-table', async (req: Request, res: Response) => {
+  try {
+    // Create charity_requests table
+    await query(`
+      CREATE TABLE IF NOT EXISTS charity_requests (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        charity_name VARCHAR(255) NOT NULL,
+        website_url VARCHAR(500) NOT NULL,
+        description TEXT NOT NULL,
+        category VARCHAR(100),
+        contact_email VARCHAR(255),
+        reason TEXT,
+        status VARCHAR(50) DEFAULT 'pending',
+        admin_notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        reviewed_at TIMESTAMP,
+        reviewed_by INTEGER REFERENCES users(id) ON DELETE SET NULL
+      )
+    `);
+
+    // Create indexes
+    await query('CREATE INDEX IF NOT EXISTS idx_charity_requests_user_id ON charity_requests(user_id)');
+    await query('CREATE INDEX IF NOT EXISTS idx_charity_requests_status ON charity_requests(status)');
+
+    res.json({
+      success: true,
+      message: 'Charity requests table created successfully!',
+      table: 'charity_requests',
+      columns: [
+        'id', 'user_id', 'charity_name', 'website_url', 'description',
+        'category', 'contact_email', 'reason', 'status', 'admin_notes',
+        'created_at', 'reviewed_at', 'reviewed_by'
+      ]
+    });
+  } catch (error: any) {
+    console.error('Error creating charity_requests table:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to create charity_requests table'
+    });
+  }
+});
+
 export default router;
