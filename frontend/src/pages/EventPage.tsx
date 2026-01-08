@@ -48,12 +48,6 @@ const EventPage = () => {
     }
   };
 
-  const handleDonationComplete = () => {
-    setShowDonationForm(false);
-    fetchEvent();
-    fetchDonations();
-  };
-
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
@@ -209,7 +203,6 @@ const EventPage = () => {
               ) : (
                 <DonationMethodSelector
                   event={event}
-                  onSuccess={handleDonationComplete}
                   onCancel={() => setShowDonationForm(false)}
                 />
               )}

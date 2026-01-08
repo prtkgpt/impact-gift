@@ -409,4 +409,163 @@ router.get('/migrate-phase2-direct-donations', async (req: Request, res: Respons
   }
 });
 
+// Add curated charities - 15 high-quality nonprofits
+router.get('/add-curated-charities', async (req: Request, res: Response) => {
+  try {
+    const charities = [
+      {
+        name: 'American Red Cross',
+        description: 'Provides emergency assistance, disaster relief, and disaster preparedness education',
+        category: 'Disaster Relief',
+        website_url: 'https://www.redcross.org',
+        donation_url: 'https://www.redcross.org/donate/donation.html',
+        logo_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/American_Red_Cross_logo.svg/200px-American_Red_Cross_logo.svg.png'
+      },
+      {
+        name: 'Direct Relief',
+        description: 'Improves the health and lives of people affected by poverty or emergencies',
+        category: 'Healthcare',
+        website_url: 'https://www.directrelief.org',
+        donation_url: 'https://secure.directrelief.org/site/Donation2',
+        logo_url: 'https://www.directrelief.org/wp-content/uploads/2021/02/DR-logo-blue.png'
+      },
+      {
+        name: 'Water.org',
+        description: 'Provides access to safe water and sanitation to people in need',
+        category: 'Water & Sanitation',
+        website_url: 'https://water.org',
+        donation_url: 'https://water.org/donate/',
+        logo_url: 'https://water.org/wp-content/themes/water/assets/images/logo.svg'
+      },
+      {
+        name: 'Kiva',
+        description: 'Crowdfunding platform extending financial access to help underserved communities thrive',
+        category: 'Poverty Alleviation',
+        website_url: 'https://www.kiva.org',
+        donation_url: 'https://www.kiva.org/donate/supportus',
+        logo_url: 'https://www-kiva-org.freetls.fastly.net/cms/kiva-k-green-on-white.png'
+      },
+      {
+        name: 'charity: water',
+        description: 'Brings clean and safe drinking water to people in developing countries',
+        category: 'Water & Sanitation',
+        website_url: 'https://www.charitywater.org',
+        donation_url: 'https://www.charitywater.org/donate',
+        logo_url: 'https://www.charitywater.org/favicon-196x196.png'
+      },
+      {
+        name: 'No Kid Hungry',
+        description: 'Works to end childhood hunger in America',
+        category: 'Hunger Relief',
+        website_url: 'https://www.nokidhungry.org',
+        donation_url: 'https://secure.nokidhungry.org/site/Donation2',
+        logo_url: 'https://www.nokidhungry.org/sites/all/themes/nkh/images/logo.png'
+      },
+      {
+        name: 'National Park Foundation',
+        description: 'Official charity of America\'s national parks',
+        category: 'Environment',
+        website_url: 'https://www.nationalparks.org',
+        donation_url: 'https://give.nationalparks.org/give/357755/',
+        logo_url: 'https://www.nationalparks.org/sites/default/files/npf-logo.png'
+      },
+      {
+        name: 'Ocean Conservancy',
+        description: 'Works to protect the ocean from today\'s greatest global challenges',
+        category: 'Environment',
+        website_url: 'https://oceanconservancy.org',
+        donation_url: 'https://act.oceanconservancy.org/page/14424/donate/1',
+        logo_url: 'https://oceanconservancy.org/wp-content/themes/oceanconservancy/assets/images/logo.svg'
+      },
+      {
+        name: 'Girls Who Code',
+        description: 'Works to close the gender gap in technology',
+        category: 'Education',
+        website_url: 'https://girlswhocode.com',
+        donation_url: 'https://girlswhocode.com/donate/',
+        logo_url: 'https://girlswhocode.com/assets/img/logo.svg'
+      },
+      {
+        name: 'GiveDirectly',
+        description: 'Sends money directly to people living in extreme poverty',
+        category: 'Poverty Alleviation',
+        website_url: 'https://www.givedirectly.org',
+        donation_url: 'https://www.givedirectly.org/give-now/',
+        logo_url: 'https://www.givedirectly.org/wp-content/themes/givedirectly/img/logo.svg'
+      },
+      {
+        name: 'American Cancer Society',
+        description: 'Leading the fight for a world without cancer',
+        category: 'Healthcare',
+        website_url: 'https://www.cancer.org',
+        donation_url: 'https://donate3.cancer.org/',
+        logo_url: 'https://www.cancer.org/content/dam/cancer-org/images/logos/acs-logo.svg'
+      },
+      {
+        name: 'Khan Academy',
+        description: 'Provides free world-class education for anyone, anywhere',
+        category: 'Education',
+        website_url: 'https://www.khanacademy.org',
+        donation_url: 'https://www.khanacademy.org/donate',
+        logo_url: 'https://cdn.kastatic.org/images/khan-logo-dark-background.png'
+      },
+      {
+        name: 'Best Friends Animal Society',
+        description: 'Leading animal welfare organization working to end killing in shelters',
+        category: 'Animals',
+        website_url: 'https://bestfriends.org',
+        donation_url: 'https://bestfriends.org/donate',
+        logo_url: 'https://bestfriends.org/themes/bestfriends/logo.svg'
+      },
+      {
+        name: 'Meals on Wheels America',
+        description: 'Empowers communities to improve health and quality of life for seniors',
+        category: 'Hunger Relief',
+        website_url: 'https://www.mealsonwheelsamerica.org',
+        donation_url: 'https://www.mealsonwheelsamerica.org/donate',
+        logo_url: 'https://via.placeholder.com/150?text=MOW'
+      },
+      {
+        name: 'National Alliance to End Homelessness',
+        description: 'Works to prevent and end homelessness in the United States',
+        category: 'Housing',
+        website_url: 'https://endhomelessness.org',
+        donation_url: 'https://endhomelessness.org/donate/',
+        logo_url: 'https://endhomelessness.org/wp-content/uploads/2021/09/logo.png'
+      }
+    ];
+
+    let addedCount = 0;
+    for (const charity of charities) {
+      // Check if charity already exists
+      const existing = await query(
+        'SELECT id FROM charities WHERE name = $1',
+        [charity.name]
+      );
+
+      if (existing.rows.length === 0) {
+        await query(
+          `INSERT INTO charities (name, description, category, website_url, donation_url, logo_url, is_active)
+           VALUES ($1, $2, $3, $4, $5, $6, true)`,
+          [charity.name, charity.description, charity.category, charity.website_url, charity.donation_url, charity.logo_url]
+        );
+        addedCount++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Added ${addedCount} new curated charities`,
+      total_charities: charities.length,
+      added: addedCount
+    });
+  } catch (error: any) {
+    console.error('Error adding curated charities:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to add curated charities'
+    });
+  }
+});
+
 export default router;
