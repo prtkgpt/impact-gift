@@ -112,7 +112,7 @@ router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) =
               COALESCE(SUM(d.amount), 0) as total_raised,
               COUNT(DISTINCT d.id) as donation_count
        FROM events e
-       LEFT JOIN donations d ON e.id = d.event_id AND d.status = 'completed'
+       LEFT JOIN donations d ON e.id = d.event_id AND d.status IN ('completed', 'committed')
        WHERE e.user_id = $1
        GROUP BY e.id
        ORDER BY e.event_date DESC`,
@@ -162,7 +162,7 @@ router.get('/:slug', async (req: Request, res: Response) => {
               COUNT(DISTINCT d.id) as donation_count
        FROM events e
        JOIN users u ON e.user_id = u.id
-       LEFT JOIN donations d ON e.id = d.event_id AND d.status = 'completed'
+       LEFT JOIN donations d ON e.id = d.event_id AND d.status IN ('completed', 'committed')
        WHERE e.slug = $1 AND e.is_active = true
        GROUP BY e.id, u.first_name, u.last_name`,
       [slug]
@@ -216,9 +216,9 @@ router.get('/:slug/donations', async (req: Request, res: Response) => {
 
     const result = await query(
       `SELECT id, donor_name, donor_email, amount, message, created_at,
-              has_employer_match, employer_name, match_status
+              has_employer_match, employer_name, match_status, status
        FROM donations
-       WHERE event_id = $1 AND status = 'completed'
+       WHERE event_id = $1 AND status IN ('completed', 'committed')
        ORDER BY amount DESC, created_at ASC`,
       [event.id]
     );

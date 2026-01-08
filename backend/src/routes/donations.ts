@@ -217,6 +217,117 @@ router.post('/mark-completed/:paymentIntentId', async (req: Request, res: Respon
   }
 });
 
+// Record committed donation (user pledges to donate directly to charity)
+router.post(
+  '/commit',
+  [
+    body('event_id').isInt(),
+    body('charity_id').isInt(),
+    body('amount').isFloat({ min: 1 }),
+    body('donor_name').trim().notEmpty(),
+    body('donor_email').isEmail()
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { event_id, charity_id, amount, donor_name, donor_email } = req.body;
+
+      // Verify event exists
+      const eventResult = await query(
+        `SELECT e.*, u.first_name, u.last_name, u.email as organizer_email
+         FROM events e
+         JOIN users u ON e.user_id = u.id
+         WHERE e.id = $1 AND e.is_active = true`,
+        [event_id]
+      );
+
+      if (eventResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+
+      const eventData = eventResult.rows[0];
+
+      // Verify charity exists
+      const charityResult = await query(
+        'SELECT * FROM charities WHERE id = $1',
+        [charity_id]
+      );
+
+      if (charityResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Charity not found' });
+      }
+
+      const charity = charityResult.rows[0];
+
+      // Record the committed donation
+      const donationResult = await query(
+        `INSERT INTO donations (
+          event_id,
+          charity_id,
+          donor_name,
+          donor_email,
+          amount,
+          status,
+          donation_method,
+          created_at
+        )
+        VALUES ($1, $2, $3, $4, $5, 'committed', 'direct', CURRENT_TIMESTAMP)
+        RETURNING *`,
+        [event_id, charity_id, donor_name, donor_email, amount]
+      );
+
+      const donation = donationResult.rows[0];
+
+      // Send notification to organizer
+      const organizerName = `${eventData.first_name} ${eventData.last_name}`;
+      const eventUrl = `${process.env.FRONTEND_URL}/event/${eventData.slug}`;
+
+      await sendDonationNotificationToOrganizer({
+        organizerName,
+        organizerEmail: eventData.organizer_email,
+        donorName: donor_name,
+        amount: Number(amount),
+        eventTitle: eventData.title,
+        eventUrl,
+        message: `${donor_name} committed to donate $${amount} directly to ${charity.name}`
+      });
+
+      // Send thank you email to donor with charity info
+      const charitiesResult = await query(
+        `SELECT c.* FROM event_charities ec
+         JOIN charities c ON ec.charity_id = c.id
+         WHERE ec.event_id = $1`,
+        [event_id]
+      );
+
+      if (donor_email) {
+        await sendThankYouEmail({
+          donorName: donor_name,
+          donorEmail: donor_email,
+          amount: Number(amount),
+          eventTitle: eventData.title,
+          organizerName,
+          charities: [charity]
+        });
+      }
+
+      res.status(201).json({
+        success: true,
+        donation,
+        charity,
+        message: 'Donation committed successfully. You will be redirected to the charity\'s donation page.'
+      });
+    } catch (error: any) {
+      console.error('Error committing donation:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
 // Get donation receipt details
 router.get('/receipt/:donationId', async (req: Request, res: Response) => {
   try {

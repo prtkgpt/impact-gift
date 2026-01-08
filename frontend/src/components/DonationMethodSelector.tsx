@@ -1,12 +1,152 @@
+import { useState } from 'react';
 import { Event } from '../types';
+import api from '../utils/api';
+import toast from 'react-hot-toast';
 
 interface DonationMethodSelectorProps {
   event: Event;
   onCancel: () => void;
+  onSuccess?: () => void;
 }
 
-const DonationMethodSelector = ({ event, onCancel }: DonationMethodSelectorProps) => {
+const DonationMethodSelector = ({ event, onCancel, onSuccess }: DonationMethodSelectorProps) => {
   const charities = event.charities || [];
+  const [amounts, setAmounts] = useState<Record<number, string>>({});
+  const [donorInfo, setDonorInfo] = useState({ name: '', email: '' });
+  const [showDonorForm, setShowDonorForm] = useState(false);
+  const [selectedCharity, setSelectedCharity] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleAmountChange = (charityId: number, value: string) => {
+    setAmounts(prev => ({ ...prev, [charityId]: value }));
+  };
+
+  const handleDonateClick = (charityId: number) => {
+    const amount = amounts[charityId];
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error('Please enter a valid donation amount');
+      return;
+    }
+    setSelectedCharity(charityId);
+    setShowDonorForm(true);
+  };
+
+  const handleSubmitDonation = async () => {
+    if (!selectedCharity) return;
+
+    const amount = amounts[selectedCharity];
+    if (!donorInfo.name || !donorInfo.email) {
+      toast.error('Please enter your name and email');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const charity = charities.find(c => c.id === selectedCharity);
+
+      // Record the committed donation
+      await api.post('/donations/commit', {
+        event_id: event.id,
+        charity_id: selectedCharity,
+        donor_name: donorInfo.name,
+        donor_email: donorInfo.email,
+        amount: parseFloat(amount)
+      });
+
+      // Open charity donation page in new tab
+      const donationUrl = charity?.donation_url || charity?.website_url;
+      if (donationUrl) {
+        window.open(donationUrl, '_blank', 'noopener,noreferrer');
+      }
+
+      toast.success(`Thank you! Opening ${charity?.name}'s donation page...`);
+
+      // Reset form
+      setShowDonorForm(false);
+      setSelectedCharity(null);
+      setDonorInfo({ name: '', email: '' });
+
+      // Call success callback to refresh event data
+      if (onSuccess) {
+        setTimeout(() => onSuccess(), 1000);
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to record donation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (showDonorForm && selectedCharity) {
+    const charity = charities.find(c => c.id === selectedCharity);
+    const amount = amounts[selectedCharity];
+
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-5 shadow-sm">
+          <h3 className="text-sm sm:text-base font-bold text-blue-900 mb-2">
+            Donating ${amount} to {charity?.name}
+          </h3>
+          <p className="text-xs sm:text-sm text-blue-800 leading-relaxed">
+            Please provide your details so we can track your donation and update the event progress.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Your Name *
+            </label>
+            <input
+              type="text"
+              required
+              className="input"
+              placeholder="John Doe"
+              value={donorInfo.name}
+              onChange={(e) => setDonorInfo({ ...donorInfo, name: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Your Email *
+            </label>
+            <input
+              type="email"
+              required
+              className="input"
+              placeholder="john@example.com"
+              value={donorInfo.email}
+              onChange={(e) => setDonorInfo({ ...donorInfo, email: e.target.value })}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              We'll send you a confirmation and the organizer will be notified
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={handleSubmitDonation}
+            disabled={loading}
+            className="btn btn-primary flex-1 py-3 font-semibold"
+          >
+            {loading ? 'Processing...' : `Continue to ${charity?.name}`}
+          </button>
+          <button
+            onClick={() => {
+              setShowDonorForm(false);
+              setSelectedCharity(null);
+            }}
+            disabled={loading}
+            className="btn btn-secondary py-3"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -29,14 +169,11 @@ const DonationMethodSelector = ({ event, onCancel }: DonationMethodSelectorProps
         ) : (
           <div className="max-h-[60vh] overflow-y-auto pr-1 space-y-3">
             {charities.map((charity) => (
-              <a
+              <div
                 key={charity.id}
-                href={charity.donation_url || charity.website_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block border-2 border-gray-200 hover:border-primary-500 active:border-primary-600 rounded-xl p-4 sm:p-5 transition-all duration-200 hover:shadow-lg active:shadow-md transform hover:-translate-y-0.5 active:scale-[0.98] bg-white group touch-manipulation"
+                className="border-2 border-gray-200 rounded-xl p-4 sm:p-5 bg-white shadow-sm"
               >
-                <div className="flex items-center gap-3 sm:gap-4">
+                <div className="flex items-start gap-3 sm:gap-4 mb-4">
                   {charity.logo_url && (
                     <img
                       src={charity.logo_url}
@@ -45,7 +182,7 @@ const DonationMethodSelector = ({ event, onCancel }: DonationMethodSelectorProps
                     />
                   )}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-gray-900 text-base sm:text-lg group-hover:text-primary-600 transition-colors break-words">
+                    <h4 className="font-bold text-gray-900 text-base sm:text-lg break-words">
                       {charity.name}
                     </h4>
                     <p className="text-xs sm:text-sm text-gray-600 font-medium mt-0.5">{charity.category}</p>
@@ -53,11 +190,29 @@ const DonationMethodSelector = ({ event, onCancel }: DonationMethodSelectorProps
                       <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">{charity.custom_instructions}</p>
                     )}
                   </div>
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 group-hover:text-primary-600 flex-shrink-0 transition-all group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
                 </div>
-              </a>
+
+                <div className="flex gap-2 sm:gap-3">
+                  <div className="flex-1 relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                    <input
+                      type="number"
+                      min="1"
+                      step="0.01"
+                      placeholder="Amount"
+                      className="input pl-8 py-2.5"
+                      value={amounts[charity.id] || ''}
+                      onChange={(e) => handleAmountChange(charity.id, e.target.value)}
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleDonateClick(charity.id)}
+                    className="px-4 sm:px-6 py-2.5 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white font-semibold rounded-lg transition-colors whitespace-nowrap touch-manipulation active:scale-95"
+                  >
+                    Donate Now
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         )}

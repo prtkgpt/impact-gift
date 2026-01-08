@@ -227,6 +227,10 @@ const EventPage = () => {
                     <DonationMethodSelector
                       event={event}
                       onCancel={() => setShowDonationForm(false)}
+                      onSuccess={() => {
+                        fetchEvent();
+                        fetchDonations();
+                      }}
                     />
                   )}
                 </div>
