@@ -10,7 +10,6 @@ const ManageEvent = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [guests, setGuests] = useState<Guest[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
-  const [emailTemplate, setEmailTemplate] = useState<EmailTemplate | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'guests' | 'email' | 'progress'>('guests');
 
@@ -46,7 +45,6 @@ const ManageEvent = () => {
 
       // Fetch email template
       const templateRes = await api.get(`/invitations/template/${eventRes.data.id}`);
-      setEmailTemplate(templateRes.data);
       setEmailSubject(templateRes.data.subject);
       setEmailBody(templateRes.data.body);
     } catch (error: any) {
@@ -124,13 +122,12 @@ const ManageEvent = () => {
     if (!event) return;
 
     try {
-      const response = await api.post('/invitations/template', {
+      await api.post('/invitations/template', {
         event_id: event.id,
         subject: emailSubject,
         body: emailBody
       });
 
-      setEmailTemplate(response.data);
       toast.success('Email template saved!');
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to save template');
