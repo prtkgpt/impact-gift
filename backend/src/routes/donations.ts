@@ -2,6 +2,11 @@ import { Router, Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import Stripe from 'stripe';
 import { query } from '../database/db';
+import {
+  sendManualDonationInstructions,
+  sendDonationNotificationToOrganizer,
+  sendThankYouEmail
+} from '../services/email';
 
 const router = Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -90,10 +95,63 @@ router.post('/webhook', async (req: Request, res: Response) => {
   if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
-    await query(
-      'UPDATE donations SET status = $1 WHERE stripe_payment_intent_id = $2',
+    // Update donation status
+    const donationResult = await query(
+      'UPDATE donations SET status = $1 WHERE stripe_payment_intent_id = $2 RETURNING *',
       ['completed', paymentIntent.id]
     );
+
+    if (donationResult.rows.length > 0) {
+      const donation = donationResult.rows[0];
+
+      // Get event and organizer details
+      const eventResult = await query(
+        `SELECT e.*, u.first_name, u.last_name, u.email as organizer_email
+         FROM events e
+         JOIN users u ON e.user_id = u.id
+         WHERE e.id = $1`,
+        [donation.event_id]
+      );
+
+      if (eventResult.rows.length > 0) {
+        const eventData = eventResult.rows[0];
+        const organizerName = `${eventData.first_name} ${eventData.last_name}`;
+        const eventUrl = `${process.env.FRONTEND_URL}/event/${eventData.slug}`;
+
+        // Get charities
+        const charitiesResult = await query(
+          `SELECT c.* FROM event_charities ec
+           JOIN charities c ON ec.charity_id = c.id
+           WHERE ec.event_id = $1`,
+          [donation.event_id]
+        );
+
+        // Send thank you email to donor
+        if (donation.donor_email) {
+          await sendThankYouEmail({
+            donorName: donation.donor_name,
+            donorEmail: donation.donor_email,
+            amount: Number(donation.amount),
+            eventTitle: eventData.title,
+            organizerName,
+            charities: charitiesResult.rows,
+            receiptUrl: `${process.env.FRONTEND_URL}/receipt/${donation.id}`
+          });
+        }
+
+        // Notify event organizer
+        await sendDonationNotificationToOrganizer({
+          organizerName,
+          organizerEmail: eventData.organizer_email,
+          donorName: donation.donor_name,
+          amount: Number(donation.amount),
+          donationMethod: 'stripe',
+          eventTitle: eventData.title,
+          eventUrl,
+          message: donation.message
+        });
+      }
+    }
 
     console.log('Payment succeeded:', paymentIntent.id);
   } else if (event.type === 'payment_intent.payment_failed') {
@@ -251,13 +309,43 @@ router.post(
         paymentInstructions = `PayPal: ${event.organizer_email}`;
       }
 
+      const organizerName = `${event.first_name} ${event.last_name}`;
+      const eventUrl = `${process.env.FRONTEND_URL}/event/${event.slug}`;
+
+      // Send payment instructions to donor
+      await sendManualDonationInstructions({
+        donorName: donor_name,
+        donorEmail: donor_email,
+        amount,
+        donationMethod: donation_method,
+        eventTitle: event.title,
+        organizerName,
+        organizerEmail: event.organizer_email,
+        charities: charitiesResult.rows,
+        paymentInstructions,
+        eventUrl,
+        message
+      });
+
+      // Notify event organizer
+      await sendDonationNotificationToOrganizer({
+        organizerName,
+        organizerEmail: event.organizer_email,
+        donorName: donor_name,
+        amount,
+        donationMethod: donation_method,
+        eventTitle: event.title,
+        eventUrl,
+        message
+      });
+
       res.json({
         success: true,
         donation,
         paymentInstructions,
         charities: charitiesResult.rows,
         organizer: {
-          name: `${event.first_name} ${event.last_name}`,
+          name: organizerName,
           email: event.organizer_email,
           phone: event.organizer_phone
         }
