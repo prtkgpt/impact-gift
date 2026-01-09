@@ -296,16 +296,35 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        console.error('RSVP validation errors:', errors.array());
+        return res.status(400).json({ error: 'Invalid RSVP data', details: errors.array() });
       }
 
       const { guestId } = req.params;
       const { rsvp_status, rsvp_comment } = req.body;
 
+      console.log(`RSVP submission - Guest ID: ${guestId}, Status: ${rsvp_status}`);
+
       // Check if guest exists
       const guestCheck = await query('SELECT * FROM guests WHERE id = $1', [guestId]);
       if (guestCheck.rows.length === 0) {
+        console.error(`Guest not found: ${guestId}`);
         return res.status(404).json({ error: 'Guest not found' });
+      }
+
+      // Check if RSVP columns exist (in case migration hasn't run)
+      const columnCheck = await query(`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'guests'
+        AND column_name IN ('rsvp_status', 'rsvp_comment', 'rsvp_at')
+      `);
+
+      if (columnCheck.rows.length < 3) {
+        console.error('RSVP columns missing in database. Migration may not have run.');
+        return res.status(500).json({
+          error: 'RSVP functionality not available yet. Please try again in a few minutes.'
+        });
       }
 
       // Update RSVP
@@ -320,11 +339,15 @@ router.post(
         [rsvp_status, rsvp_comment || null, guestId]
       );
 
-      console.log(`Guest ${guestId} RSVP'd: ${rsvp_status}`);
+      console.log(`✅ Guest ${guestId} RSVP'd: ${rsvp_status}`);
       res.json(result.rows[0]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting RSVP:', error);
-      res.status(500).json({ error: 'Server error' });
+      console.error('Error stack:', error.stack);
+      res.status(500).json({
+        error: 'Failed to submit RSVP. Please try again.',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   }
 );
@@ -333,22 +356,31 @@ router.post(
 router.get('/find-by-email/:eventId/:email', async (req, res: Response) => {
   try {
     const { eventId, email } = req.params;
+    const decodedEmail = decodeURIComponent(email);
+
+    console.log(`Looking up guest - Event ID: ${eventId}, Email: ${decodedEmail}`);
 
     const result = await query(
       `SELECT g.*
        FROM guests g
        WHERE g.event_id = $1 AND LOWER(g.email) = LOWER($2)`,
-      [eventId, decodeURIComponent(email)]
+      [eventId, decodedEmail]
     );
 
     if (result.rows.length === 0) {
+      console.log(`Guest not found - Event ID: ${eventId}, Email: ${decodedEmail}`);
       return res.status(404).json({ error: 'Guest not found for this event' });
     }
 
+    console.log(`✅ Guest found - ID: ${result.rows[0].id}, Email: ${decodedEmail}`);
     res.json(result.rows[0]);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error finding guest by email:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({
+      error: 'Failed to lookup guest',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
