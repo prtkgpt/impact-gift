@@ -33,21 +33,35 @@ const ManageEvent = () => {
     fetchEventData();
   }, [slug]);
 
+  useEffect(() => {
+    console.log('Active tab changed to:', activeTab);
+    console.log('Current state:', { guests: guests.length, donations: donations.length });
+  }, [activeTab, guests, donations]);
+
   const fetchEventData = async () => {
     try {
       setLoading(true);
       // First get the event to get the event ID
       const eventRes = await api.get(`/events/${slug}`);
       setEvent(eventRes.data);
+      console.log('Event loaded:', eventRes.data);
 
       // Then fetch guests and donations using event ID
       const [guestsRes, donationsRes] = await Promise.all([
-        api.get(`/guests/event/${eventRes.data.id}`).catch(() => ({ data: [] })),
-        api.get(`/events/${slug}/donations`).catch(() => ({ data: [] }))
+        api.get(`/guests/event/${eventRes.data.id}`).catch((err) => {
+          console.error('Error fetching guests:', err);
+          return { data: [] };
+        }),
+        api.get(`/events/${slug}/donations`).catch((err) => {
+          console.error('Error fetching donations:', err);
+          return { data: [] };
+        })
       ]);
 
       setGuests(guestsRes.data);
       setDonations(donationsRes.data);
+      console.log('Guests loaded:', guestsRes.data.length);
+      console.log('Donations loaded:', donationsRes.data.length);
 
       // Fetch email template
       const templateRes = await api.get(`/invitations/template/${eventRes.data.id}`);
@@ -282,7 +296,11 @@ const ManageEvent = () => {
           {(['guests', 'email', 'progress'] as const).map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                console.log('Tab clicked:', tab);
+                setActiveTab(tab);
+                console.log('Active tab set to:', tab);
+              }}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab
                   ? 'border-primary-600 text-primary-600'

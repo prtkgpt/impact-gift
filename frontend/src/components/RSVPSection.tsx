@@ -24,10 +24,12 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
   const fetchGuestInfo = async () => {
     try {
       setLoading(true);
+      console.log('Fetching guest info:', { eventId, guestEmail });
       // Find guest by email and event ID using public endpoint
       const response = await api.get(`/guests/find-by-email/${eventId}/${encodeURIComponent(guestEmail)}`);
       const matchedGuest = response.data as Guest;
 
+      console.log('Guest found:', matchedGuest);
       if (matchedGuest) {
         setGuest(matchedGuest);
         if (matchedGuest.rsvp_status !== 'no_response') {
@@ -35,8 +37,12 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
           setRsvpComment(matchedGuest.rsvp_comment || '');
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load guest info:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        message: error.response?.data?.error || error.message
+      });
     } finally {
       setLoading(false);
     }
