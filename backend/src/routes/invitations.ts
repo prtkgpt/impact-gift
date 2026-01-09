@@ -245,7 +245,7 @@ router.post(
         response.note = 'Email service not configured. Guests marked as invited but no emails were actually sent.';
         response.preview = {
           subject,
-          body: bodyTemplate.replace(/\{\{EVENT_LINK\}\}/g, eventUrl).replace(/\{\{YOUR_NAME\}\}/g, senderName)
+          body: bodyTemplate.replace(/\{\{EVENT_LINK\}\}/g, baseEventUrl).replace(/\{\{YOUR_NAME\}\}/g, senderName)
         };
       }
 
