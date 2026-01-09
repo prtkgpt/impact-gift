@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Helmet } from 'react-helmet-async';
 import api from '../utils/api';
@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 const EventPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [donations, setDonations] = useState<Donation[]>([]);
@@ -130,13 +131,25 @@ const EventPage = () => {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-2 sm:mb-3 tracking-tight leading-tight break-words">
-                {event.title}
-              </h1>
-              <p className="text-base sm:text-lg lg:text-xl opacity-95 font-light">
-                {event.first_name} {event.last_name} is fundraising for{' '}
-                <span className="font-semibold">{event.charity_name}</span>
-              </p>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-2 sm:mb-3 tracking-tight leading-tight break-words">
+                    {event.title}
+                  </h1>
+                  <p className="text-base sm:text-lg lg:text-xl opacity-95 font-light">
+                    {event.first_name} {event.last_name} is fundraising for{' '}
+                    <span className="font-semibold">{event.charity_name}</span>
+                  </p>
+                </div>
+                {isOwner && (
+                  <button
+                    onClick={() => navigate(`/event/${event.slug}/edit`)}
+                    className="flex-shrink-0 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white font-medium transition-all duration-200 border border-white/30 hover:border-white/50"
+                  >
+                    ✏️ Edit Event
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-white/90">
