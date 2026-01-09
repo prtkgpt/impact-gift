@@ -91,9 +91,27 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// Run migrations on startup in production
+async function startServer() {
+  try {
+    // Run migrations before starting server
+    if (process.env.NODE_ENV === 'production') {
+      console.log('🔄 Running database migrations on startup...');
+      const runMigrations = (await import('./database/run-migrations')).default;
+      await runMigrations();
+      console.log('✅ Migrations completed');
+    }
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 export default app;
