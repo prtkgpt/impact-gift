@@ -29,15 +29,36 @@ async function runMigrations() {
     const appliedMigrations = new Set(appliedResult.rows.map(row => row.filename));
 
     // Read all migration files from the migrations directory
-    const migrationsDir = path.join(__dirname, 'migrations');
-    let migrationFiles: string[] = [];
+    // Try multiple possible locations for migrations
+    const possibleDirs = [
+      path.join(__dirname, 'migrations'), // When running from dist
+      path.join(__dirname, '..', '..', 'src', 'database', 'migrations'), // When running from dist, look in src
+      path.join(process.cwd(), 'src', 'database', 'migrations'), // From project root
+      path.join(process.cwd(), 'backend', 'src', 'database', 'migrations'), // From monorepo root
+    ];
 
+    let migrationsDir: string | null = null;
+    for (const dir of possibleDirs) {
+      if (fs.existsSync(dir)) {
+        migrationsDir = dir;
+        console.log(`✓ Found migrations directory: ${dir}`);
+        break;
+      }
+    }
+
+    if (!migrationsDir) {
+      console.log('⚠ No migrations directory found in any expected location');
+      console.log('Tried:', possibleDirs);
+      return;
+    }
+
+    let migrationFiles: string[] = [];
     try {
       migrationFiles = fs.readdirSync(migrationsDir)
         .filter(file => file.endsWith('.sql'))
         .sort(); // Run migrations in alphabetical order
     } catch (error) {
-      console.log('⚠ No migrations directory found or empty');
+      console.log('⚠ Error reading migrations directory');
       return;
     }
 
