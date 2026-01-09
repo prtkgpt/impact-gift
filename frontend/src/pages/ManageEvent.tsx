@@ -11,7 +11,8 @@ const ManageEvent = () => {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'guests' | 'email' | 'progress'>('guests');
+  type TabType = 'guests' | 'email' | 'progress';
+  const [activeTab, setActiveTab] = useState<TabType>('guests');
 
   // Guest form
   const [guestEmail, setGuestEmail] = useState('');
@@ -278,10 +279,10 @@ const ManageEvent = () => {
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
-          {['guests', 'email', 'progress'].map((tab) => (
+          {(['guests', 'email', 'progress'] as const).map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab as any)}
+              onClick={() => setActiveTab(tab)}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab
                   ? 'border-primary-600 text-primary-600'
