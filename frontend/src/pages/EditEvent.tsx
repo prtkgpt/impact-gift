@@ -43,7 +43,7 @@ const EditEvent = () => {
         goal_amount: event.goal_amount ? Number(event.goal_amount) : undefined
       });
 
-      setSelectedCharityIds([event.charity_id]);
+      setSelectedCharityIds(event.charity_id ? [event.charity_id] : []);
     } catch (error: any) {
       toast.error('Failed to load event');
       navigate('/dashboard');
