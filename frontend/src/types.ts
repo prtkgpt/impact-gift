@@ -117,6 +117,9 @@ export interface Guest {
   invitation_sent: boolean;
   invitation_sent_at?: string;
   status: 'pending' | 'viewed' | 'donated';
+  rsvp_status: 'no_response' | 'attending' | 'not_attending' | 'maybe';
+  rsvp_comment?: string;
+  rsvp_at?: string;
   has_donated?: boolean;
   donated_amount?: number;
   created_at: string;
@@ -150,5 +153,11 @@ export interface UpdateUserProfileInput {
   last_name?: string;
   phone_number?: string;
   address?: string;
+}
+
+export interface RSVPInput {
+  guest_id: number;
+  rsvp_status: 'attending' | 'not_attending' | 'maybe';
+  rsvp_comment?: string;
 }
 

@@ -225,6 +225,7 @@ const ManageEvent = () => {
 
   const pendingInvites = guests.filter(g => !g.invitation_sent).length;
   const totalDonations = donations.reduce((sum, d) => sum + d.amount, 0);
+  const attendingCount = guests.filter(g => g.rsvp_status === 'attending').length;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -251,7 +252,7 @@ const ManageEvent = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
         <div className="card">
           <div className="text-sm text-gray-600">Total Guests</div>
           <div className="text-2xl font-bold">{guests.length}</div>
@@ -259,6 +260,10 @@ const ManageEvent = () => {
         <div className="card">
           <div className="text-sm text-gray-600">Pending Invites</div>
           <div className="text-2xl font-bold text-orange-600">{pendingInvites}</div>
+        </div>
+        <div className="card">
+          <div className="text-sm text-gray-600">RSVP Attending</div>
+          <div className="text-2xl font-bold text-blue-600">{attendingCount}</div>
         </div>
         <div className="card">
           <div className="text-sm text-gray-600">Donations</div>
@@ -374,6 +379,7 @@ const ManageEvent = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">RSVP</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Donated</th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                     </tr>
@@ -411,6 +417,19 @@ const ManageEvent = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`text-xs ${
+                              guest.rsvp_status === 'attending' ? 'text-green-600' :
+                              guest.rsvp_status === 'not_attending' ? 'text-red-600' :
+                              guest.rsvp_status === 'maybe' ? 'text-yellow-600' :
+                              'text-gray-400'
+                            }`}>
+                              {guest.rsvp_status === 'attending' && '✅'}
+                              {guest.rsvp_status === 'not_attending' && '❌'}
+                              {guest.rsvp_status === 'maybe' && '🤔'}
+                              {guest.rsvp_status === 'no_response' && '-'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
                             {guest.has_donated ? (
                               <span className="text-green-600 font-medium">${guest.donated_amount?.toFixed(2)}</span>
                             ) : (
@@ -445,6 +464,26 @@ const ManageEvent = () => {
                             }`}>
                               {guest.invitation_sent ? 'Invited' : 'Pending'}
                             </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <div className="flex flex-col">
+                              <span className={`text-xs font-medium ${
+                                guest.rsvp_status === 'attending' ? 'text-green-600' :
+                                guest.rsvp_status === 'not_attending' ? 'text-red-600' :
+                                guest.rsvp_status === 'maybe' ? 'text-yellow-600' :
+                                'text-gray-400'
+                              }`}>
+                                {guest.rsvp_status === 'attending' && '✅ Attending'}
+                                {guest.rsvp_status === 'not_attending' && '❌ Not Attending'}
+                                {guest.rsvp_status === 'maybe' && '🤔 Maybe'}
+                                {guest.rsvp_status === 'no_response' && '-'}
+                              </span>
+                              {guest.rsvp_comment && (
+                                <span className="text-xs text-gray-500 italic mt-1" title={guest.rsvp_comment}>
+                                  "{guest.rsvp_comment.substring(0, 30)}{guest.rsvp_comment.length > 30 ? '...' : ''}"
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
                             {guest.has_donated ? (

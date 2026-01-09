@@ -169,13 +169,16 @@ router.post(
         });
       }
 
-      const eventUrl = `${process.env.FRONTEND_URL}/event/${event.slug}`;
+      const baseEventUrl = `${process.env.FRONTEND_URL}/event/${event.slug}`;
       const senderName = `${event.first_name} ${event.last_name}`;
 
       let sentCount = 0;
       const errors_list: any[] = [];
 
       for (const guest of guests) {
+        // Create personalized event URL with guest email for RSVP tracking
+        const eventUrl = `${baseEventUrl}?email=${encodeURIComponent(guest.email)}`;
+
         // Replace template variables
         const personalizedBody = bodyTemplate
           .replace(/\{\{EVENT_LINK\}\}/g, eventUrl)
@@ -301,7 +304,8 @@ router.post(
         bodyTemplate = `Dear Family and Friends,\n\nI'm so excited to celebrate my ${guest.title} with you!\n\nI would humbly request that you please don't bring any kind of gift (boxed or otherwise). Your presence and blessings would be the best gift.\n\nI know not everyone heeds such requests :) So if you must give a gift, may I request you please make a donation to the charities that I support.\n\nYou can view the event and donate here:\n{{EVENT_LINK}}\n\nThank you so much. Look forward to celebrating with you!\n\nWith love,\n{{YOUR_NAME}}`;
       }
 
-      const eventUrl = `${process.env.FRONTEND_URL}/event/${guest.slug}`;
+      // Create personalized event URL with guest email for RSVP tracking
+      const eventUrl = `${process.env.FRONTEND_URL}/event/${guest.slug}?email=${encodeURIComponent(guest.email)}`;
       const senderName = `${guest.first_name} ${guest.last_name}`;
 
       const personalizedBody = bodyTemplate

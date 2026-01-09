@@ -285,4 +285,72 @@ router.post('/:guestId/viewed', async (req, res: Response) => {
   }
 });
 
+// Submit RSVP (public endpoint - no authentication required)
+router.post(
+  '/:guestId/rsvp',
+  [
+    body('rsvp_status').isIn(['attending', 'not_attending', 'maybe']).withMessage('Invalid RSVP status'),
+    body('rsvp_comment').optional().trim()
+  ],
+  async (req, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { guestId } = req.params;
+      const { rsvp_status, rsvp_comment } = req.body;
+
+      // Check if guest exists
+      const guestCheck = await query('SELECT * FROM guests WHERE id = $1', [guestId]);
+      if (guestCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Guest not found' });
+      }
+
+      // Update RSVP
+      const result = await query(
+        `UPDATE guests
+         SET rsvp_status = $1,
+             rsvp_comment = $2,
+             rsvp_at = CURRENT_TIMESTAMP,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $3
+         RETURNING *`,
+        [rsvp_status, rsvp_comment || null, guestId]
+      );
+
+      console.log(`Guest ${guestId} RSVP'd: ${rsvp_status}`);
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Error submitting RSVP:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
+// Get guest by ID (public endpoint for RSVP page)
+router.get('/:guestId', async (req, res: Response) => {
+  try {
+    const { guestId } = req.params;
+
+    const result = await query(
+      `SELECT g.*, e.title as event_title, e.slug as event_slug, e.event_date
+       FROM guests g
+       JOIN events e ON g.event_id = e.id
+       WHERE g.id = $1`,
+      [guestId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Guest not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching guest:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;

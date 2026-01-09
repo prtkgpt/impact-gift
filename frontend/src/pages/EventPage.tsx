@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Helmet } from 'react-helmet-async';
 import api from '../utils/api';
@@ -10,22 +10,39 @@ import EventUpdates from '../components/EventUpdates';
 import ShareButtons from '../components/ShareButtons';
 import EventCountdown from '../components/EventCountdown';
 import Leaderboard from '../components/Leaderboard';
+import RSVPSection from '../components/RSVPSection';
 import { useAuth } from '../contexts/AuthContext';
 
 const EventPage = () => {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDonationForm, setShowDonationForm] = useState(false);
+  const [guestEmail, setGuestEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (slug) {
       fetchEvent();
       fetchDonations();
+
+      // Check for guest email in URL params
+      const emailParam = searchParams.get('email');
+      if (emailParam) {
+        setGuestEmail(emailParam);
+        // Store in localStorage for persistent RSVP access
+        localStorage.setItem(`guestEmail_${slug}`, emailParam);
+      } else {
+        // Check localStorage for previously stored email
+        const storedEmail = localStorage.getItem(`guestEmail_${slug}`);
+        if (storedEmail) {
+          setGuestEmail(storedEmail);
+        }
+      }
     }
-  }, [slug]);
+  }, [slug, searchParams]);
 
   const fetchEvent = async () => {
     try {
@@ -158,6 +175,17 @@ const EventPage = () => {
                 </a>
               )}
             </div>
+
+            {guestEmail && event && (
+              <RSVPSection
+                guestEmail={guestEmail}
+                eventId={event.id}
+                onRSVPSubmit={() => {
+                  // Optionally refresh data after RSVP
+                  fetchDonations();
+                }}
+              />
+            )}
 
             <Leaderboard donations={donations} event={event} />
 
