@@ -10,6 +10,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import CreateEvent from './pages/CreateEvent';
+import EditEvent from './pages/EditEvent';
 import EventPage from './pages/EventPage';
 import Receipt from './pages/Receipt';
 import Profile from './pages/Profile';
@@ -69,6 +70,14 @@ function App() {
                 element={
                   <PrivateRoute>
                     <ManageEvent />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/event/:slug/edit"
+                element={
+                  <PrivateRoute>
+                    <EditEvent />
                   </PrivateRoute>
                 }
               />

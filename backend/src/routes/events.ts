@@ -230,33 +230,64 @@ router.get('/:slug/donations', async (req: Request, res: Response) => {
   }
 });
 
-router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
+router.put('/:identifier', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const { title, description, event_date, goal_amount, is_active } = req.body;
+    const { identifier } = req.params;
+    const {
+      title,
+      description,
+      event_date,
+      event_type,
+      start_date,
+      end_date,
+      goal_amount,
+      is_active,
+      charity_ids
+    } = req.body;
 
-    const eventCheck = await query('SELECT user_id FROM events WHERE id = $1', [id]);
+    // Check if identifier is a slug or ID
+    const isSlug = isNaN(Number(identifier));
+    const eventCheck = isSlug
+      ? await query('SELECT id, user_id FROM events WHERE slug = $1', [identifier])
+      : await query('SELECT id, user_id FROM events WHERE id = $1', [identifier]);
+
     if (eventCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    if (eventCheck.rows[0].user_id !== req.user!.id) {
+    const event = eventCheck.rows[0];
+
+    if (event.user_id !== req.user!.id) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
+    // Update event details
     const result = await query(
       `UPDATE events
        SET title = COALESCE($1, title),
            description = COALESCE($2, description),
            event_date = COALESCE($3, event_date),
-           goal_amount = COALESCE($4, goal_amount),
-           is_active = COALESCE($5, is_active),
+           event_type = COALESCE($4, event_type),
+           start_date = COALESCE($5, start_date),
+           end_date = COALESCE($6, end_date),
+           goal_amount = COALESCE($7, goal_amount),
+           is_active = COALESCE($8, is_active),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $6
+       WHERE id = $9
        RETURNING *`,
-      [title, description, event_date, goal_amount, is_active, id]
+      [title, description, event_date, event_type, start_date, end_date, goal_amount, is_active, event.id]
     );
 
+    // If charity_ids provided, update charity association
+    if (charity_ids && charity_ids.length > 0) {
+      // For now, just use the first charity (maintaining single charity per event)
+      await query(
+        `UPDATE events SET charity_id = $1 WHERE id = $2`,
+        [charity_ids[0], event.id]
+      );
+    }
+
+    console.log(`Event ${event.id} updated successfully`);
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error updating event:', error);

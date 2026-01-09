@@ -7,7 +7,6 @@ import { Event, Donation } from '../types';
 import toast from 'react-hot-toast';
 import DonationMethodSelector from '../components/DonationMethodSelector';
 import EventUpdates from '../components/EventUpdates';
-import EmployerMatchDashboard from '../components/EmployerMatchDashboard';
 import ShareButtons from '../components/ShareButtons';
 import EventCountdown from '../components/EventCountdown';
 import Leaderboard from '../components/Leaderboard';
@@ -66,10 +65,6 @@ const EventPage = () => {
   const progressPercentage = event.goal_amount
     ? Math.min((Number(event.total_raised) / event.goal_amount) * 100, 100)
     : 0;
-
-  const potentialMatching = donations
-    .filter(d => d.has_employer_match)
-    .reduce((sum, d) => sum + Number(d.amount), 0);
 
   const isOwner = user && event && user.id === event.user_id;
 
@@ -166,8 +161,6 @@ const EventPage = () => {
 
             <Leaderboard donations={donations} event={event} />
 
-            {isOwner && <EmployerMatchDashboard eventId={event.id} />}
-
             <EventUpdates eventId={event.id} isOwner={!!isOwner} />
           </div>
 
@@ -203,17 +196,6 @@ const EventPage = () => {
                       </svg>
                       {event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}
                     </p>
-                    {potentialMatching > 0 && (
-                      <div className="mt-4 sm:mt-5 p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
-                        <p className="text-xs text-blue-700 font-semibold mb-2 uppercase tracking-wide">💼 Employer Matching</p>
-                        <p className="text-base sm:text-lg text-blue-900 font-bold">
-                          ${potentialMatching.toFixed(2)} <span className="text-sm font-normal">potential match</span>
-                        </p>
-                        <p className="text-xs text-blue-600 mt-1.5">
-                          {donations.filter(d => d.has_employer_match).length} donation{donations.filter(d => d.has_employer_match).length !== 1 ? 's' : ''} with matching
-                        </p>
-                      </div>
-                    )}
                   </div>
 
                   {!showDonationForm ? (

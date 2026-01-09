@@ -236,8 +236,18 @@ const ManageEvent = () => {
         >
           ← Back to Dashboard
         </button>
-        <h1 className="text-3xl font-bold">Manage Event: {event.title}</h1>
-        <p className="text-gray-600 mt-2">Event Page: <a href={`/event/${event.slug}`} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">/event/{event.slug}</a></p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Manage Event: {event.title}</h1>
+            <p className="text-gray-600 mt-2">Event Page: <a href={`/event/${event.slug}`} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">/event/{event.slug}</a></p>
+          </div>
+          <button
+            onClick={() => navigate(`/event/${event.slug}/edit`)}
+            className="btn btn-secondary"
+          >
+            ✏️ Edit Event
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
