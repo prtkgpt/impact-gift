@@ -42,6 +42,7 @@ export interface Event {
   goal_amount?: number;
   slug: string;
   is_active: boolean;
+  show_guest_list?: boolean;
   total_raised?: number;
   donation_count?: number;
   first_name?: string;

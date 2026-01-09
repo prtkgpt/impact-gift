@@ -19,7 +19,8 @@ const EditEvent = () => {
     event_date: '',
     start_date: '',
     end_date: '',
-    goal_amount: undefined as number | undefined
+    goal_amount: undefined as number | undefined,
+    show_guest_list: false
   });
   const navigate = useNavigate();
 
@@ -40,7 +41,8 @@ const EditEvent = () => {
         event_date: event.event_date.split('T')[0],
         start_date: event.start_date ? event.start_date.split('T')[0] : '',
         end_date: event.end_date ? event.end_date.split('T')[0] : '',
-        goal_amount: event.goal_amount ? Number(event.goal_amount) : undefined
+        goal_amount: event.goal_amount ? Number(event.goal_amount) : undefined,
+        show_guest_list: event.show_guest_list || false
       });
 
       setSelectedCharityIds(event.charity_id ? [event.charity_id] : []);
@@ -296,6 +298,29 @@ const EditEvent = () => {
             </div>
             <p className="text-xs text-gray-500 mt-1">
               Set a fundraising goal to track progress (optional)
+            </p>
+          </div>
+
+          {/* Guest List Visibility */}
+          <div className="border-t border-gray-200 pt-6">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.show_guest_list}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    show_guest_list: e.target.checked
+                  })
+                }
+                className="h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              />
+              <span className="ml-3 text-sm font-medium text-gray-700">
+                Show guest list publicly on event page
+              </span>
+            </label>
+            <p className="text-xs text-gray-500 mt-2 ml-8">
+              When enabled, guests who RSVP'd as "Attending" will be visible to everyone viewing your event page
             </p>
           </div>
 

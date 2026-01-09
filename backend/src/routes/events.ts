@@ -230,6 +230,43 @@ router.get('/:slug/donations', async (req: Request, res: Response) => {
   }
 });
 
+// Get public attending guest list for an event (only if show_guest_list is enabled)
+router.get('/:slug/attending-guests', async (req, res: Response) => {
+  try {
+    const { slug } = req.params;
+
+    // Get event and check if guest list is public
+    const eventResult = await query(
+      'SELECT id, show_guest_list FROM events WHERE slug = $1',
+      [slug]
+    );
+
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const event = eventResult.rows[0];
+
+    if (!event.show_guest_list) {
+      return res.json([]); // Return empty array if guest list is private
+    }
+
+    // Fetch only attending guests
+    const guestsResult = await query(
+      `SELECT name, email, rsvp_comment, rsvp_at
+       FROM guests
+       WHERE event_id = $1 AND rsvp_status = 'attending'
+       ORDER BY rsvp_at DESC`,
+      [event.id]
+    );
+
+    res.json(guestsResult.rows);
+  } catch (error) {
+    console.error('Error fetching attending guests:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.put('/:identifier', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const { identifier } = req.params;
@@ -242,6 +279,7 @@ router.put('/:identifier', authenticate, async (req: AuthRequest, res: Response)
       end_date,
       goal_amount,
       is_active,
+      show_guest_list,
       charity_ids
     } = req.body;
 
@@ -272,10 +310,11 @@ router.put('/:identifier', authenticate, async (req: AuthRequest, res: Response)
            end_date = COALESCE($6, end_date),
            goal_amount = COALESCE($7, goal_amount),
            is_active = COALESCE($8, is_active),
+           show_guest_list = COALESCE($9, show_guest_list),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $9
+       WHERE id = $10
        RETURNING *`,
-      [title, description, event_date, event_type, start_date, end_date, goal_amount, is_active, event.id]
+      [title, description, event_date, event_type, start_date, end_date, goal_amount, is_active, show_guest_list, event.id]
     );
 
     // If charity_ids provided, update charity association

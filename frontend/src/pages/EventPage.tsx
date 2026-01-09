@@ -11,6 +11,7 @@ import ShareButtons from '../components/ShareButtons';
 import EventCountdown from '../components/EventCountdown';
 import Leaderboard from '../components/Leaderboard';
 import RSVPSection from '../components/RSVPSection';
+import AttendingGuests from '../components/AttendingGuests';
 import { useAuth } from '../contexts/AuthContext';
 
 const EventPage = () => {
@@ -199,6 +200,8 @@ const EventPage = () => {
                 }}
               />
             )}
+
+            {event.show_guest_list && <AttendingGuests eventSlug={event.slug} />}
 
             <Leaderboard donations={donations} event={event} />
 

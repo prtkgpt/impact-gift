@@ -94,12 +94,20 @@ const Dashboard = () => {
                 </p>
               </div>
 
-              <Link
-                to={`/event/${event.slug}`}
-                className="btn btn-primary w-full text-center block"
-              >
-                View Event Page
-              </Link>
+              <div className="flex gap-2">
+                <Link
+                  to={`/event/${event.slug}/manage`}
+                  className="btn btn-primary flex-1 text-center block"
+                >
+                  Manage Event
+                </Link>
+                <Link
+                  to={`/event/${event.slug}`}
+                  className="btn btn-secondary flex-1 text-center block"
+                >
+                  View Public Page
+                </Link>
+              </div>
             </div>
           ))}
         </div>
