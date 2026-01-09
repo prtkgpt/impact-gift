@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "build": "tsc",
+    "build": "tsc && cp -r src/database/migrations dist/database/",
     "start": "node dist/index.js",
     "migrate": "ts-node src/database/run-migrations.ts",
     "migrate:prod": "node dist/database/run-migrations.js",
