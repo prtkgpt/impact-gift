@@ -9,6 +9,7 @@ import { User, UserPayload } from '../types';
 
 const router = Router();
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const FROM_EMAIL = process.env.FROM_EMAIL || 'Impact Gift <noreply@giftwithimpact.com>';
 
 router.post(
   '/signup',
@@ -171,7 +172,7 @@ router.post(
       if (resend) {
         try {
           await resend.emails.send({
-            from: 'Impact Gift <onboarding@resend.dev>',
+            from: FROM_EMAIL,
             to: email,
             subject: 'Reset Your Password - Impact Gift',
             html: `

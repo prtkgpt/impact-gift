@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const FROM_EMAIL = process.env.FROM_EMAIL || 'Impact Gift <noreply@giftwithimpact.com>';
 
 interface SendDonationNotificationParams {
   organizerName: string;
@@ -55,7 +56,7 @@ Impact Gift`;
   if (resend) {
     try {
       await resend.emails.send({
-        from: 'Impact Gift <onboarding@resend.dev>',
+        from: FROM_EMAIL,
         to: organizerEmail,
         subject: `New Donation: $${amount.toFixed(2)} for ${eventTitle}`,
         text: emailBody,
@@ -107,7 +108,7 @@ Impact Gift Team`;
   if (resend) {
     try {
       await resend.emails.send({
-        from: 'Impact Gift <onboarding@resend.dev>',
+        from: FROM_EMAIL,
         to: donorEmail,
         subject: `Thank you for your donation to ${eventTitle}!`,
         text: emailBody,
