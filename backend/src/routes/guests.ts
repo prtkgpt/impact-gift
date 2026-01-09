@@ -329,6 +329,29 @@ router.post(
   }
 );
 
+// Find guest by email and event (public endpoint for RSVP)
+router.get('/find-by-email/:eventId/:email', async (req, res: Response) => {
+  try {
+    const { eventId, email } = req.params;
+
+    const result = await query(
+      `SELECT g.*
+       FROM guests g
+       WHERE g.event_id = $1 AND LOWER(g.email) = LOWER($2)`,
+      [eventId, decodeURIComponent(email)]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Guest not found for this event' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error finding guest by email:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Get guest by ID (public endpoint for RSVP page)
 router.get('/:guestId', async (req, res: Response) => {
   try {

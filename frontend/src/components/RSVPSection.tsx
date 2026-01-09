@@ -24,10 +24,9 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
   const fetchGuestInfo = async () => {
     try {
       setLoading(true);
-      // Find guest by email and event ID
-      const response = await api.get(`/guests/event/${eventId}`);
-      const guests = response.data as Guest[];
-      const matchedGuest = guests.find(g => g.email.toLowerCase() === guestEmail.toLowerCase());
+      // Find guest by email and event ID using public endpoint
+      const response = await api.get(`/guests/find-by-email/${eventId}/${encodeURIComponent(guestEmail)}`);
+      const matchedGuest = response.data as Guest;
 
       if (matchedGuest) {
         setGuest(matchedGuest);
