@@ -290,7 +290,8 @@ router.post(
   '/:guestId/rsvp',
   [
     body('rsvp_status').isIn(['attending', 'not_attending', 'maybe']).withMessage('Invalid RSVP status'),
-    body('rsvp_comment').optional().trim()
+    body('rsvp_comment').optional().trim(),
+    body('additional_guests').optional().isInt({ min: 0, max: 20 }).withMessage('Additional guests must be between 0 and 20')
   ],
   async (req: Request, res: Response) => {
     try {
@@ -301,9 +302,9 @@ router.post(
       }
 
       const { guestId } = req.params;
-      const { rsvp_status, rsvp_comment } = req.body;
+      const { rsvp_status, rsvp_comment, additional_guests } = req.body;
 
-      console.log(`RSVP submission - Guest ID: ${guestId}, Status: ${rsvp_status}`);
+      console.log(`RSVP submission - Guest ID: ${guestId}, Status: ${rsvp_status}, Additional Guests: ${additional_guests || 0}`);
 
       // Check if guest exists
       const guestCheck = await query('SELECT * FROM guests WHERE id = $1', [guestId]);
@@ -332,14 +333,15 @@ router.post(
         `UPDATE guests
          SET rsvp_status = $1,
              rsvp_comment = $2,
+             additional_guests = $3,
              rsvp_at = CURRENT_TIMESTAMP,
              updated_at = CURRENT_TIMESTAMP
-         WHERE id = $3
+         WHERE id = $4
          RETURNING *`,
-        [rsvp_status, rsvp_comment || null, guestId]
+        [rsvp_status, rsvp_comment || null, additional_guests || 0, guestId]
       );
 
-      console.log(`✅ Guest ${guestId} RSVP'd: ${rsvp_status}`);
+      console.log(`✅ Guest ${guestId} RSVP'd: ${rsvp_status} with ${additional_guests || 0} additional guest(s)`);
       res.json(result.rows[0]);
     } catch (error: any) {
       console.error('Error submitting RSVP:', error);

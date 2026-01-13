@@ -121,6 +121,7 @@ export interface Guest {
   rsvp_status: 'no_response' | 'attending' | 'not_attending' | 'maybe';
   rsvp_comment?: string;
   rsvp_at?: string;
+  additional_guests?: number;
   has_donated?: boolean;
   donated_amount?: number;
   created_at: string;

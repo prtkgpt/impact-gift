@@ -81,15 +81,11 @@ const EventPage = () => {
     );
   }
 
-  const progressPercentage = event.goal_amount
-    ? Math.min((Number(event.total_raised) / event.goal_amount) * 100, 100)
-    : 0;
-
   const isOwner = user && event && user.id === event.user_id;
 
   const pageUrl = window.location.href;
   const shareTitle = `${event.first_name} ${event.last_name} is fundraising for ${event.charity_name}`;
-  const shareDescription = `Help ${event.first_name} reach their goal of $${Number(event.goal_amount || 0).toFixed(2)} for ${event.charity_name}! ${event.donation_count} donors have already contributed $${Number(event.total_raised || 0).toFixed(2)}.`;
+  const shareDescription = `Help ${event.first_name} support ${event.charity_name}! ${event.donation_count} donors have already contributed $${Number(event.total_raised || 0).toFixed(2)}.`;
 
   return (
     <>
@@ -221,19 +217,6 @@ const EventPage = () => {
                         ${Number(event.total_raised || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
-                    {event.goal_amount && (
-                      <>
-                        <div className="w-full bg-gray-100 rounded-full h-3 sm:h-4 mb-3 overflow-hidden shadow-inner">
-                          <div
-                            className="bg-gradient-to-r from-primary-500 to-primary-600 h-3 sm:h-4 rounded-full transition-all duration-500 ease-out shadow-sm"
-                            style={{ width: `${progressPercentage}%` }}
-                          />
-                        </div>
-                        <p className="text-sm font-medium text-gray-700">
-                          {progressPercentage.toFixed(0)}% of ${Number(event.goal_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} goal
-                        </p>
-                      </>
-                    )}
                     <p className="text-sm text-gray-500 mt-3 flex items-center">
                       <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />

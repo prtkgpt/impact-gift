@@ -15,6 +15,7 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
   const [submitting, setSubmitting] = useState(false);
   const [rsvpStatus, setRsvpStatus] = useState<'attending' | 'not_attending' | 'maybe'>('attending');
   const [rsvpComment, setRsvpComment] = useState('');
+  const [additionalGuests, setAdditionalGuests] = useState(0);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
         if (matchedGuest.rsvp_status !== 'no_response') {
           setRsvpStatus(matchedGuest.rsvp_status as 'attending' | 'not_attending' | 'maybe');
           setRsvpComment(matchedGuest.rsvp_comment || '');
+          setAdditionalGuests(matchedGuest.additional_guests || 0);
         }
       }
     } catch (error: any) {
@@ -56,7 +58,8 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
     try {
       await api.post(`/guests/${guest.id}/rsvp`, {
         rsvp_status: rsvpStatus,
-        rsvp_comment: rsvpComment || undefined
+        rsvp_comment: rsvpComment || undefined,
+        additional_guests: additionalGuests
       });
 
       toast.success('RSVP submitted successfully!');
@@ -99,6 +102,11 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
               {guest.rsvp_status === 'not_attending' && '❌ Not Attending'}
               {guest.rsvp_status === 'maybe' && '🤔 Maybe'}
             </p>
+            {guest.additional_guests && guest.additional_guests > 0 && (
+              <p className="text-sm text-green-800 mt-1">
+                +{guest.additional_guests} additional guest{guest.additional_guests !== 1 ? 's' : ''}
+              </p>
+            )}
             {guest.rsvp_comment && (
               <p className="text-sm text-green-800 mt-2 italic">"{guest.rsvp_comment}"</p>
             )}
@@ -157,6 +165,27 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
               </label>
             </div>
           </div>
+
+          {(rsvpStatus === 'attending' || rsvpStatus === 'maybe') && (
+            <div>
+              <label htmlFor="additional_guests" className="block text-sm font-medium text-gray-700 mb-1">
+                Bringing additional guests?
+              </label>
+              <select
+                id="additional_guests"
+                className="input"
+                value={additionalGuests}
+                onChange={(e) => setAdditionalGuests(Number(e.target.value))}
+              >
+                <option value={0}>Just me</option>
+                <option value={1}>+1 guest</option>
+                <option value={2}>+2 guests</option>
+                <option value={3}>+3 guests</option>
+                <option value={4}>+4 guests</option>
+                <option value={5}>+5 guests</option>
+              </select>
+            </div>
+          )}
 
           <div>
             <label htmlFor="rsvp_comment" className="block text-sm font-medium text-gray-700 mb-1">
