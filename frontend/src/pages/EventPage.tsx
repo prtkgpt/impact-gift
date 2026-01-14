@@ -210,20 +210,22 @@ const EventPage = () => {
 
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="p-6 sm:p-8">
-                  <div className="mb-6 sm:mb-8">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-3 gap-2">
-                      <span className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide">Total Raised</span>
-                      <span className="text-3xl sm:text-4xl font-bold text-primary-600">
-                        ${Number(event.total_raised || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
+                  {isOwner && (
+                    <div className="mb-6 sm:mb-8">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-3 gap-2">
+                        <span className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide">Total Raised</span>
+                        <span className="text-3xl sm:text-4xl font-bold text-primary-600">
+                          ${Number(event.total_raised || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-3 flex items-center">
+                        <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                        </svg>
+                        {event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-500 mt-3 flex items-center">
-                      <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                      </svg>
-                      {event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}
-                    </p>
-                  </div>
+                  )}
 
                   {!showDonationForm ? (
                     <button
