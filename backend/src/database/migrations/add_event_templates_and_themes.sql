@@ -59,7 +59,7 @@ INSERT INTO event_templates (name, display_name, description, event_type, icon, 
 ('anniversary-giving', 'Anniversary Celebration', 'Mark your special day with charitable giving', 'anniversary', '💝', '{name1} & {name2}''s Anniversary', 'Celebrating {years} years together! Please join us in supporting these meaningful causes.', ARRAY['Environment', 'Healthcare', 'Arts'], 5),
 ('baby-shower', 'Baby Shower', 'Welcome a new life with giving', 'baby-shower', '👶', '{name}''s Baby Shower', 'As we prepare to welcome our little one, we invite you to donate to causes that help children and families.', ARRAY['Children', 'Healthcare', 'Family Services'], 6),
 ('retirement-party', 'Retirement Celebration', 'Celebrate a career milestone with impact', 'retirement', '🎉', '{name}''s Retirement Celebration', 'As I embark on this new journey, please help me give back to the community through these wonderful organizations.', ARRAY['Education', 'Healthcare', 'Arts'], 7),
-('general-fundraiser', 'General Fundraiser', 'A flexible template for any occasion', 'other', '❤️', 'Support Our Cause', 'Join us in making a difference by supporting these important causes.', ARRAY[], 8)
+('general-fundraiser', 'General Fundraiser', 'A flexible template for any occasion', 'other', '❤️', 'Support Our Cause', 'Join us in making a difference by supporting these important causes.', ARRAY[]::TEXT[], 8)
 ON CONFLICT (name) DO NOTHING;
 
 -- 6. Insert default event themes
