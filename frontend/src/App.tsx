@@ -15,6 +15,7 @@ import EventPage from './pages/EventPage';
 import Receipt from './pages/Receipt';
 import Profile from './pages/Profile';
 import ManageEvent from './pages/ManageEvent';
+import PublicCharityPage from './pages/PublicCharityPage';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -82,6 +83,7 @@ function App() {
                 }
               />
               <Route path="/receipt/:donationId" element={<Receipt />} />
+              <Route path="/charity/:slug" element={<PublicCharityPage />} />
             </Routes>
           </div>
         </Router>

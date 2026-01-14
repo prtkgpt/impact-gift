@@ -6,6 +6,7 @@ export interface User {
   last_name: string;
   phone_number?: string;
   address?: string;
+  charity_page_slug?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -159,4 +160,5 @@ export interface UpdateUserProfileInput {
   last_name?: string;
   phone_number?: string;
   address?: string;
+  charity_page_slug?: string;
 }

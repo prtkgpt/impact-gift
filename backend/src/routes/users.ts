@@ -10,7 +10,7 @@ const router = Router();
 router.get('/profile', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const result = await query(
-      'SELECT id, email, first_name, last_name, phone_number, address, created_at FROM users WHERE id = $1',
+      'SELECT id, email, first_name, last_name, phone_number, address, charity_page_slug, created_at FROM users WHERE id = $1',
       [req.user!.id]
     );
 
@@ -33,7 +33,14 @@ router.put(
     body('first_name').optional().trim().notEmpty(),
     body('last_name').optional().trim().notEmpty(),
     body('phone_number').optional().trim(),
-    body('address').optional().trim()
+    body('address').optional().trim(),
+    body('charity_page_slug')
+      .optional()
+      .trim()
+      .matches(/^[a-z0-9-]+$/)
+      .withMessage('Slug can only contain lowercase letters, numbers, and hyphens')
+      .isLength({ min: 3, max: 50 })
+      .withMessage('Slug must be between 3 and 50 characters')
   ],
   async (req: AuthRequest, res: Response) => {
     try {
@@ -42,7 +49,19 @@ router.put(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { first_name, last_name, phone_number, address }: UpdateUserProfileInput = req.body;
+      const { first_name, last_name, phone_number, address, charity_page_slug } = req.body;
+
+      // Check if slug is already taken by another user
+      if (charity_page_slug) {
+        const slugCheck = await query(
+          'SELECT id FROM users WHERE charity_page_slug = $1 AND id != $2',
+          [charity_page_slug, req.user!.id]
+        );
+
+        if (slugCheck.rows.length > 0) {
+          return res.status(400).json({ error: 'This charity page URL is already taken' });
+        }
+      }
 
       const result = await query(
         `UPDATE users
@@ -50,15 +69,19 @@ router.put(
              last_name = COALESCE($2, last_name),
              phone_number = COALESCE($3, phone_number),
              address = COALESCE($4, address),
+             charity_page_slug = COALESCE($5, charity_page_slug),
              updated_at = CURRENT_TIMESTAMP
-         WHERE id = $5
-         RETURNING id, email, first_name, last_name, phone_number, address, created_at, updated_at`,
-        [first_name, last_name, phone_number, address, req.user!.id]
+         WHERE id = $6
+         RETURNING id, email, first_name, last_name, phone_number, address, charity_page_slug, created_at, updated_at`,
+        [first_name, last_name, phone_number, address, charity_page_slug, req.user!.id]
       );
 
       res.json(result.rows[0]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating user profile:', error);
+      if (error.code === '23505') { // Unique constraint violation
+        return res.status(400).json({ error: 'This charity page URL is already taken' });
+      }
       res.status(500).json({ error: 'Server error' });
     }
   }
