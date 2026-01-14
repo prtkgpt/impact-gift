@@ -18,6 +18,7 @@ import favoriteCharitiesRoutes from './routes/favoriteCharities';
 import coHostsRoutes from './routes/coHosts';
 import potluckRoutes from './routes/potluck';
 import publicCharityPageRoutes from './routes/publicCharityPage';
+import charityCommitmentsRoutes from './routes/charityCommitments';
 
 dotenv.config();
 
@@ -91,6 +92,7 @@ app.use('/api/favorite-charities', favoriteCharitiesRoutes);
 app.use('/api/co-hosts', coHostsRoutes);
 app.use('/api/potluck', potluckRoutes);
 app.use('/api/charity-page', publicCharityPageRoutes);
+app.use('/api/charity-commitments', charityCommitmentsRoutes);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);

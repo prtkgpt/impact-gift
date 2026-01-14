@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import api from '../utils/api';
 import { Event } from '../types';
 import toast from 'react-hot-toast';
+import CharityPageCard from '../components/CharityPageCard';
 import FavoriteCharities from '../components/FavoriteCharities';
 
 const Dashboard = () => {
@@ -31,6 +32,11 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Charity Page Card */}
+      <div className="mb-8">
+        <CharityPageCard />
+      </div>
+
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">My Events</h1>
         <Link to="/create-event" className="btn btn-primary">

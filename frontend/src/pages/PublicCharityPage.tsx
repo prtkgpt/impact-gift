@@ -22,10 +22,25 @@ interface PublicCharityPageData {
   }>;
 }
 
+interface SelectedCharity {
+  id: number;
+  charity_id: number;
+  name: string;
+  website: string;
+}
+
 const PublicCharityPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [data, setData] = useState<PublicCharityPageData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCommitmentModal, setShowCommitmentModal] = useState(false);
+  const [selectedCharity, setSelectedCharity] = useState<SelectedCharity | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [commitmentForm, setCommitmentForm] = useState({
+    donor_name: '',
+    donor_email: '',
+    commitment_amount: ''
+  });
 
   useEffect(() => {
     fetchCharityPage();
@@ -46,8 +61,50 @@ const PublicCharityPage = () => {
     }
   };
 
-  const openDonationPage = (website: string) => {
-    window.open(website, '_blank', 'noopener,noreferrer');
+  const handleDonateClick = (charity: any) => {
+    setSelectedCharity({
+      id: charity.id,
+      charity_id: charity.charity_id,
+      name: charity.name,
+      website: charity.website || ''
+    });
+    setShowCommitmentModal(true);
+  };
+
+  const handleDoGood = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCharity || !slug) return;
+
+    setSubmitting(true);
+
+    try {
+      // Record the commitment
+      await api.post('/charity-commitments', {
+        charity_page_slug: slug,
+        charity_id: selectedCharity.charity_id,
+        donor_name: commitmentForm.donor_name,
+        donor_email: commitmentForm.donor_email,
+        commitment_amount: parseFloat(commitmentForm.commitment_amount)
+      });
+
+      toast.success('Thank you for your commitment! Opening charity donation page...');
+
+      // Open charity's donation page in new window
+      window.open(selectedCharity.website, '_blank', 'noopener,noreferrer');
+
+      // Reset and close modal
+      setShowCommitmentModal(false);
+      setCommitmentForm({
+        donor_name: '',
+        donor_email: '',
+        commitment_amount: ''
+      });
+      setSelectedCharity(null);
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to record commitment');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const copyPageUrl = () => {
@@ -109,7 +166,7 @@ const PublicCharityPage = () => {
             {data.charities.map((charity) => (
               <div
                 key={charity.id}
-                className="card-interactive overflow-hidden"
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-200 overflow-hidden"
               >
                 {/* Charity Logo */}
                 {charity.logo && (
@@ -157,7 +214,7 @@ const PublicCharityPage = () => {
                   )}
 
                   <button
-                    onClick={() => openDonationPage(charity.website || '#')}
+                    onClick={() => handleDonateClick(charity)}
                     className="btn btn-primary w-full"
                   >
                     💝 Donate Now
@@ -176,6 +233,106 @@ const PublicCharityPage = () => {
           </p>
         </div>
       </div>
+
+      {/* Commitment Modal */}
+      {showCommitmentModal && selectedCharity && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold">Commit to Donate</h3>
+              <button
+                onClick={() => setShowCommitmentModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mb-4 p-3 bg-pink-50 rounded-lg">
+              <p className="text-sm text-gray-700 mb-1">You're supporting:</p>
+              <p className="font-bold text-gray-900">{selectedCharity.name}</p>
+            </div>
+
+            <form onSubmit={handleDoGood} className="space-y-4">
+              <div>
+                <label htmlFor="donor_name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Your Name *
+                </label>
+                <input
+                  id="donor_name"
+                  type="text"
+                  required
+                  className="input"
+                  placeholder="e.g., Sarah Johnson"
+                  value={commitmentForm.donor_name}
+                  onChange={(e) => setCommitmentForm({ ...commitmentForm, donor_name: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="donor_email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Your Email *
+                </label>
+                <input
+                  id="donor_email"
+                  type="email"
+                  required
+                  className="input"
+                  placeholder="e.g., sarah@example.com"
+                  value={commitmentForm.donor_email}
+                  onChange={(e) => setCommitmentForm({ ...commitmentForm, donor_email: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="commitment_amount" className="block text-sm font-medium text-gray-700 mb-1">
+                  Amount You'll Donate *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <input
+                    id="commitment_amount"
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    required
+                    className="input pl-8"
+                    placeholder="50.00"
+                    value={commitmentForm.commitment_amount}
+                    onChange={(e) => setCommitmentForm({ ...commitmentForm, commitment_amount: e.target.value })}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  This is tracked for {data.user.first_name} only (not public)
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  ℹ️ Clicking "Do Good" will open {selectedCharity.name}'s donation page in a new window where you'll complete your donation.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn btn-primary flex-1"
+                >
+                  {submitting ? 'Recording...' : '✨ Do Good'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCommitmentModal(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
