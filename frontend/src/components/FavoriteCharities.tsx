@@ -12,6 +12,7 @@ const FavoriteCharities = () => {
   const [commitmentAmount, setCommitmentAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchFavorites();
@@ -101,6 +102,49 @@ const FavoriteCharities = () => {
 
   const openDonationPage = (website: string) => {
     window.open(website, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleImageError = (favoriteId: number) => {
+    setImageErrors(prev => new Set(prev).add(favoriteId));
+  };
+
+  const getCategoryIcon = (category: string) => {
+    const categoryLower = (category || '').toLowerCase();
+
+    if (categoryLower.includes('animal') || categoryLower.includes('wildlife') || categoryLower.includes('pet')) {
+      return '🐾';
+    }
+    if (categoryLower.includes('health') || categoryLower.includes('medical') || categoryLower.includes('cancer') || categoryLower.includes('hospital')) {
+      return '🏥';
+    }
+    if (categoryLower.includes('child') || categoryLower.includes('education') || categoryLower.includes('school')) {
+      return '👨‍👩‍👧‍👦';
+    }
+    if (categoryLower.includes('environment') || categoryLower.includes('nature') || categoryLower.includes('climate') || categoryLower.includes('water')) {
+      return '🌍';
+    }
+    if (categoryLower.includes('hunger') || categoryLower.includes('food') || categoryLower.includes('feeding')) {
+      return '🍽️';
+    }
+    if (categoryLower.includes('housing') || categoryLower.includes('shelter') || categoryLower.includes('homeless')) {
+      return '🏠';
+    }
+    if (categoryLower.includes('human') || categoryLower.includes('rights') || categoryLower.includes('justice')) {
+      return '⚖️';
+    }
+    if (categoryLower.includes('art') || categoryLower.includes('culture') || categoryLower.includes('museum')) {
+      return '🎨';
+    }
+    return '❤️'; // Default heart for general charity
+  };
+
+  const getCharityInitials = (name: string) => {
+    return name
+      .split(' ')
+      .filter(word => word.length > 0)
+      .slice(0, 2)
+      .map(word => word[0].toUpperCase())
+      .join('');
   };
 
   if (loading) {
@@ -232,16 +276,33 @@ const FavoriteCharities = () => {
               key={favorite.id}
               className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
             >
-              {/* Charity Logo */}
-              {favorite.logo && (
-                <div className="h-32 bg-gray-100 flex items-center justify-center p-4">
+              {/* Charity Logo or Fallback */}
+              <div className="h-40 bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center p-6 relative overflow-hidden">
+                {favorite.logo && !imageErrors.has(favorite.id) ? (
                   <img
                     src={favorite.logo}
                     alt={favorite.name}
-                    className="max-h-full max-w-full object-contain"
+                    className="max-h-full max-w-full object-contain relative z-10"
+                    onError={() => handleImageError(favorite.id)}
                   />
+                ) : (
+                  <div className="text-center relative z-10">
+                    <div className="text-6xl mb-2">
+                      {getCategoryIcon(favorite.category || '')}
+                    </div>
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-md">
+                      <span className="text-xl font-bold text-rose-600">
+                        {getCharityInitials(favorite.name)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {/* Decorative background pattern */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 left-0 w-32 h-32 bg-rose-300 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                  <div className="absolute bottom-0 right-0 w-32 h-32 bg-pink-300 rounded-full translate-x-1/2 translate-y-1/2"></div>
                 </div>
-              )}
+              </div>
 
               <div className="p-4">
                 <h3 className="font-bold text-lg mb-2">{favorite.name}</h3>

@@ -11,7 +11,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
 
     const result = await query(
-      `SELECT fc.*, c.name, c.logo_url as logo, c.description, c.website_url as website
+      `SELECT fc.*, c.name, c.logo_url as logo, c.description, c.website_url as website, c.category
        FROM favorite_charities fc
        JOIN charities c ON fc.charity_id = c.id
        WHERE fc.user_id = $1
@@ -63,7 +63,7 @@ router.post(
 
       // Fetch full charity details
       const favoriteWithCharity = await query(
-        `SELECT fc.*, c.name, c.logo_url as logo, c.description, c.website_url as website
+        `SELECT fc.*, c.name, c.logo_url as logo, c.description, c.website_url as website, c.category
          FROM favorite_charities fc
          JOIN charities c ON fc.charity_id = c.id
          WHERE fc.id = $1`,
@@ -119,7 +119,7 @@ router.put(
 
       // Fetch updated data with charity info
       const result = await query(
-        `SELECT fc.*, c.name, c.logo_url as logo, c.description, c.website_url as website
+        `SELECT fc.*, c.name, c.logo_url as logo, c.description, c.website_url as website, c.category
          FROM favorite_charities fc
          JOIN charities c ON fc.charity_id = c.id
          WHERE fc.id = $1`,

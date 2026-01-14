@@ -173,6 +173,7 @@ export interface FavoriteCharity {
   logo?: string;
   description?: string;
   website?: string;
+  category?: string;
 }
 
 export interface RSVPInput {
