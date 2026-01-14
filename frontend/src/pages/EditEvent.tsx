@@ -20,7 +20,8 @@ const EditEvent = () => {
     start_date: '',
     end_date: '',
     goal_amount: undefined as number | undefined,
-    show_guest_list: false
+    show_guest_list: false,
+    potluck_enabled: false
   });
   const navigate = useNavigate();
 
@@ -42,7 +43,8 @@ const EditEvent = () => {
         start_date: event.start_date ? event.start_date.split('T')[0] : '',
         end_date: event.end_date ? event.end_date.split('T')[0] : '',
         goal_amount: event.goal_amount ? Number(event.goal_amount) : undefined,
-        show_guest_list: event.show_guest_list || false
+        show_guest_list: event.show_guest_list || false,
+        potluck_enabled: event.potluck_enabled || false
       });
 
       setSelectedCharityIds(event.charity_id ? [event.charity_id] : []);
@@ -86,7 +88,8 @@ const EditEvent = () => {
         ...formData,
         charity_ids: selectedCharityIds,
         start_date: formData.start_date || formData.event_date,
-        end_date: formData.end_date || formData.event_date
+        end_date: formData.end_date || formData.event_date,
+        potluck_enabled: formData.potluck_enabled
       };
 
       await api.put(`/events/${slug}`, eventData);
@@ -321,6 +324,29 @@ const EditEvent = () => {
             </label>
             <p className="text-xs text-gray-500 mt-2 ml-8">
               When enabled, guests who RSVP'd as "Attending" will be visible to everyone viewing your event page
+            </p>
+          </div>
+
+          {/* Potluck Option */}
+          <div className="border-t border-gray-200 pt-6">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.potluck_enabled}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    potluck_enabled: e.target.checked
+                  })
+                }
+                className="h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              />
+              <span className="ml-3 text-sm font-medium text-gray-700">
+                Enable Potluck
+              </span>
+            </label>
+            <p className="text-xs text-gray-500 mt-2 ml-8">
+              Allow guests to sign up to bring food, drinks, or other items to your event
             </p>
           </div>
 

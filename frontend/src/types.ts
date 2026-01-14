@@ -43,6 +43,7 @@ export interface Event {
   slug: string;
   is_active: boolean;
   show_guest_list?: boolean;
+  potluck_enabled?: boolean;
   total_raised?: number;
   donation_count?: number;
   first_name?: string;
@@ -86,6 +87,7 @@ export interface CreateEventInput {
   charity_id?: number;
   charity_ids?: number[];
   goal_amount?: number;
+  potluck_enabled?: boolean;
 }
 
 export interface CreateDonationInput {
@@ -177,5 +179,29 @@ export interface RSVPInput {
   guest_id: number;
   rsvp_status: 'attending' | 'not_attending' | 'maybe';
   rsvp_comment?: string;
+}
+
+export interface CoHost {
+  id: number;
+  event_id: number;
+  user_id?: number;
+  email: string;
+  name?: string;
+  invited_at: string;
+  accepted_at?: string;
+  // Joined user data
+  first_name?: string;
+  last_name?: string;
+}
+
+export interface PotluckItem {
+  id: number;
+  event_id: number;
+  item_name: string;
+  guest_name: string;
+  guest_email: string;
+  quantity: number;
+  notes?: string;
+  created_at: string;
 }
 

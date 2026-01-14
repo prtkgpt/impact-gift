@@ -15,6 +15,8 @@ import usersRoutes from './routes/users';
 import guestsRoutes from './routes/guests';
 import invitationsRoutes from './routes/invitations';
 import favoriteCharitiesRoutes from './routes/favoriteCharities';
+import coHostsRoutes from './routes/coHosts';
+import potluckRoutes from './routes/potluck';
 
 dotenv.config();
 
@@ -85,6 +87,8 @@ app.use('/api/users', usersRoutes);
 app.use('/api/guests', guestsRoutes);
 app.use('/api/invitations', invitationsRoutes);
 app.use('/api/favorite-charities', favoriteCharitiesRoutes);
+app.use('/api/co-hosts', coHostsRoutes);
+app.use('/api/potluck', potluckRoutes);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);

@@ -17,7 +17,8 @@ const CreateEvent = () => {
     event_date: '',
     start_date: '',
     end_date: '',
-    goal_amount: undefined as number | undefined
+    goal_amount: undefined as number | undefined,
+    potluck_enabled: false
   });
   const navigate = useNavigate();
 
@@ -57,7 +58,8 @@ const CreateEvent = () => {
         ...formData,
         charity_ids: selectedCharityIds,
         start_date: formData.start_date || formData.event_date,
-        end_date: formData.end_date || formData.event_date
+        end_date: formData.end_date || formData.event_date,
+        potluck_enabled: formData.potluck_enabled
       };
 
       const response = await api.post('/events', eventData);
@@ -255,6 +257,29 @@ const CreateEvent = () => {
             <p className="text-xs text-gray-500 mt-1">
               Set a fundraising goal to track progress (optional)
             </p>
+          </div>
+
+          {/* Potluck Option */}
+          <div className="border-t pt-6">
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  id="potluck_enabled"
+                  type="checkbox"
+                  checked={formData.potluck_enabled}
+                  onChange={(e) => setFormData({ ...formData, potluck_enabled: e.target.checked })}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+              </div>
+              <div className="ml-3">
+                <label htmlFor="potluck_enabled" className="font-medium text-gray-700">
+                  Enable Potluck
+                </label>
+                <p className="text-sm text-gray-500">
+                  Allow guests to sign up to bring food, drinks, or other items to your event
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Submit */}

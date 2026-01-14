@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { Event, Guest, Donation } from '../types';
+import CoHostsManagement from '../components/CoHostsManagement';
 
 const ManageEvent = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -11,7 +12,7 @@ const ManageEvent = () => {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
-  type TabType = 'guests' | 'email' | 'progress';
+  type TabType = 'guests' | 'email' | 'progress' | 'cohosts';
   const [activeTab, setActiveTab] = useState<TabType>('guests');
 
   // Guest form
@@ -293,7 +294,7 @@ const ManageEvent = () => {
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
-          {(['guests', 'email', 'progress'] as const).map((tab) => (
+          {(['guests', 'email', 'cohosts', 'progress'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => {
@@ -309,6 +310,7 @@ const ManageEvent = () => {
             >
               {tab === 'guests' && 'Guest List'}
               {tab === 'email' && 'Email Invitations'}
+              {tab === 'cohosts' && 'Co-Hosts'}
               {tab === 'progress' && 'Progress & Donations'}
             </button>
           ))}
@@ -602,6 +604,13 @@ const ManageEvent = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Co-Hosts Tab */}
+      {activeTab === 'cohosts' && (
+        <div className="space-y-6">
+          <CoHostsManagement eventId={event.id} />
         </div>
       )}
 

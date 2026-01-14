@@ -12,6 +12,7 @@ import EventCountdown from '../components/EventCountdown';
 import Leaderboard from '../components/Leaderboard';
 import RSVPSection from '../components/RSVPSection';
 import AttendingGuests from '../components/AttendingGuests';
+import PotluckItems from '../components/PotluckItems';
 import { useAuth } from '../contexts/AuthContext';
 
 const EventPage = () => {
@@ -198,6 +199,8 @@ const EventPage = () => {
             )}
 
             {event.show_guest_list && <AttendingGuests eventSlug={event.slug} />}
+
+            {event.potluck_enabled && <PotluckItems eventId={event.id} />}
 
             <Leaderboard donations={donations} event={event} />
 
