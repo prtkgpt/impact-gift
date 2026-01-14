@@ -44,6 +44,9 @@ export interface Event {
   is_active: boolean;
   show_guest_list?: boolean;
   potluck_enabled?: boolean;
+  template_id?: number;
+  theme_id?: number;
+  custom_colors?: any;
   total_raised?: number;
   donation_count?: number;
   first_name?: string;
@@ -88,6 +91,8 @@ export interface CreateEventInput {
   charity_ids?: number[];
   goal_amount?: number;
   potluck_enabled?: boolean;
+  template_id?: number;
+  theme_id?: number;
 }
 
 export interface CreateDonationInput {
@@ -203,6 +208,41 @@ export interface PotluckItem {
   guest_email: string;
   quantity: number;
   notes?: string;
+  created_at: string;
+}
+
+// Event Templates and Themes
+export interface EventTemplate {
+  id: number;
+  name: string;
+  display_name: string;
+  description?: string;
+  event_type: string;
+  icon?: string;
+  default_title_template?: string;
+  default_description_template?: string;
+  suggested_charities?: string[];
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface EventTheme {
+  id: number;
+  name: string;
+  display_name: string;
+  description?: string;
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  background_gradient_start?: string;
+  background_gradient_end?: string;
+  button_style?: string;
+  font_family?: string;
+  is_active: boolean;
+  is_premium: boolean;
+  preview_image_url?: string;
+  sort_order: number;
   created_at: string;
 }
 

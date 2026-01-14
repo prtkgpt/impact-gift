@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { Charity, CreateEventInput } from '../types';
+import { Charity, CreateEventInput, EventTemplate, EventTheme } from '../types';
 import toast from 'react-hot-toast';
 import RequestCharityModal from '../components/RequestCharityModal';
+import TemplateSelector from '../components/TemplateSelector';
+import ThemeSelector from '../components/ThemeSelector';
 
 const CreateEvent = () => {
   const [charities, setCharities] = useState<Charity[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedCharityIds, setSelectedCharityIds] = useState<number[]>([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<EventTemplate | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState<EventTheme | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -43,6 +47,29 @@ const CreateEvent = () => {
     );
   };
 
+  const handleTemplateSelect = (template: EventTemplate | null) => {
+    setSelectedTemplate(template);
+    if (template) {
+      // Auto-fill title and description with template defaults
+      if (template.default_title_template && !formData.title) {
+        setFormData(prev => ({
+          ...prev,
+          title: template.default_title_template?.replace('{name}', 'Your') || ''
+        }));
+      }
+      if (template.default_description_template && !formData.description) {
+        setFormData(prev => ({
+          ...prev,
+          description: template.default_description_template || ''
+        }));
+      }
+    }
+  };
+
+  const handleThemeSelect = (theme: EventTheme | null) => {
+    setSelectedTheme(theme);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -59,7 +86,9 @@ const CreateEvent = () => {
         charity_ids: selectedCharityIds,
         start_date: formData.start_date || formData.event_date,
         end_date: formData.end_date || formData.event_date,
-        potluck_enabled: formData.potluck_enabled
+        potluck_enabled: formData.potluck_enabled,
+        template_id: selectedTemplate?.id,
+        theme_id: selectedTheme?.id
       };
 
       const response = await api.post('/events', eventData);
@@ -180,8 +209,25 @@ const CreateEvent = () => {
             </div>
           </div>
 
+          {/* Template Selector */}
+          <div className="border-t pt-6">
+            <TemplateSelector
+              eventType={formData.event_type}
+              selectedTemplateId={selectedTemplate?.id}
+              onSelectTemplate={handleTemplateSelect}
+            />
+          </div>
+
+          {/* Theme Selector */}
+          <div className="border-t pt-6">
+            <ThemeSelector
+              selectedThemeId={selectedTheme?.id}
+              onSelectTheme={handleThemeSelect}
+            />
+          </div>
+
           {/* Select Multiple Charities */}
-          <div>
+          <div className="border-t pt-6">
             <div className="flex items-center justify-between mb-3">
               <label className="block text-sm font-medium text-gray-700">
                 Select Charities * (Select one or more)

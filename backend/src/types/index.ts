@@ -162,3 +162,38 @@ export interface UpdateUserProfileInput {
   address?: string;
   charity_page_slug?: string;
 }
+
+// Event Templates and Themes
+export interface EventTemplate {
+  id: number;
+  name: string;
+  display_name: string;
+  description?: string;
+  event_type: string;
+  icon?: string;
+  default_title_template?: string;
+  default_description_template?: string;
+  suggested_charities?: string[];
+  is_active: boolean;
+  sort_order: number;
+  created_at: Date;
+}
+
+export interface EventTheme {
+  id: number;
+  name: string;
+  display_name: string;
+  description?: string;
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  background_gradient_start?: string;
+  background_gradient_end?: string;
+  button_style?: string;
+  font_family?: string;
+  is_active: boolean;
+  is_premium: boolean;
+  preview_image_url?: string;
+  sort_order: number;
+  created_at: Date;
+}
