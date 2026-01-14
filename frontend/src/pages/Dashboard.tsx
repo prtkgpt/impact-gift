@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import api from '../utils/api';
 import { Event } from '../types';
 import toast from 'react-hot-toast';
+import FavoriteCharities from '../components/FavoriteCharities';
 
 const Dashboard = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -112,6 +113,11 @@ const Dashboard = () => {
           ))}
         </div>
       )}
+
+      {/* Favorite Charities Section */}
+      <div className="mt-12">
+        <FavoriteCharities />
+      </div>
     </div>
   );
 };

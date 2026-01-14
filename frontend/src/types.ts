@@ -157,6 +157,22 @@ export interface UpdateUserProfileInput {
   address?: string;
 }
 
+export interface FavoriteCharity {
+  id: number;
+  user_id: number;
+  charity_id: number;
+  commitment_amount: number;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  // Joined charity data
+  name: string;
+  logo?: string;
+  description?: string;
+  website?: string;
+  ein?: string;
+}
+
 export interface RSVPInput {
   guest_id: number;
   rsvp_status: 'attending' | 'not_attending' | 'maybe';
