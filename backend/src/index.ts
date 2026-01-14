@@ -21,6 +21,7 @@ import publicCharityPageRoutes from './routes/publicCharityPage';
 import charityCommitmentsRoutes from './routes/charityCommitments';
 import eventTemplatesRoutes from './routes/eventTemplates';
 import eventThemesRoutes from './routes/eventThemes';
+import emailTestRoutes from './routes/emailTest';
 
 dotenv.config();
 
@@ -97,6 +98,7 @@ app.use('/api/charity-page', publicCharityPageRoutes);
 app.use('/api/charity-commitments', charityCommitmentsRoutes);
 app.use('/api/event-templates', eventTemplatesRoutes);
 app.use('/api/event-themes', eventThemesRoutes);
+app.use('/api/email-test', emailTestRoutes);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
