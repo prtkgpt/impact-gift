@@ -729,4 +729,41 @@ router.get('/migrate-phase3-templates-themes', async (req: Request, res: Respons
   }
 });
 
+// Phase 4 Migration: Custom Event Images
+router.get('/migrate-phase4-custom-images', async (req: Request, res: Response) => {
+  try {
+    const changes = [];
+
+    // Add event_image_url and event_image_public_id columns to events table
+    await query(`
+      ALTER TABLE events
+      ADD COLUMN IF NOT EXISTS event_image_url VARCHAR(500),
+      ADD COLUMN IF NOT EXISTS event_image_public_id VARCHAR(255)
+    `);
+    changes.push('Added event_image_url and event_image_public_id to events table');
+
+    // Create index for better query performance
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_events_event_image_url ON events(event_image_url)
+    `);
+    changes.push('Created index on event_image_url');
+
+    res.json({
+      success: true,
+      message: 'Phase 4 custom event images migration completed successfully!',
+      changes,
+      summary: {
+        columns_added: ['events.event_image_url', 'events.event_image_public_id'],
+        feature: 'Event creators can now upload custom images (photos, graphics, etc.)'
+      }
+    });
+  } catch (error: any) {
+    console.error('Phase 4 migration error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to complete Phase 4 custom images migration'
+    });
+  }
+});
+
 export default router;

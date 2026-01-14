@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import RequestCharityModal from '../components/RequestCharityModal';
 import TemplateSelector from '../components/TemplateSelector';
 import ThemeSelector from '../components/ThemeSelector';
+import ImageUpload from '../components/ImageUpload';
 
 const CreateEvent = () => {
   const [charities, setCharities] = useState<Charity[]>([]);
@@ -14,6 +15,7 @@ const CreateEvent = () => {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EventTemplate | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<EventTheme | null>(null);
+  const [eventImage, setEventImage] = useState<{ url: string; publicId: string }>({ url: '', publicId: '' });
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -92,9 +94,24 @@ const CreateEvent = () => {
       };
 
       const response = await api.post('/events', eventData);
+      const eventId = response.data.id;
+
+      // Upload event image if one was selected
+      if (eventImage.url) {
+        try {
+          await api.put(`/event-images/event/${eventId}`, {
+            imageUrl: eventImage.url,
+            publicId: eventImage.publicId
+          });
+        } catch (imgError) {
+          console.error('Failed to save event image:', imgError);
+          // Don't fail the entire operation, just log it
+        }
+      }
+
       toast.success('Event created successfully!');
 
-      // Navigate to manage event page (we'll create this next)
+      // Navigate to manage event page
       navigate(`/event/${response.data.slug}/manage`);
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to create event');
@@ -138,6 +155,14 @@ const CreateEvent = () => {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
           </div>
+
+          {/* Event Image Upload */}
+          <ImageUpload
+            onImageUploaded={(url, publicId) => setEventImage({ url, publicId })}
+            currentImageUrl={eventImage.url}
+            label="Event Image (Optional)"
+            helpText="Upload a personal photo to make your event stand out! Perfect for baby photos, wedding pictures, or any meaningful image."
+          />
 
           {/* Event Type and Date */}
           <div className="grid md:grid-cols-2 gap-4">

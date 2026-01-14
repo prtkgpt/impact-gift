@@ -47,6 +47,8 @@ export interface Event {
   template_id?: number;
   theme_id?: number;
   custom_colors?: any;
+  event_image_url?: string;
+  event_image_public_id?: string;
   total_raised?: number;
   donation_count?: number;
   first_name?: string;

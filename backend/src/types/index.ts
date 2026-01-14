@@ -47,6 +47,8 @@ export interface Event {
   goal_amount?: number;
   slug: string;
   is_active: boolean;
+  event_image_url?: string;
+  event_image_public_id?: string;
   created_at: Date;
   updated_at: Date;
 }
