@@ -5,19 +5,37 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// Helper function to generate Clearbit logo URL from website URL
-function generateLogoUrl(websiteUrl: string, existingLogoUrl: string): string {
-  // If logo is a placeholder or invalid, generate Clearbit logo URL
-  if (!existingLogoUrl || existingLogoUrl.includes('placeholder')) {
-    try {
-      const url = new URL(websiteUrl);
-      const domain = url.hostname.replace('www.', '');
-      return `https://logo.clearbit.com/${domain}`;
-    } catch (e) {
-      return existingLogoUrl;
-    }
+// Helper function to generate logo URL from website URL
+function generateLogoUrl(websiteUrl: string, charityName: string): string {
+  // Manual mapping for known charities with reliable logo URLs
+  const logoMap: { [key: string]: string } = {
+    'Best Friends Animal Society': 'https://logo.clearbit.com/bestfriends.org',
+    'American Cancer Society': 'https://logo.clearbit.com/cancer.org',
+    'charity: water': 'https://logo.clearbit.com/charitywater.org',
+    'Red Cross': 'https://logo.clearbit.com/redcross.org',
+    'Doctors Without Borders': 'https://logo.clearbit.com/doctorswithoutborders.org',
+    'World Wildlife Fund': 'https://logo.clearbit.com/worldwildlife.org',
+    'UNICEF': 'https://logo.clearbit.com/unicef.org',
+    'Feeding America': 'https://logo.clearbit.com/feedingamerica.org',
+    'The Nature Conservancy': 'https://logo.clearbit.com/nature.org',
+    'St. Jude Children\'s Research Hospital': 'https://logo.clearbit.com/stjude.org',
+    'Habitat for Humanity': 'https://logo.clearbit.com/habitat.org'
+  };
+
+  // Check manual mapping first
+  if (logoMap[charityName]) {
+    return logoMap[charityName];
   }
-  return existingLogoUrl;
+
+  // Otherwise generate from website URL
+  try {
+    const url = new URL(websiteUrl);
+    const domain = url.hostname.replace('www.', '');
+    return `https://logo.clearbit.com/${domain}`;
+  } catch (e) {
+    // Fallback to a generic icon
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(charityName)}&size=200&background=f43f5e&color=fff`;
+  }
 }
 
 // Get user's favorite charities
@@ -34,10 +52,10 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
       [userId]
     );
 
-    // Transform logo URLs to use Clearbit if they're placeholders
+    // Transform logo URLs to use reliable logo sources
     const charitiesWithLogos = result.rows.map(charity => ({
       ...charity,
-      logo: generateLogoUrl(charity.website, charity.logo)
+      logo: generateLogoUrl(charity.website, charity.name)
     }));
 
     res.json(charitiesWithLogos);
