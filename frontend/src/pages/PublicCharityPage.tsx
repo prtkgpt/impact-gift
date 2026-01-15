@@ -138,7 +138,7 @@ const PublicCharityPage = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            {data.user.first_name}'s Favorite Charities v2
+            {data.user.first_name}'s Favorite Charities v3
           </h1>
           <p className="text-lg text-gray-600 mb-6">
             Instead of a gift, please consider donating to one of these meaningful causes
@@ -174,7 +174,8 @@ const PublicCharityPage = () => {
                     <img
                       src={charity.logo}
                       alt={charity.name}
-                      className="max-h-full max-w-full object-contain relative z-10"
+                      className="w-full h-full object-contain relative z-10"
+                      style={{ minHeight: '80px', minWidth: '80px' }}
                     />
                     {/* Decorative background pattern */}
                     <div className="absolute inset-0 opacity-10">
