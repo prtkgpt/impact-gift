@@ -113,4 +113,42 @@ router.get('/requests', async (req: Request, res: Response) => {
   }
 });
 
+// Admin endpoint to update all charity logos to use Clearbit Logo API
+router.post('/admin/update-logos', async (req: Request, res: Response) => {
+  try {
+    const logoMappings = [
+      { name: 'Red Cross', domain: 'redcross.org' },
+      { name: 'Doctors Without Borders', domain: 'doctorswithoutborders.org' },
+      { name: 'World Wildlife Fund', domain: 'worldwildlife.org' },
+      { name: 'UNICEF', domain: 'unicef.org' },
+      { name: 'Feeding America', domain: 'feedingamerica.org' },
+      { name: 'The Nature Conservancy', domain: 'nature.org' },
+      { name: 'St. Jude Children\'s Research Hospital', domain: 'stjude.org' },
+      { name: 'Habitat for Humanity', domain: 'habitat.org' },
+      { name: 'American Cancer Society', domain: 'cancer.org' },
+      { name: 'Best Friends Animal Society', domain: 'bestfriends.org' },
+      { name: 'charity: water', domain: 'charitywater.org' }
+    ];
+
+    let updatedCount = 0;
+    for (const mapping of logoMappings) {
+      const logoUrl = `https://logo.clearbit.com/${mapping.domain}`;
+      const result = await query(
+        'UPDATE charities SET logo_url = $1 WHERE name = $2',
+        [logoUrl, mapping.name]
+      );
+      updatedCount += result.rowCount || 0;
+    }
+
+    res.json({
+      success: true,
+      message: `Updated ${updatedCount} charity logos`,
+      updatedCount
+    });
+  } catch (error) {
+    console.error('Error updating charity logos:', error);
+    res.status(500).json({ error: 'Failed to update logos' });
+  }
+});
+
 export default router;

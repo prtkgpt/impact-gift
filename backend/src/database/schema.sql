@@ -57,14 +57,17 @@ CREATE INDEX IF NOT EXISTS idx_events_slug ON events(slug);
 CREATE INDEX IF NOT EXISTS idx_donations_event_id ON donations(event_id);
 CREATE INDEX IF NOT EXISTS idx_donations_status ON donations(status);
 
--- Insert some sample charities
+-- Insert some sample charities with real logos using Clearbit Logo API
 INSERT INTO charities (name, description, category, website_url, logo_url) VALUES
-('Red Cross', 'Humanitarian organization providing emergency assistance, disaster relief, and education', 'Humanitarian', 'https://www.redcross.org', 'https://via.placeholder.com/150?text=Red+Cross'),
-('Doctors Without Borders', 'International medical humanitarian organization', 'Healthcare', 'https://www.doctorswithoutborders.org', 'https://via.placeholder.com/150?text=MSF'),
-('World Wildlife Fund', 'Conservation organization working to preserve nature', 'Environment', 'https://www.worldwildlife.org', 'https://via.placeholder.com/150?text=WWF'),
-('UNICEF', 'United Nations agency providing humanitarian aid to children worldwide', 'Children', 'https://www.unicef.org', 'https://via.placeholder.com/150?text=UNICEF'),
-('Feeding America', 'Nationwide network of food banks fighting domestic hunger', 'Hunger Relief', 'https://www.feedingamerica.org', 'https://via.placeholder.com/150?text=Feeding+America'),
-('The Nature Conservancy', 'Environmental organization working to protect lands and waters', 'Environment', 'https://www.nature.org', 'https://via.placeholder.com/150?text=TNC'),
-('St. Jude Children''s Research Hospital', 'Pediatric treatment and research facility', 'Healthcare', 'https://www.stjude.org', 'https://via.placeholder.com/150?text=St+Jude'),
-('Habitat for Humanity', 'Nonprofit organization building affordable housing', 'Housing', 'https://www.habitat.org', 'https://via.placeholder.com/150?text=Habitat')
+('Red Cross', 'Humanitarian organization providing emergency assistance, disaster relief, and education', 'Humanitarian', 'https://www.redcross.org', 'https://logo.clearbit.com/redcross.org'),
+('Doctors Without Borders', 'International medical humanitarian organization', 'Healthcare', 'https://www.doctorswithoutborders.org', 'https://logo.clearbit.com/doctorswithoutborders.org'),
+('World Wildlife Fund', 'Conservation organization working to preserve nature', 'Environment', 'https://www.worldwildlife.org', 'https://logo.clearbit.com/worldwildlife.org'),
+('UNICEF', 'United Nations agency providing humanitarian aid to children worldwide', 'Children', 'https://www.unicef.org', 'https://logo.clearbit.com/unicef.org'),
+('Feeding America', 'Nationwide network of food banks fighting domestic hunger', 'Hunger Relief', 'https://www.feedingamerica.org', 'https://logo.clearbit.com/feedingamerica.org'),
+('The Nature Conservancy', 'Environmental organization working to protect lands and waters', 'Environment', 'https://www.nature.org', 'https://logo.clearbit.com/nature.org'),
+('St. Jude Children''s Research Hospital', 'Pediatric treatment and research facility', 'Healthcare', 'https://www.stjude.org', 'https://logo.clearbit.com/stjude.org'),
+('Habitat for Humanity', 'Nonprofit organization building affordable housing', 'Housing', 'https://www.habitat.org', 'https://logo.clearbit.com/habitat.org'),
+('American Cancer Society', 'Leading the fight for a world without cancer', 'Healthcare', 'https://www.cancer.org', 'https://logo.clearbit.com/cancer.org'),
+('Best Friends Animal Society', 'Leading animal welfare organization working to end killing in shelters', 'Animals', 'https://www.bestfriends.org', 'https://logo.clearbit.com/bestfriends.org'),
+('charity: water', 'Brings clean and safe drinking water to people in developing countries', 'Water & Sanitation', 'https://www.charitywater.org', 'https://logo.clearbit.com/charitywater.org')
 ON CONFLICT DO NOTHING;
