@@ -17,6 +17,14 @@ router.post(
     body('event_date').isISO8601(),
     body('start_date').optional().isISO8601(),
     body('end_date').optional().isISO8601(),
+    body('start_time').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+    body('end_time').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+    body('venue_name').optional().trim(),
+    body('address').optional().trim(),
+    body('virtual_link').optional().isURL(),
+    body('host_name').optional().trim(),
+    body('host_phone').optional().trim(),
+    body('rsvp_deadline').optional().isISO8601(),
     body('charity_id').optional().isInt(),
     body('charity_ids').optional().isArray(),
     body('goal_amount').optional().isFloat({ min: 0 })
@@ -28,7 +36,12 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { title, description, event_type, event_date, start_date, end_date, charity_id, charity_ids, goal_amount }: CreateEventInput = req.body;
+      const {
+        title, description, event_type, event_date, start_date, end_date,
+        start_time, end_time, venue_name, address, virtual_link,
+        host_name, host_phone, rsvp_deadline,
+        charity_id, charity_ids, goal_amount
+      }: CreateEventInput = req.body;
       const slug = generateSlug(title);
 
       // Support both single charity (legacy) and multiple charities (new feature)
@@ -48,8 +61,13 @@ router.post(
 
       // Create the event (charity_id can be null for multi-charity events)
       const result = await query(
-        `INSERT INTO events (user_id, title, description, event_type, event_date, start_date, end_date, charity_id, goal_amount, slug)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        `INSERT INTO events (
+          user_id, title, description, event_type, event_date, start_date, end_date,
+          start_time, end_time, venue_name, address, virtual_link,
+          host_name, host_phone, rsvp_deadline,
+          charity_id, goal_amount, slug
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
          RETURNING *`,
         [
           req.user!.id,
@@ -59,6 +77,14 @@ router.post(
           event_date,
           start_date || event_date,
           end_date || event_date,
+          start_time || null,
+          end_time || null,
+          venue_name || null,
+          address || null,
+          virtual_link || null,
+          host_name || null,
+          host_phone || null,
+          rsvp_deadline || null,
           charityList.length === 1 ? charityList[0] : null,
           goal_amount || null,
           slug

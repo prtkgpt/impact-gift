@@ -21,6 +21,14 @@ const CreateEvent = () => {
     description: '',
     event_type: 'birthday',
     event_date: '',
+    start_time: '',
+    end_time: '',
+    venue_name: '',
+    address: '',
+    virtual_link: '',
+    host_name: '',
+    host_phone: '',
+    rsvp_deadline: '',
     start_date: '',
     end_date: '',
     goal_amount: undefined as number | undefined,
@@ -197,6 +205,139 @@ const CreateEvent = () => {
                 onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
               />
             </div>
+          </div>
+
+          {/* Event Time */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="start_time" className="block text-sm font-medium text-gray-700 mb-1">
+                Start Time (Optional)
+              </label>
+              <input
+                id="start_time"
+                type="time"
+                className="input"
+                value={formData.start_time}
+                onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="end_time" className="block text-sm font-medium text-gray-700 mb-1">
+                End Time (Optional)
+              </label>
+              <input
+                id="end_time"
+                type="time"
+                className="input"
+                value={formData.end_time}
+                onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Event Location */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Location</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="venue_name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Venue Name (Optional)
+                </label>
+                <input
+                  id="venue_name"
+                  type="text"
+                  className="input"
+                  placeholder="e.g., Golden Gate Park, The Smith Residence"
+                  value={formData.venue_name}
+                  onChange={(e) => setFormData({ ...formData, venue_name: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                  Address (Optional)
+                </label>
+                <textarea
+                  id="address"
+                  rows={2}
+                  className="input"
+                  placeholder="123 Main St, San Francisco, CA 94102"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="virtual_link" className="block text-sm font-medium text-gray-700 mb-1">
+                  Virtual Event Link (Optional)
+                </label>
+                <input
+                  id="virtual_link"
+                  type="url"
+                  className="input"
+                  placeholder="https://zoom.us/j/123456789"
+                  value={formData.virtual_link}
+                  onChange={(e) => setFormData({ ...formData, virtual_link: e.target.value })}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  For virtual events, add your Zoom, Google Meet, or other video link
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Host Contact Info */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Host Information</h3>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="host_name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Host Name (Optional)
+                </label>
+                <input
+                  id="host_name"
+                  type="text"
+                  className="input"
+                  placeholder="Your name or organization"
+                  value={formData.host_name}
+                  onChange={(e) => setFormData({ ...formData, host_name: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="host_phone" className="block text-sm font-medium text-gray-700 mb-1">
+                  Host Phone (Optional)
+                </label>
+                <input
+                  id="host_phone"
+                  type="tel"
+                  className="input"
+                  placeholder="(555) 123-4567"
+                  value={formData.host_phone}
+                  onChange={(e) => setFormData({ ...formData, host_phone: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* RSVP Deadline */}
+          <div>
+            <label htmlFor="rsvp_deadline" className="block text-sm font-medium text-gray-700 mb-1">
+              RSVP Deadline (Optional)
+            </label>
+            <input
+              id="rsvp_deadline"
+              type="date"
+              className="input"
+              value={formData.rsvp_deadline}
+              onChange={(e) => setFormData({ ...formData, rsvp_deadline: e.target.value })}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Set a date by which guests should respond
+            </p>
           </div>
 
           {/* Start and End Dates */}

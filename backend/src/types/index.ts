@@ -43,6 +43,14 @@ export interface Event {
   event_date: Date;
   start_date?: Date;
   end_date?: Date;
+  start_time?: string; // Event start time (HH:MM:SS format)
+  end_time?: string; // Event end time (HH:MM:SS format)
+  venue_name?: string; // Location name
+  address?: string; // Full address
+  virtual_link?: string; // Zoom/video conference link
+  host_name?: string; // Primary host display name
+  host_phone?: string; // Host contact phone
+  rsvp_deadline?: Date; // RSVP cutoff date
   charity_id?: number; // Optional now since we support multiple charities
   goal_amount?: number;
   slug: string;
@@ -89,6 +97,14 @@ export interface CreateEventInput {
   event_date: string;
   start_date?: string;
   end_date?: string;
+  start_time?: string; // Event start time (HH:MM format)
+  end_time?: string; // Event end time (HH:MM format)
+  venue_name?: string; // Location name
+  address?: string; // Full address
+  virtual_link?: string; // Zoom/video conference link
+  host_name?: string; // Primary host display name
+  host_phone?: string; // Host contact phone
+  rsvp_deadline?: string; // RSVP cutoff date (ISO format)
   charity_id?: number; // Optional since we support multiple charities via charity_ids
   charity_ids?: number[]; // Array of charity IDs for multiple charities
   goal_amount?: number;

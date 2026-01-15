@@ -166,10 +166,16 @@ const EventPage = () => {
           <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-white/90">
             <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm">
               📅 {format(new Date(event.event_date), 'MMMM dd, yyyy')}
+              {event.start_time && ` at ${event.start_time}`}
             </span>
             <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm capitalize">
               🎉 {event.event_type}
             </span>
+            {event.venue_name && (
+              <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm">
+                📍 {event.venue_name}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -181,6 +187,120 @@ const EventPage = () => {
               <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-5 text-gray-900">About This Event</h2>
               <p className="text-gray-700 leading-relaxed text-base sm:text-lg whitespace-pre-wrap">{event.description}</p>
             </div>
+
+            {/* Event Details Card */}
+            {(event.start_time || event.end_time || event.venue_name || event.address || event.virtual_link || event.host_name || event.host_phone || event.rsvp_deadline) && (
+              <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
+                <div className="flex items-center justify-between mb-4 sm:mb-5">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Event Details</h2>
+                  <a
+                    href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/calendar/event/${event.slug}`}
+                    download
+                    className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium text-sm transition-colors"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Add to Calendar
+                  </a>
+                </div>
+                <div className="space-y-4">
+                  {/* Date and Time */}
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                      <span className="text-xl">📅</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Date & Time</h3>
+                      <p className="text-gray-700">
+                        {format(new Date(event.event_date), 'EEEE, MMMM dd, yyyy')}
+                      </p>
+                      {event.start_time && (
+                        <p className="text-gray-600 text-sm">
+                          {event.start_time}
+                          {event.end_time && ` - ${event.end_time}`}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Location */}
+                  {(event.venue_name || event.address) && (
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                        <span className="text-xl">📍</span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Location</h3>
+                        {event.venue_name && (
+                          <p className="text-gray-700 font-medium">{event.venue_name}</p>
+                        )}
+                        {event.address && (
+                          <p className="text-gray-600 text-sm whitespace-pre-wrap">{event.address}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Virtual Link */}
+                  {event.virtual_link && (
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                        <span className="text-xl">💻</span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Virtual Event</h3>
+                        <a
+                          href={event.virtual_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary-600 hover:text-primary-700 hover:underline break-all"
+                        >
+                          Join Virtual Event
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Host Contact */}
+                  {(event.host_name || event.host_phone) && (
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                        <span className="text-xl">👤</span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Host</h3>
+                        {event.host_name && (
+                          <p className="text-gray-700">{event.host_name}</p>
+                        )}
+                        {event.host_phone && (
+                          <p className="text-gray-600 text-sm">
+                            <a href={`tel:${event.host_phone}`} className="hover:text-primary-600">
+                              {event.host_phone}
+                            </a>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* RSVP Deadline */}
+                  {event.rsvp_deadline && (
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                        <span className="text-xl">⏰</span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">RSVP Deadline</h3>
+                        <p className="text-gray-700">
+                          {format(new Date(event.rsvp_deadline), 'MMMM dd, yyyy')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
               <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-5 text-gray-900">About {event.charity_name}</h2>

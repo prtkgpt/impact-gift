@@ -23,6 +23,8 @@ import eventTemplatesRoutes from './routes/eventTemplates';
 import eventThemesRoutes from './routes/eventThemes';
 import emailTestRoutes from './routes/emailTest';
 import eventImagesRoutes from './routes/eventImages';
+import calendarRoutes from './routes/calendar';
+import targetedEmailsRoutes from './routes/targetedEmails';
 
 dotenv.config();
 
@@ -101,6 +103,8 @@ app.use('/api/event-templates', eventTemplatesRoutes);
 app.use('/api/event-themes', eventThemesRoutes);
 app.use('/api/email-test', emailTestRoutes);
 app.use('/api/event-images', eventImagesRoutes);
+app.use('/api/calendar', calendarRoutes);
+app.use('/api/targeted-emails', targetedEmailsRoutes);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);

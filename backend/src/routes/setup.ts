@@ -766,4 +766,96 @@ router.get('/migrate-phase4-custom-images', async (req: Request, res: Response) 
   }
 });
 
+// Phase 5 Migration: Event Details (Time, Location, Host Info)
+router.get('/migrate-phase5-event-details', async (req: Request, res: Response) => {
+  try {
+    const changes = [];
+
+    // Add event time fields
+    await query(`
+      ALTER TABLE events
+      ADD COLUMN IF NOT EXISTS start_time TIME,
+      ADD COLUMN IF NOT EXISTS end_time TIME
+    `);
+    changes.push('Added start_time and end_time columns');
+
+    // Add event location fields
+    await query(`
+      ALTER TABLE events
+      ADD COLUMN IF NOT EXISTS venue_name VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS address TEXT,
+      ADD COLUMN IF NOT EXISTS virtual_link VARCHAR(500)
+    `);
+    changes.push('Added venue_name, address, and virtual_link columns');
+
+    // Add host contact info fields
+    await query(`
+      ALTER TABLE events
+      ADD COLUMN IF NOT EXISTS host_name VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS host_phone VARCHAR(50)
+    `);
+    changes.push('Added host_name and host_phone columns');
+
+    // Add RSVP deadline field
+    await query(`
+      ALTER TABLE events
+      ADD COLUMN IF NOT EXISTS rsvp_deadline TIMESTAMP
+    `);
+    changes.push('Added rsvp_deadline column');
+
+    // Create indexes for better query performance
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_events_event_date_time ON events(event_date, start_time);
+      CREATE INDEX IF NOT EXISTS idx_events_rsvp_deadline ON events(rsvp_deadline)
+    `);
+    changes.push('Created indexes on event_date/start_time and rsvp_deadline');
+
+    // Add comments for documentation
+    await query(`
+      COMMENT ON COLUMN events.start_time IS 'Event start time (time only, date in event_date)';
+      COMMENT ON COLUMN events.end_time IS 'Event end time (optional)';
+      COMMENT ON COLUMN events.venue_name IS 'Event venue or location name';
+      COMMENT ON COLUMN events.address IS 'Full event address';
+      COMMENT ON COLUMN events.virtual_link IS 'Zoom/video conference link for virtual events';
+      COMMENT ON COLUMN events.host_name IS 'Primary host display name';
+      COMMENT ON COLUMN events.host_phone IS 'Host contact phone number';
+      COMMENT ON COLUMN events.rsvp_deadline IS 'Deadline for RSVPs'
+    `);
+    changes.push('Added column comments for documentation');
+
+    res.json({
+      success: true,
+      message: 'Phase 5 event details migration completed successfully!',
+      changes,
+      summary: {
+        columns_added: [
+          'events.start_time',
+          'events.end_time',
+          'events.venue_name',
+          'events.address',
+          'events.virtual_link',
+          'events.host_name',
+          'events.host_phone',
+          'events.rsvp_deadline'
+        ],
+        features: [
+          'Event time tracking (start/end time)',
+          'Event location details (venue, address)',
+          'Virtual event links (Zoom, Google Meet)',
+          'Host contact information',
+          'RSVP deadline enforcement',
+          'Calendar integration (.ics download)',
+          'Targeted email messaging by RSVP status'
+        ]
+      }
+    });
+  } catch (error: any) {
+    console.error('Phase 5 migration error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to complete Phase 5 event details migration'
+    });
+  }
+});
+
 export default router;
