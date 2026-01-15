@@ -138,7 +138,7 @@ const PublicCharityPage = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            {data.user.first_name}'s Favorite Charities v8
+            {data.user.first_name}'s Favorite Charities
           </h1>
           <p className="text-lg text-gray-600 mb-6">
             Instead of a gift, please consider donating to one of these meaningful causes
@@ -162,42 +162,40 @@ const PublicCharityPage = () => {
             <p className="text-gray-500">{data.user.first_name} hasn't added any favorite charities yet.</p>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {data.charities.map((charity) => (
               <div
                 key={charity.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all"
               >
-                {/* Charity Logo */}
-                <div className="h-40 bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center p-6 relative overflow-hidden">
+                {/* Charity Logo - REDESIGNED */}
+                <div
+                  className="bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center"
+                  style={{ height: '240px', padding: '32px' }}
+                >
                   {charity.logo ? (
                     <img
                       src={charity.logo}
                       alt={charity.name}
                       style={{
-                        width: '112px',
-                        height: '112px',
-                        objectFit: 'contain',
-                        position: 'relative',
-                        zIndex: 10
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        width: 'auto',
+                        height: 'auto',
+                        objectFit: 'contain'
                       }}
                     />
                   ) : null}
-                  {/* Decorative background pattern */}
-                  <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 left-0 w-32 h-32 bg-rose-300 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-                    <div className="absolute bottom-0 right-0 w-32 h-32 bg-pink-300 rounded-full translate-x-1/2 translate-y-1/2"></div>
-                  </div>
                 </div>
 
-                <div className="p-4">
+                <div className="p-6">
                   {charity.category && (
                     <span className="inline-block px-3 py-1 text-xs font-semibold text-pink-600 bg-pink-100 rounded-full mb-3">
                       {charity.category}
                     </span>
                   )}
 
-                  <h3 className="font-bold text-lg mb-2">{charity.name}</h3>
+                  <h3 className="font-bold text-xl mb-3">{charity.name}</h3>
 
                   {charity.description && (
                     <p className="text-sm text-gray-600 mb-4 line-clamp-3">
