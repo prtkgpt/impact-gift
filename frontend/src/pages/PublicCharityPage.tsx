@@ -173,19 +173,21 @@ const PublicCharityPage = () => {
                   className="bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center"
                   style={{ height: '240px', padding: '32px' }}
                 >
-                  {charity.logo ? (
-                    <img
-                      src={charity.logo}
-                      alt={charity.name}
-                      style={{
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        width: 'auto',
-                        height: 'auto',
-                        objectFit: 'contain'
-                      }}
-                    />
-                  ) : null}
+                  <img
+                    src={charity.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(charity.name)}&size=200&background=f43f5e&color=fff&bold=true`}
+                    alt={charity.name}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(charity.name)}&size=200&background=f43f5e&color=fff&bold=true`;
+                    }}
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      width: 'auto',
+                      height: 'auto',
+                      objectFit: 'contain'
+                    }}
+                  />
                 </div>
 
                 <div className="p-6">
