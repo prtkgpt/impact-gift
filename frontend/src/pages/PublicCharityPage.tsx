@@ -170,13 +170,14 @@ const PublicCharityPage = () => {
               >
                 {/* Charity Logo */}
                 {charity.logo && (
-                  <div className="h-40 bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center p-6 relative overflow-hidden">
-                    <img
-                      src={charity.logo}
-                      alt={charity.name}
-                      className="w-full h-full object-contain relative z-10"
-                      style={{ minHeight: '80px', minWidth: '80px' }}
-                    />
+                  <div className="h-40 bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 relative overflow-hidden p-6">
+                    <div className="absolute inset-6 flex items-center justify-center">
+                      <img
+                        src={charity.logo}
+                        alt={charity.name}
+                        className="max-w-full max-h-full object-contain relative z-10"
+                      />
+                    </div>
                     {/* Decorative background pattern */}
                     <div className="absolute inset-0 opacity-10">
                       <div className="absolute top-0 left-0 w-32 h-32 bg-rose-300 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
