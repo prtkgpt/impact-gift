@@ -138,7 +138,7 @@ const PublicCharityPage = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            {data.user.first_name}'s Favorite Charities
+            {data.user.first_name}'s Favorite Charities v2
           </h1>
           <p className="text-lg text-gray-600 mb-6">
             Instead of a gift, please consider donating to one of these meaningful causes
@@ -162,7 +162,7 @@ const PublicCharityPage = () => {
             <p className="text-gray-500">{data.user.first_name} hasn't added any favorite charities yet.</p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {data.charities.map((charity) => (
               <div
                 key={charity.id}
@@ -191,7 +191,7 @@ const PublicCharityPage = () => {
                     </span>
                   )}
 
-                  <h3 className="font-bold text-xl mb-3">{charity.name}</h3>
+                  <h3 className="font-bold text-lg mb-2">{charity.name}</h3>
 
                   {charity.description && (
                     <p className="text-sm text-gray-600 mb-4 line-clamp-3">
