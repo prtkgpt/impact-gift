@@ -170,7 +170,7 @@ const PublicCharityPage = () => {
               >
                 {/* Charity Logo */}
                 {charity.logo && (
-                  <div className="h-40 bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center p-6 mb-4 -mx-6 -mt-6 relative overflow-hidden">
+                  <div className="h-40 bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center p-4 mb-4 -mx-6 -mt-6 relative overflow-hidden">
                     <img
                       src={charity.logo}
                       alt={charity.name}
