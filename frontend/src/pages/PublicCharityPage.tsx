@@ -166,11 +166,11 @@ const PublicCharityPage = () => {
             {data.charities.map((charity) => (
               <div
                 key={charity.id}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-200 overflow-hidden"
+                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
               >
                 {/* Charity Logo */}
                 {charity.logo && (
-                  <div className="h-40 bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center p-4 mb-4 -mx-6 -mt-6 relative overflow-hidden">
+                  <div className="h-40 bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center p-6 relative overflow-hidden">
                     <img
                       src={charity.logo}
                       alt={charity.name}
@@ -184,8 +184,7 @@ const PublicCharityPage = () => {
                   </div>
                 )}
 
-                {/* Charity Info */}
-                <div>
+                <div className="p-4">
                   {charity.category && (
                     <span className="inline-block px-3 py-1 text-xs font-semibold text-pink-600 bg-pink-100 rounded-full mb-3">
                       {charity.category}
