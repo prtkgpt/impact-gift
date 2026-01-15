@@ -5,6 +5,21 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
+// Helper function to generate Clearbit logo URL from website URL
+function generateLogoUrl(websiteUrl: string, existingLogoUrl: string): string {
+  // If logo is a placeholder or invalid, generate Clearbit logo URL
+  if (!existingLogoUrl || existingLogoUrl.includes('placeholder')) {
+    try {
+      const url = new URL(websiteUrl);
+      const domain = url.hostname.replace('www.', '');
+      return `https://logo.clearbit.com/${domain}`;
+    } catch (e) {
+      return existingLogoUrl;
+    }
+  }
+  return existingLogoUrl;
+}
+
 // Get user's favorite charities
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
   try {
@@ -19,7 +34,13 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
       [userId]
     );
 
-    res.json(result.rows);
+    // Transform logo URLs to use Clearbit if they're placeholders
+    const charitiesWithLogos = result.rows.map(charity => ({
+      ...charity,
+      logo: generateLogoUrl(charity.website, charity.logo)
+    }));
+
+    res.json(charitiesWithLogos);
   } catch (error) {
     console.error('Error fetching favorite charities:', error);
     res.status(500).json({ error: 'Server error' });

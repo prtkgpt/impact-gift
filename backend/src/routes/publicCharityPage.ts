@@ -3,6 +3,21 @@ import { query } from '../database/db';
 
 const router = Router();
 
+// Helper function to generate Clearbit logo URL from website URL
+function generateLogoUrl(websiteUrl: string, existingLogoUrl: string): string {
+  // If logo is a placeholder or invalid, generate Clearbit logo URL
+  if (!existingLogoUrl || existingLogoUrl.includes('placeholder')) {
+    try {
+      const url = new URL(websiteUrl);
+      const domain = url.hostname.replace('www.', '');
+      return `https://logo.clearbit.com/${domain}`;
+    } catch (e) {
+      return existingLogoUrl;
+    }
+  }
+  return existingLogoUrl;
+}
+
 // Get public charity page by slug (no authentication required)
 router.get('/:slug', async (req: Request, res: Response) => {
   try {
@@ -30,13 +45,19 @@ router.get('/:slug', async (req: Request, res: Response) => {
       [user.id]
     );
 
+    // Transform logo URLs to use Clearbit if they're placeholders
+    const charitiesWithLogos = charitiesResult.rows.map(charity => ({
+      ...charity,
+      logo: generateLogoUrl(charity.website, charity.logo)
+    }));
+
     res.json({
       user: {
         first_name: user.first_name,
         last_name: user.last_name,
         slug: user.charity_page_slug
       },
-      charities: charitiesResult.rows
+      charities: charitiesWithLogos
     });
   } catch (error) {
     console.error('Error fetching public charity page:', error);
