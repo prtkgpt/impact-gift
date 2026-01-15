@@ -138,7 +138,7 @@ const PublicCharityPage = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            {data.user.first_name}'s Favorite Charities v4
+            {data.user.first_name}'s Favorite Charities v5
           </h1>
           <p className="text-lg text-gray-600 mb-6">
             Instead of a gift, please consider donating to one of these meaningful causes
@@ -170,14 +170,12 @@ const PublicCharityPage = () => {
               >
                 {/* Charity Logo */}
                 {charity.logo && (
-                  <div className="h-40 bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 relative overflow-hidden p-6">
-                    <div className="absolute inset-6 flex items-center justify-center">
-                      <img
-                        src={charity.logo}
-                        alt={charity.name}
-                        className="w-full h-full object-contain relative z-10"
-                      />
-                    </div>
+                  <div className="h-40 bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center p-6 relative overflow-hidden">
+                    <img
+                      src={charity.logo}
+                      alt={charity.name}
+                      className="max-h-full max-w-full object-contain relative z-10"
+                    />
                     {/* Decorative background pattern */}
                     <div className="absolute inset-0 opacity-10">
                       <div className="absolute top-0 left-0 w-32 h-32 bg-rose-300 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
