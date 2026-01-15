@@ -170,11 +170,11 @@ const PublicCharityPage = () => {
               >
                 {/* Charity Logo */}
                 {charity.logo && (
-                  <div className="h-40 bg-gray-100 flex items-center justify-center p-6 mb-4 -mx-6 -mt-6">
+                  <div className="h-48 sm:h-56 bg-white flex items-center justify-center p-8 mb-4 -mx-6 -mt-6 border-b border-gray-100">
                     <img
                       src={charity.logo}
                       alt={charity.name}
-                      className="max-h-full max-w-full object-contain"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 )}
