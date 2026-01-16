@@ -174,12 +174,9 @@ const PublicCharityPage = () => {
                   style={{ height: '240px', padding: '32px' }}
                 >
                   <img
-                    src={charity.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(charity.name)}&size=200&background=f43f5e&color=fff&bold=true`}
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(charity.name)}&size=200&background=f43f5e&color=fff&bold=true`}
                     alt={charity.name}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(charity.name)}&size=200&background=f43f5e&color=fff&bold=true`;
-                    }}
+                    loading="lazy"
                     style={{
                       maxWidth: '100%',
                       maxHeight: '100%',
