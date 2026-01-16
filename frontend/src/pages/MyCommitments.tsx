@@ -7,7 +7,7 @@ interface Commitment {
   id: number;
   donor_name: string;
   donor_email: string;
-  commitment_amount: number;
+  commitment_amount: number | string;
   charity_name: string;
   charity_logo: string;
   created_at: string;
@@ -177,7 +177,7 @@ const MyCommitments = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm font-bold text-pink-600">
-                          ${commitment.commitment_amount.toFixed(2)}
+                          ${Number(commitment.commitment_amount).toFixed(2)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
