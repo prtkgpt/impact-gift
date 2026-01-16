@@ -16,6 +16,7 @@ import Receipt from './pages/Receipt';
 import Profile from './pages/Profile';
 import ManageEvent from './pages/ManageEvent';
 import PublicCharityPage from './pages/PublicCharityPage';
+import MyCommitments from './pages/MyCommitments';
 import NotFound from './pages/NotFound';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -63,6 +64,14 @@ function App() {
                 element={
                   <PrivateRoute>
                     <Profile />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/commitments"
+                element={
+                  <PrivateRoute>
+                    <MyCommitments />
                   </PrivateRoute>
                 }
               />

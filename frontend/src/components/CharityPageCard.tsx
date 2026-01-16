@@ -112,7 +112,7 @@ const CharityPageCard = () => {
       {stats.total_commitments > 0 && (
         <div className="mt-4">
           <button
-            onClick={() => navigate(`/charity/${stats.charity_page_slug}`)}
+            onClick={() => navigate('/commitments')}
             className="text-sm text-pink-600 hover:text-pink-700 font-medium"
           >
             View all commitments →
