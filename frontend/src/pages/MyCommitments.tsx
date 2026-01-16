@@ -49,22 +49,6 @@ const MyCommitments = () => {
     );
   }
 
-  if (!data?.charity_page_slug) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">💝</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">No Charity Page Yet</h2>
-            <p className="text-gray-600">
-              Set up your charity page first to start receiving commitments
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -80,24 +64,31 @@ const MyCommitments = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
             <p className="text-sm text-gray-600 mb-2">Total Commitments</p>
-            <p className="text-4xl font-bold text-pink-600">{data.total_commitments}</p>
+            <p className="text-4xl font-bold text-pink-600">{data?.total_commitments || 0}</p>
           </div>
           <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
             <p className="text-sm text-gray-600 mb-2">Total Amount</p>
             <p className="text-4xl font-bold text-pink-600">
-              ${data.total_amount.toFixed(2)}
+              ${(data?.total_amount || 0).toFixed(2)}
             </p>
           </div>
         </div>
 
         {/* Commitments Table */}
-        {data.commitments.length === 0 ? (
+        {!data?.commitments || data.commitments.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-gray-200">
             <div className="text-6xl mb-4">🎁</div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">No Commitments Yet</h3>
-            <p className="text-gray-600">
-              Share your charity page link to start receiving commitments!
+            <p className="text-gray-600 mb-4">
+              {!data?.charity_page_slug
+                ? "Set up your charity page to start receiving commitments from friends and family."
+                : "Share your charity page link to start receiving commitments!"}
             </p>
+            {data?.charity_page_slug && (
+              <p className="text-sm text-gray-500">
+                Your charity page: giftwithimpact.com/charity/{data.charity_page_slug}
+              </p>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
