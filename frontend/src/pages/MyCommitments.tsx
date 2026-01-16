@@ -27,12 +27,15 @@ const MyCommitments = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('MyCommitments component mounted');
     fetchCommitments();
   }, []);
 
   const fetchCommitments = async () => {
+    console.log('Fetching commitments...');
     try {
       const response = await api.get('/charity-commitments/my-page');
+      console.log('Commitments response:', response.data);
       setData(response.data);
       setError(null);
     } catch (error: any) {
@@ -44,10 +47,12 @@ const MyCommitments = () => {
     }
   };
 
+  console.log('MyCommitments render - loading:', loading, 'error:', error, 'data:', data);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading commitments...</div>
+        <div className="text-gray-600 text-2xl">Loading commitments...</div>
       </div>
     );
   }
@@ -63,7 +68,10 @@ const MyCommitments = () => {
               {error || "Unable to load commitments data"}
             </p>
             <button
-              onClick={fetchCommitments}
+              onClick={() => {
+                setLoading(true);
+                fetchCommitments();
+              }}
               className="btn btn-primary"
             >
               Try Again
