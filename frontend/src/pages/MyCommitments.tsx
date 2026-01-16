@@ -24,6 +24,7 @@ interface CommitmentsData {
 const MyCommitments = () => {
   const [data, setData] = useState<CommitmentsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCommitments();
@@ -33,8 +34,10 @@ const MyCommitments = () => {
     try {
       const response = await api.get('/charity-commitments/my-page');
       setData(response.data);
-    } catch (error) {
+      setError(null);
+    } catch (error: any) {
       console.error('Failed to load commitments:', error);
+      setError(error.response?.data?.error || 'Failed to load commitments');
       toast.error('Failed to load commitments');
     } finally {
       setLoading(false);
@@ -45,6 +48,28 @@ const MyCommitments = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-gray-600">Loading commitments...</div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center py-16">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Commitments</h2>
+            <p className="text-gray-600 mb-4">
+              {error || "Unable to load commitments data"}
+            </p>
+            <button
+              onClick={fetchCommitments}
+              className="btn btn-primary"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
