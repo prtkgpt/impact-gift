@@ -22,12 +22,12 @@ router.get('/event/:eventId', authenticate, async (req: AuthRequest, res: Respon
 
     const result = await query(
       `SELECT g.*,
-              CASE WHEN d.id IS NOT NULL THEN true ELSE false END as has_donated,
+              COUNT(d.id) > 0 as has_donated,
               COALESCE(SUM(d.amount), 0) as donated_amount
        FROM guests g
        LEFT JOIN donations d ON g.email = d.donor_email AND d.event_id = g.event_id AND d.status = 'completed'
        WHERE g.event_id = $1
-       GROUP BY g.id, d.id
+       GROUP BY g.id
        ORDER BY g.created_at DESC`,
       [eventId]
     );
@@ -311,21 +311,6 @@ router.post(
       if (guestCheck.rows.length === 0) {
         console.error(`Guest not found: ${guestId}`);
         return res.status(404).json({ error: 'Guest not found' });
-      }
-
-      // Check if RSVP columns exist (in case migration hasn't run)
-      const columnCheck = await query(`
-        SELECT column_name
-        FROM information_schema.columns
-        WHERE table_name = 'guests'
-        AND column_name IN ('rsvp_status', 'rsvp_comment', 'rsvp_at')
-      `);
-
-      if (columnCheck.rows.length < 3) {
-        console.error('RSVP columns missing in database. Migration may not have run.');
-        return res.status(500).json({
-          error: 'RSVP functionality not available yet. Please try again in a few minutes.'
-        });
       }
 
       // Update RSVP

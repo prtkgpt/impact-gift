@@ -58,8 +58,8 @@ const EditEvent = () => {
 
   const fetchCharities = async () => {
     try {
-      const response = await api.get<Charity[]>('/charities');
-      setCharities(response.data);
+      const response = await api.get<{ charities: Charity[] }>('/charities');
+      setCharities(response.data.charities);
     } catch (error) {
       toast.error('Failed to load charities');
     }

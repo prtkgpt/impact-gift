@@ -132,43 +132,46 @@ router.post(
 
 router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    // Get all events for user
+    // Get all events with their charities in a single query using json_agg
     const eventsResult = await query(
       `SELECT e.*,
-              COALESCE(SUM(d.amount), 0) as total_raised,
-              COUNT(DISTINCT d.id) as donation_count
+              COALESCE(SUM(DISTINCT d.amount), 0) as total_raised,
+              COUNT(DISTINCT d.id) as donation_count,
+              COALESCE(
+                json_agg(
+                  DISTINCT jsonb_build_object(
+                    'id', c.id,
+                    'name', c.name,
+                    'logo_url', c.logo_url
+                  )
+                ) FILTER (WHERE c.id IS NOT NULL),
+                '[]'
+              ) as charities
        FROM events e
        LEFT JOIN donations d ON e.id = d.event_id AND d.status IN ('completed', 'committed')
+       LEFT JOIN event_charities ec ON e.id = ec.event_id
+       LEFT JOIN charities c ON ec.charity_id = c.id
        WHERE e.user_id = $1
        GROUP BY e.id
        ORDER BY e.event_date DESC`,
       [req.user!.id]
     );
 
-    // For each event, get its charities
-    const events = await Promise.all(
-      eventsResult.rows.map(async (event) => {
-        const charitiesResult = await query(
-          `SELECT c.id, c.name, c.logo_url
-           FROM event_charities ec
-           JOIN charities c ON ec.charity_id = c.id
-           WHERE ec.event_id = $1`,
-          [event.id]
-        );
+    // Process events for backward compatibility
+    const events = eventsResult.rows.map((event) => {
+      const charities = event.charities || [];
 
-        // For backward compatibility with single charity
-        if (charitiesResult.rows.length === 1) {
-          event.charity_name = charitiesResult.rows[0].name;
-          event.charity_logo = charitiesResult.rows[0].logo_url;
-        } else if (charitiesResult.rows.length > 1) {
-          // Multiple charities - show count
-          event.charity_name = `${charitiesResult.rows.length} charities`;
-        }
+      // For backward compatibility with single charity
+      if (charities.length === 1) {
+        event.charity_name = charities[0].name;
+        event.charity_logo = charities[0].logo_url;
+      } else if (charities.length > 1) {
+        // Multiple charities - show count
+        event.charity_name = `${charities.length} charities`;
+      }
 
-        event.charities = charitiesResult.rows;
-        return event;
-      })
-    );
+      return event;
+    });
 
     res.json(events);
   } catch (error) {

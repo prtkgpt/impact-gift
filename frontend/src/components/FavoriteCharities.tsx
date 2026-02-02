@@ -32,8 +32,8 @@ const FavoriteCharities = () => {
 
   const fetchCharities = async () => {
     try {
-      const response = await api.get('/charities');
-      setCharities(response.data);
+      const response = await api.get<{ charities: any[] }>('/charities');
+      setCharities(response.data.charities);
     } catch (error) {
       console.error('Failed to load charities:', error);
     }
