@@ -135,22 +135,23 @@ router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) =
     // Get all events with their charities in a single query using json_agg
     const eventsResult = await query(
       `SELECT e.*,
-              COALESCE(SUM(DISTINCT d.amount), 0) as total_raised,
+              COALESCE(SUM(d.amount), 0) as total_raised,
               COUNT(DISTINCT d.id) as donation_count,
               COALESCE(
-                json_agg(
-                  DISTINCT jsonb_build_object(
-                    'id', c.id,
-                    'name', c.name,
-                    'logo_url', c.logo_url
-                  )
-                ) FILTER (WHERE c.id IS NOT NULL),
+                (
+                  SELECT json_agg(DISTINCT jsonb_build_object(
+                    'id', c2.id,
+                    'name', c2.name,
+                    'logo_url', c2.logo_url
+                  ))
+                  FROM event_charities ec2
+                  JOIN charities c2 ON ec2.charity_id = c2.id
+                  WHERE ec2.event_id = e.id
+                ),
                 '[]'
               ) as charities
        FROM events e
        LEFT JOIN donations d ON e.id = d.event_id AND d.status IN ('completed', 'committed')
-       LEFT JOIN event_charities ec ON e.id = ec.event_id
-       LEFT JOIN charities c ON ec.charity_id = c.id
        WHERE e.user_id = $1
        GROUP BY e.id
        ORDER BY e.event_date DESC`,
