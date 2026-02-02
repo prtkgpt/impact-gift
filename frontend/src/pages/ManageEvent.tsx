@@ -12,6 +12,7 @@ const ManageEvent = () => {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   type TabType = 'guests' | 'email' | 'progress' | 'cohosts';
   const [activeTab, setActiveTab] = useState<TabType>('guests');
 
@@ -42,6 +43,7 @@ const ManageEvent = () => {
   const fetchEventData = async () => {
     try {
       setLoading(true);
+      setError(null);
       // First get the event to get the event ID
       const eventRes = await api.get(`/events/${slug}`);
       setEvent(eventRes.data);
@@ -65,14 +67,21 @@ const ManageEvent = () => {
       console.log('Donations loaded:', donationsRes.data.length);
 
       // Fetch email template
-      const templateRes = await api.get(`/invitations/template/${eventRes.data.id}`);
+      const templateRes = await api.get(`/invitations/template/${eventRes.data.id}`).catch((err) => {
+        console.error('Error fetching email template:', err);
+        return { data: { subject: '', body: '' } };
+      });
       setEmailSubject(templateRes.data.subject);
       setEmailBody(templateRes.data.body);
     } catch (error: any) {
       console.error('Error fetching event data:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to load event';
+      setError(errorMessage);
       if (error.response?.status === 404 || error.response?.status === 403) {
         toast.error('Event not found or you do not have permission');
-        navigate('/dashboard');
+        setTimeout(() => navigate('/dashboard'), 2000);
+      } else {
+        toast.error(errorMessage);
       }
     } finally {
       setLoading(false);
@@ -237,7 +246,25 @@ const ManageEvent = () => {
     );
   }
 
-  if (!event) return null;
+  if (error || !event) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Failed to Load Event</h2>
+          <p className="text-gray-600 mb-6">{error || 'Event not found'}</p>
+          <div className="space-x-4">
+            <button onClick={fetchEventData} className="btn btn-primary">
+              Try Again
+            </button>
+            <button onClick={() => navigate('/dashboard')} className="btn btn-secondary">
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const pendingInvites = guests.filter(g => !g.invitation_sent).length;
   const totalDonations = donations.reduce((sum, d) => sum + d.amount, 0);
