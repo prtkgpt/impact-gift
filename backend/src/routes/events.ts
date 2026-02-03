@@ -45,17 +45,16 @@ router.post(
       const slug = generateSlug(title);
 
       // Support both single charity (legacy) and multiple charities (new feature)
+      // Charities are now optional - events can be created as pure evites
       const charityList = charity_ids || (charity_id ? [charity_id] : []);
 
-      if (charityList.length === 0) {
-        return res.status(400).json({ error: 'At least one charity must be selected' });
-      }
-
-      // Verify all charities exist
-      for (const cid of charityList) {
-        const charityCheck = await query('SELECT id FROM charities WHERE id = $1', [cid]);
-        if (charityCheck.rows.length === 0) {
-          return res.status(400).json({ error: `Invalid charity ID: ${cid}` });
+      // Verify all charities exist (only if charities were provided)
+      if (charityList.length > 0) {
+        for (const cid of charityList) {
+          const charityCheck = await query('SELECT id FROM charities WHERE id = $1', [cid]);
+          if (charityCheck.rows.length === 0) {
+            return res.status(400).json({ error: `Invalid charity ID: ${cid}` });
+          }
         }
       }
 
@@ -93,14 +92,16 @@ router.post(
 
       const newEvent = result.rows[0];
 
-      // Add charities to event_charities junction table
-      for (const cid of charityList) {
-        await query(
-          `INSERT INTO event_charities (event_id, charity_id)
-           VALUES ($1, $2)
-           ON CONFLICT (event_id, charity_id) DO NOTHING`,
-          [newEvent.id, cid]
-        );
+      // Add charities to event_charities junction table (only if charities were provided)
+      if (charityList.length > 0) {
+        for (const cid of charityList) {
+          await query(
+            `INSERT INTO event_charities (event_id, charity_id)
+             VALUES ($1, $2)
+             ON CONFLICT (event_id, charity_id) DO NOTHING`,
+            [newEvent.id, cid]
+          );
+        }
       }
 
       // Fetch the complete event with charities
