@@ -187,13 +187,132 @@ router.post(
 
         if (resend) {
           try {
+            // Create HTML email template
+            const htmlEmail = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You're Invited!</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: white; border: 4px solid #22c55e; border-radius: 8px; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 40px 20px 40px; text-align: center;">
+              <h1 style="margin: 0; font-size: 48px; font-weight: bold; color: #22c55e; line-height: 1.2;">
+                You're<br>invited!
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Event Details -->
+          <tr>
+            <td style="padding: 20px 40px; text-align: center;">
+              <h2 style="margin: 0 0 20px 0; font-size: 24px; font-weight: bold; color: #1f2937;">
+                ${senderName} invited you to ${event.title}
+              </h2>
+
+              ${event.event_date ? `
+              <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280; font-weight: 600;">📅 DATE & TIME</p>
+                <p style="margin: 0; font-size: 18px; font-weight: bold; color: #1f2937;">
+                  ${new Date(event.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
+                ${event.start_time ? `<p style="margin: 8px 0 0 0; font-size: 16px; color: #4b5563;">⏰ ${event.start_time}</p>` : ''}
+              </div>
+              ` : ''}
+
+              ${event.venue_name ? `
+              <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280; font-weight: 600;">📍 VENUE</p>
+                <p style="margin: 0; font-size: 16px; color: #1f2937;">${event.venue_name}</p>
+                ${event.address ? `<p style="margin: 8px 0 0 0; font-size: 14px; color: #6b7280;">${event.address}</p>` : ''}
+              </div>
+              ` : ''}
+            </td>
+          </tr>
+
+          <!-- Message -->
+          <tr>
+            <td style="padding: 20px 40px;">
+              <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 4px; margin: 20px 0;">
+                <p style="margin: 0; font-size: 14px; color: #78350f; line-height: 1.6;">
+                  ${personalizedBody.replace(/\n/g, '<br>')}
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- CTA Buttons -->
+          <tr>
+            <td style="padding: 20px 40px; text-align: center;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="${eventUrl}" style="display: inline-block; padding: 16px 32px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin: 10px;">
+                      View Invitation
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top: 10px;">
+                    <a href="${eventUrl}" style="display: inline-block; padding: 12px 24px; background-color: white; color: #22c55e; text-decoration: none; border: 2px solid #22c55e; border-radius: 8px; font-size: 16px; font-weight: 600; margin: 10px;">
+                      RSVP Now
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px 40px; border-top: 1px solid #e5e7eb;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="50%" style="text-align: center; padding: 10px;">
+                    <a href="mailto:${event.user_email}" style="color: #6b7280; text-decoration: none; font-size: 14px;">
+                      <strong style="display: block; margin-bottom: 4px; color: #1f2937;">💬 Message Host</strong>
+                    </a>
+                  </td>
+                  <td width="50%" style="text-align: center; padding: 10px;">
+                    <a href="${eventUrl}" style="color: #6b7280; text-decoration: none; font-size: 14px;">
+                      <strong style="display: block; margin-bottom: 4px; color: #1f2937;">📅 Add to Calendar</strong>
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Branding -->
+          <tr>
+            <td style="padding: 20px; text-align: center; background-color: #f9fafb;">
+              <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+                Powered by <strong style="color: #22c55e;">Impact Gift</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+            `;
+
             await resend.emails.send({
               from: 'Impact Gift <noreply@giftwithimpact.com>',
               to: guest.email,
               replyTo: event.user_email,
               subject: subject,
               text: personalizedBody,
-              html: personalizedBody.replace(/\n/g, '<br>')
+              html: htmlEmail
             });
 
             console.log(`✅ Email sent to ${guest.email}`);
@@ -330,13 +449,133 @@ router.post(
       if (resend) {
         try {
           console.log(`[RESEND] Sending email via Resend...`);
+
+          // Create HTML email template
+          const htmlEmail = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You're Invited!</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: white; border: 4px solid #22c55e; border-radius: 8px; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 40px 20px 40px; text-align: center;">
+              <h1 style="margin: 0; font-size: 48px; font-weight: bold; color: #22c55e; line-height: 1.2;">
+                You're<br>invited!
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Event Details -->
+          <tr>
+            <td style="padding: 20px 40px; text-align: center;">
+              <h2 style="margin: 0 0 20px 0; font-size: 24px; font-weight: bold; color: #1f2937;">
+                ${senderName} invited you to ${guest.title}
+              </h2>
+
+              ${guest.event_date ? `
+              <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280; font-weight: 600;">📅 DATE & TIME</p>
+                <p style="margin: 0; font-size: 18px; font-weight: bold; color: #1f2937;">
+                  ${new Date(guest.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
+                ${guest.start_time ? `<p style="margin: 8px 0 0 0; font-size: 16px; color: #4b5563;">⏰ ${guest.start_time}</p>` : ''}
+              </div>
+              ` : ''}
+
+              ${guest.venue_name ? `
+              <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280; font-weight: 600;">📍 VENUE</p>
+                <p style="margin: 0; font-size: 16px; color: #1f2937;">${guest.venue_name}</p>
+                ${guest.address ? `<p style="margin: 8px 0 0 0; font-size: 14px; color: #6b7280;">${guest.address}</p>` : ''}
+              </div>
+              ` : ''}
+            </td>
+          </tr>
+
+          <!-- Message -->
+          <tr>
+            <td style="padding: 20px 40px;">
+              <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 4px; margin: 20px 0;">
+                <p style="margin: 0; font-size: 14px; color: #78350f; line-height: 1.6;">
+                  ${personalizedBody.replace(/\n/g, '<br>')}
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- CTA Buttons -->
+          <tr>
+            <td style="padding: 20px 40px; text-align: center;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="${eventUrl}" style="display: inline-block; padding: 16px 32px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin: 10px;">
+                      View Invitation
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top: 10px;">
+                    <a href="${eventUrl}" style="display: inline-block; padding: 12px 24px; background-color: white; color: #22c55e; text-decoration: none; border: 2px solid #22c55e; border-radius: 8px; font-size: 16px; font-weight: 600; margin: 10px;">
+                      RSVP Now
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px 40px; border-top: 1px solid #e5e7eb;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="50%" style="text-align: center; padding: 10px;">
+                    <a href="mailto:${guest.user_email}" style="color: #6b7280; text-decoration: none; font-size: 14px;">
+                      <strong style="display: block; margin-bottom: 4px; color: #1f2937;">💬 Message Host</strong>
+                    </a>
+                  </td>
+                  <td width="50%" style="text-align: center; padding: 10px;">
+                    <a href="${eventUrl}" style="color: #6b7280; text-decoration: none; font-size: 14px;">
+                      <strong style="display: block; margin-bottom: 4px; color: #1f2937;">📅 Add to Calendar</strong>
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Branding -->
+          <tr>
+            <td style="padding: 20px; text-align: center; background-color: #f9fafb;">
+              <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+                Powered by <strong style="color: #22c55e;">Impact Gift</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+          `;
+
           const result = await resend.emails.send({
             from: 'Impact Gift <noreply@giftwithimpact.com>',
             to: guest.email,
             replyTo: guest.user_email,
             subject: subject,
             text: personalizedBody,
-            html: personalizedBody.replace(/\n/g, '<br>')
+            html: htmlEmail
           });
 
           console.log(`[RESEND] ✅ Resend API response:`, result);
