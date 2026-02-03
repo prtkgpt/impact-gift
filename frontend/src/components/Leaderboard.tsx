@@ -182,7 +182,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ donations, event }) => {
                   <div className="flex-1">
                     <div className="text-sm">
                       <span className={achieved ? 'text-green-700 font-medium' : 'text-gray-600'}>
-                        {percent}% - ${milestoneAmount.toFixed(2)}
+                        {percent}% - ${Number(milestoneAmount).toFixed(2)}
                       </span>
                       {achieved && <span className="ml-2 text-green-600">🎉 Achieved!</span>}
                     </div>

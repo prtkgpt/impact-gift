@@ -215,7 +215,7 @@ const PublicCharityPage = () => {
                     <div className="mb-4 p-3 bg-gradient-to-r from-pink-50 to-rose-50 rounded-lg">
                       <p className="text-xs text-gray-600 mb-1">Personal commitment</p>
                       <p className="text-2xl font-bold text-pink-600">
-                        ${charity.commitment_amount.toFixed(2)}
+                        ${Number(charity.commitment_amount).toFixed(2)}
                       </p>
                     </div>
                   )}

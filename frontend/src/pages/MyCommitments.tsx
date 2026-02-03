@@ -102,7 +102,7 @@ const MyCommitments = () => {
           <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-200">
             <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Total Amount</p>
             <p className="text-3xl sm:text-4xl font-bold text-pink-600">
-              ${(data?.total_amount || 0).toFixed(2)}
+              ${Number(data?.total_amount || 0).toFixed(2)}
             </p>
           </div>
         </div>

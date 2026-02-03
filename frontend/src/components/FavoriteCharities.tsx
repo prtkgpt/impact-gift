@@ -311,7 +311,7 @@ const FavoriteCharities = () => {
                   <div className="mb-3 p-3 bg-primary-50 rounded-lg">
                     <p className="text-xs text-primary-600 font-medium">MY COMMITMENT</p>
                     <p className="text-2xl font-bold text-primary-700">
-                      ${favorite.commitment_amount.toFixed(2)}
+                      ${Number(favorite.commitment_amount).toFixed(2)}
                     </p>
                   </div>
                 )}
