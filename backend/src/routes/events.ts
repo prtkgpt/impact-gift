@@ -181,9 +181,24 @@ router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) =
   }
 });
 
-router.get('/:slug', async (req: Request, res: Response) => {
+router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
   try {
     const { slug } = req.params;
+
+    // Check if user is authenticated (for manage page access)
+    const authHeader = req.headers.authorization;
+    let authenticatedUserId: number | null = null;
+
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+        authenticatedUserId = decoded.userId;
+      } catch (err) {
+        // Invalid token, treat as unauthenticated
+      }
+    }
 
     // Get basic event info
     const eventResult = await query(
@@ -193,9 +208,9 @@ router.get('/:slug', async (req: Request, res: Response) => {
        FROM events e
        JOIN users u ON e.user_id = u.id
        LEFT JOIN donations d ON e.id = d.event_id AND d.status IN ('completed', 'committed')
-       WHERE e.slug = $1 AND e.is_active = true
+       WHERE e.slug = $1 AND (e.is_active = true OR e.user_id = $2)
        GROUP BY e.id, u.first_name, u.last_name`,
-      [slug]
+      [slug, authenticatedUserId]
     );
 
     if (eventResult.rows.length === 0) {
