@@ -171,11 +171,16 @@ const ManageEvent = () => {
   };
 
   const resendInvitation = async (guestId: number) => {
+    console.log(`[RESEND FRONTEND] Resending invitation for guest ID: ${guestId}`);
     try {
+      console.log(`[RESEND FRONTEND] Making API call to /invitations/resend/${guestId}`);
       const response = await api.post(`/invitations/resend/${guestId}`);
+      console.log(`[RESEND FRONTEND] API response:`, response.data);
       toast.success(response.data.message);
       await fetchEventData();
     } catch (error: any) {
+      console.error(`[RESEND FRONTEND] Error resending invitation:`, error);
+      console.error(`[RESEND FRONTEND] Error response:`, error.response?.data);
       toast.error(error.response?.data?.error || 'Failed to resend invitation');
     }
   };

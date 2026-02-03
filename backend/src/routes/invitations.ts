@@ -268,6 +268,8 @@ router.post(
   async (req: AuthRequest, res: Response) => {
     try {
       const { guestId } = req.params;
+      console.log(`[RESEND] Starting resend invitation for guest ID: ${guestId}`);
+      console.log(`[RESEND] Authenticated user ID: ${req.user!.id}`);
 
       // Get guest and verify ownership
       const guestResult = await query(
@@ -279,17 +281,23 @@ router.post(
         [guestId]
       );
 
+      console.log(`[RESEND] Guest query returned ${guestResult.rows.length} rows`);
+
       if (guestResult.rows.length === 0) {
+        console.log(`[RESEND] Guest not found - returning 404`);
         return res.status(404).json({ error: 'Guest not found' });
       }
 
       const guest = guestResult.rows[0];
+      console.log(`[RESEND] Guest found: ${guest.email}, event: ${guest.title}`);
 
       if (guest.user_id !== req.user!.id) {
+        console.log(`[RESEND] User ${req.user!.id} not authorized for guest owned by ${guest.user_id}`);
         return res.status(403).json({ error: 'Not authorized' });
       }
 
       // Get email template
+      console.log(`[RESEND] Fetching email template for event ID: ${guest.event_id}`);
       const templateResult = await query(
         'SELECT * FROM email_templates WHERE event_id = $1',
         [guest.event_id]
@@ -299,9 +307,11 @@ router.post(
       if (templateResult.rows.length > 0) {
         subject = templateResult.rows[0].subject;
         bodyTemplate = templateResult.rows[0].body;
+        console.log(`[RESEND] Using custom template`);
       } else {
         subject = `You're invited to support my ${guest.title}!`;
         bodyTemplate = `Dear Family and Friends,\n\nI'm so excited to celebrate my ${guest.title} with you!\n\nI would humbly request that you please don't bring any kind of gift (boxed or otherwise). Your presence and blessings would be the best gift.\n\nI know not everyone heeds such requests :) So if you must give a gift, may I request you please make a donation to the charities that I support.\n\nYou can view the event and donate here:\n{{EVENT_LINK}}\n\nThank you so much. Look forward to celebrating with you!\n\nWith love,\n{{YOUR_NAME}}`;
+        console.log(`[RESEND] Using default template`);
       }
 
       // Create personalized event URL with guest email for RSVP tracking
@@ -313,9 +323,14 @@ router.post(
         .replace(/\{\{YOUR_NAME\}\}/g, senderName)
         .replace(/\{\{GUEST_NAME\}\}/g, guest.name || 'Friend');
 
+      console.log(`[RESEND] Email details - To: ${guest.email}, ReplyTo: ${guest.user_email}`);
+      console.log(`[RESEND] Resend configured: ${!!resend}`);
+      console.log(`[RESEND] RESEND_API_KEY exists: ${!!process.env.RESEND_API_KEY}`);
+
       if (resend) {
         try {
-          await resend.emails.send({
+          console.log(`[RESEND] Sending email via Resend...`);
+          const result = await resend.emails.send({
             from: 'Impact Gift <noreply@giftwithimpact.com>',
             to: guest.email,
             replyTo: guest.user_email,
@@ -324,7 +339,7 @@ router.post(
             html: personalizedBody.replace(/\n/g, '<br>')
           });
 
-          console.log(`✅ Resent invitation to ${guest.email}`);
+          console.log(`[RESEND] ✅ Resend API response:`, result);
 
           // Update invitation sent timestamp
           await query(
@@ -336,23 +351,32 @@ router.post(
             [guestId]
           );
 
+          console.log(`[RESEND] ✅ Database updated for guest ${guestId}`);
+
           res.json({
             success: true,
             message: `Invitation resent to ${guest.email}`
           });
         } catch (emailError: any) {
-          console.error(`❌ Failed to resend email to ${guest.email}:`, emailError);
+          console.error(`[RESEND] ❌ Failed to resend email to ${guest.email}:`, emailError);
+          console.error('[RESEND] Error details:', {
+            message: emailError.message,
+            statusCode: emailError.statusCode,
+            name: emailError.name,
+            stack: emailError.stack
+          });
           res.status(500).json({
             error: emailError.message || 'Failed to send email'
           });
         }
       } else {
+        console.log(`[RESEND] ❌ Resend not configured - RESEND_API_KEY missing`);
         res.status(500).json({
           error: 'Email service not configured'
         });
       }
     } catch (error) {
-      console.error('Error resending invitation:', error);
+      console.error('[RESEND] Error resending invitation:', error);
       res.status(500).json({ error: 'Server error' });
     }
   }
