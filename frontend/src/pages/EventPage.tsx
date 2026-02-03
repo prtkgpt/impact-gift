@@ -134,10 +134,12 @@ const EventPage = () => {
                   <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-2 sm:mb-3 tracking-tight leading-tight break-words">
                     {event.title}
                   </h1>
-                  <p className="text-base sm:text-lg lg:text-xl opacity-95 font-light">
-                    {event.first_name} {event.last_name} is fundraising for{' '}
-                    <span className="font-semibold">{event.charity_name}</span>
-                  </p>
+                  {event.charity_id && event.charity_name && (
+                    <p className="text-base sm:text-lg lg:text-xl opacity-95 font-light">
+                      {event.first_name} {event.last_name} is fundraising for{' '}
+                      <span className="font-semibold">{event.charity_name}</span>
+                    </p>
+                  )}
                 </div>
                 {isOwner && (
                   <button
