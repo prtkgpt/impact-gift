@@ -391,7 +391,7 @@ const CreateEvent = () => {
           <div className="border-t pt-6">
             <div className="flex items-center justify-between mb-3">
               <label className="block text-sm font-medium text-gray-700">
-                Select Charities * (Select one or more)
+                Select Charities (Optional)
               </label>
               <button
                 type="button"
