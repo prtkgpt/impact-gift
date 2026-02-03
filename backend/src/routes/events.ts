@@ -15,16 +15,16 @@ router.post(
     body('description').optional(),
     body('event_type').isIn(['birthday', 'wedding', 'anniversary', 'graduation', 'other']),
     body('event_date').isISO8601(),
-    body('start_date').optional().isISO8601(),
-    body('end_date').optional().isISO8601(),
-    body('start_time').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
-    body('end_time').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+    body('start_date').optional({ nullable: true, checkFalsy: true }).isISO8601(),
+    body('end_date').optional({ nullable: true, checkFalsy: true }).isISO8601(),
+    body('start_time').optional({ nullable: true, checkFalsy: true }).matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+    body('end_time').optional({ nullable: true, checkFalsy: true }).matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
     body('venue_name').optional().trim(),
     body('address').optional().trim(),
-    body('virtual_link').optional().isURL(),
+    body('virtual_link').optional({ nullable: true, checkFalsy: true }).isURL(),
     body('host_name').optional().trim(),
     body('host_phone').optional().trim(),
-    body('rsvp_deadline').optional().isISO8601(),
+    body('rsvp_deadline').optional({ nullable: true, checkFalsy: true }).isISO8601(),
     body('charity_id').optional().isInt(),
     body('charity_ids').optional().isArray(),
     body('goal_amount').optional().isFloat({ min: 0 })
@@ -33,7 +33,18 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        console.error('[CREATE EVENT] Validation errors:', JSON.stringify(errors.array(), null, 2));
+        console.error('[CREATE EVENT] Request body:', JSON.stringify(req.body, null, 2));
+        const errorMessages = errors.array().map(e => {
+          if ('param' in e) {
+            return `${e.param}: ${e.msg}`;
+          }
+          return e.msg;
+        }).join(', ');
+        return res.status(400).json({
+          error: `Validation failed: ${errorMessages}`,
+          errors: errors.array()
+        });
       }
 
       const {
