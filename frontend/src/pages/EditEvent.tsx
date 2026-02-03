@@ -76,17 +76,12 @@ const EditEvent = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (selectedCharityIds.length === 0) {
-      toast.error('Please select at least one charity');
-      return;
-    }
-
     setLoading(true);
 
     try {
       const eventData = {
         ...formData,
-        charity_ids: selectedCharityIds,
+        charity_ids: selectedCharityIds.length > 0 ? selectedCharityIds : undefined,
         start_date: formData.start_date || formData.event_date,
         end_date: formData.end_date || formData.event_date,
         potluck_enabled: formData.potluck_enabled
@@ -229,7 +224,7 @@ const EditEvent = () => {
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="block text-sm font-medium text-gray-700">
-                Select Charities * (Select one or more)
+                Select Charities (Optional)
               </label>
               <button
                 type="button"
