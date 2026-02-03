@@ -107,13 +107,16 @@ router.post(
       // Fetch the complete event with charities
       const eventWithCharities = await query(
         `SELECT e.*,
-                json_agg(
-                  json_build_object(
-                    'id', c.id,
-                    'name', c.name,
-                    'logo_url', c.logo_url,
-                    'custom_instructions', ec.custom_instructions
-                  )
+                COALESCE(
+                  json_agg(
+                    json_build_object(
+                      'id', c.id,
+                      'name', c.name,
+                      'logo_url', c.logo_url,
+                      'custom_instructions', ec.custom_instructions
+                    )
+                  ) FILTER (WHERE c.id IS NOT NULL),
+                  '[]'
                 ) as charities
          FROM events e
          LEFT JOIN event_charities ec ON e.id = ec.event_id
