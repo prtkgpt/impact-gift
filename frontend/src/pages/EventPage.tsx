@@ -3,13 +3,11 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Helmet } from 'react-helmet-async';
 import api from '../utils/api';
-import { Event, Donation } from '../types';
+import { Event } from '../types';
 import toast from 'react-hot-toast';
 import DonationMethodSelector from '../components/DonationMethodSelector';
 import EventUpdates from '../components/EventUpdates';
-import ShareButtons from '../components/ShareButtons';
 import EventCountdown from '../components/EventCountdown';
-import Leaderboard from '../components/Leaderboard';
 import RSVPSection from '../components/RSVPSection';
 import AttendingGuests from '../components/AttendingGuests';
 import PotluckItems from '../components/PotluckItems';
@@ -21,7 +19,6 @@ const EventPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
-  const [donations, setDonations] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDonationForm, setShowDonationForm] = useState(false);
   const [guestEmail, setGuestEmail] = useState<string | null>(null);
@@ -29,7 +26,6 @@ const EventPage = () => {
   useEffect(() => {
     if (slug) {
       fetchEvent();
-      fetchDonations();
 
       // Check for guest email in URL params
       const emailParam = searchParams.get('email');
@@ -58,15 +54,6 @@ const EventPage = () => {
     }
   };
 
-  const fetchDonations = async () => {
-    try {
-      const response = await api.get<Donation[]>(`/events/${slug}/donations`);
-      setDonations(response.data);
-    } catch (error) {
-      console.error('Failed to load donations');
-    }
-  };
-
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
@@ -85,8 +72,8 @@ const EventPage = () => {
   const isOwner = user && event && user.id === event.user_id;
 
   const pageUrl = window.location.href;
-  const shareTitle = `${event.first_name} ${event.last_name} is fundraising for ${event.charity_name}`;
-  const shareDescription = `Help ${event.first_name} support ${event.charity_name}! ${event.donation_count} donors have already contributed $${Number(event.total_raised || 0).toFixed(2)}.`;
+  const shareTitle = `You're invited to ${event.title}`;
+  const shareDescription = `${event.first_name} ${event.last_name} invited you to ${event.title}${event.event_date ? ` on ${format(new Date(event.event_date), 'MMMM dd, yyyy')}` : ''}. RSVP and view event details.`;
 
   return (
     <>
@@ -325,8 +312,8 @@ const EventPage = () => {
                 guestEmail={guestEmail}
                 eventId={event.id}
                 onRSVPSubmit={() => {
-                  // Optionally refresh data after RSVP
-                  fetchDonations();
+                  // RSVP submitted successfully
+                  toast.success('RSVP submitted!');
                 }}
               />
             )}
@@ -334,8 +321,6 @@ const EventPage = () => {
             {event.show_guest_list && <AttendingGuests eventSlug={event.slug} />}
 
             {event.potluck_enabled && <PotluckItems eventId={event.id} />}
-
-            <Leaderboard donations={donations} event={event} />
 
             <EventUpdates eventId={event.id} isOwner={!!isOwner} />
           </div>
@@ -346,54 +331,58 @@ const EventPage = () => {
 
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="p-6 sm:p-8">
-                  {isOwner && (
-                    <div className="mb-6 sm:mb-8">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-3 gap-2">
-                        <span className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide">Total Raised</span>
-                        <span className="text-3xl sm:text-4xl font-bold text-primary-600">
+                  {isOwner && event.charity_id && (event.donation_count || 0) > 0 && (
+                    <div className="mb-6 sm:mb-8 pb-6 border-b border-gray-200">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-2 gap-2">
+                        <span className="text-xs font-medium text-gray-500">Charity Donations</span>
+                        <span className="text-2xl font-bold text-primary-600">
                           ${Number(event.total_raised || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-500 mt-3 flex items-center">
-                        <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                        </svg>
+                      <p className="text-xs text-gray-400 mt-1">
                         {event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}
                       </p>
                     </div>
                   )}
 
-                  {!showDonationForm ? (
-                    <button
-                      onClick={() => setShowDonationForm(true)}
-                      className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold text-base sm:text-lg py-3 sm:py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
-                    >
-                      💝 Make a Donation
-                    </button>
-                  ) : (
-                    <DonationMethodSelector
-                      event={event}
-                      onCancel={() => setShowDonationForm(false)}
-                      onSuccess={() => {
-                        fetchEvent();
-                        fetchDonations();
-                      }}
-                    />
+                  {event.charity_id && (
+                    <>
+                      {!showDonationForm ? (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <p className="text-xs text-gray-500 mb-3 text-center">
+                            In lieu of gifts, consider a donation
+                          </p>
+                          <button
+                            onClick={() => setShowDonationForm(true)}
+                            className="w-full bg-white border-2 border-primary-500 text-primary-600 hover:bg-primary-50 font-semibold text-sm py-2.5 px-4 rounded-lg transition-colors"
+                          >
+                            💝 Make a Donation
+                          </button>
+                        </div>
+                      ) : (
+                        <DonationMethodSelector
+                          event={event}
+                          onCancel={() => setShowDonationForm(false)}
+                          onSuccess={() => {
+                            fetchEvent();
+                            setShowDonationForm(false);
+                          }}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
 
                 <div className="px-6 sm:px-8 py-5 sm:py-6 bg-gray-50 border-t border-gray-100">
-                  <ShareButtons event={event} />
-
                   <button
                     onClick={() => {
                       const url = window.location.href;
                       navigator.clipboard.writeText(url);
                       toast.success('Link copied to clipboard!');
                     }}
-                    className="btn btn-secondary w-full mt-4 py-3 font-semibold hover:bg-gray-200 transition-colors active:scale-95"
+                    className="btn btn-secondary w-full py-3 font-semibold hover:bg-gray-200 transition-colors active:scale-95"
                   >
-                    📋 Copy Link
+                    📋 Share Invitation
                   </button>
                 </div>
               </div>
