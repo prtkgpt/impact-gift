@@ -407,4 +407,129 @@ router.put('/:identifier', authenticate, async (req: AuthRequest, res: Response)
   }
 });
 
+// Notify guests about event updates
+router.post('/:slug/notify-guests', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { slug } = req.params;
+
+    // Get event details
+    const eventResult = await query(
+      `SELECT e.id, e.title, e.slug, e.user_id, e.event_date, u.first_name, u.last_name, u.email as user_email
+       FROM events e
+       JOIN users u ON e.user_id = u.id
+       WHERE e.slug = $1`,
+      [slug]
+    );
+
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const event = eventResult.rows[0];
+
+    // Verify ownership
+    if (event.user_id !== req.user!.id) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    // Get all guests for this event
+    const guestsResult = await query(
+      `SELECT email, name FROM guests WHERE event_id = $1`,
+      [event.id]
+    );
+
+    const guests = guestsResult.rows;
+
+    if (guests.length === 0) {
+      return res.status(400).json({ error: 'No guests to notify' });
+    }
+
+    // Send notification emails
+    const { Resend } = require('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
+    const eventUrl = `${process.env.FRONTEND_URL}/event/${event.slug}`;
+    const senderName = `${event.first_name} ${event.last_name}`;
+
+    // Send emails to all guests
+    for (const guest of guests) {
+      const htmlEmail = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Updated</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: white; border: 4px solid #22c55e; border-radius: 8px; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 40px 20px 40px; text-align: center; background-color: #f9fafb;">
+              <h1 style="margin: 0; font-size: 32px; font-weight: bold; color: #1f2937; line-height: 1.2;">
+                📝 Event Updated
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px 40px; text-align: center;">
+              <p style="margin: 0 0 20px 0; font-size: 18px; color: #1f2937;">
+                ${senderName} has updated the details for<br>
+                <strong style="font-size: 20px; color: #22c55e;">${event.title}</strong>
+              </p>
+
+              <p style="margin: 20px 0; font-size: 16px; color: #6b7280;">
+                The event information has changed. Click below to view the latest details.
+              </p>
+            </td>
+          </tr>
+
+          <!-- CTA Button -->
+          <tr>
+            <td style="padding: 0 40px 40px 40px; text-align: center;">
+              <a href="${eventUrl}" style="display: inline-block; padding: 16px 40px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-size: 18px; font-weight: bold;">
+                View Updated Event
+              </a>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 20px 40px; background-color: #f9fafb; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0; font-size: 14px; color: #6b7280;">
+                You received this email because you're invited to this event
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
+
+      await resend.emails.send({
+        from: 'Impact Gift <noreply@giftwithimpact.com>',
+        to: guest.email,
+        replyTo: event.user_email,
+        subject: `${event.title} - Event Updated`,
+        html: htmlEmail
+      });
+    }
+
+    console.log(`[NOTIFY GUESTS] Sent update notifications to ${guests.length} guests for event ${event.id}`);
+
+    res.json({ success: true, notified: guests.length });
+  } catch (error) {
+    console.error('[NOTIFY GUESTS] Error:', error);
+    res.status(500).json({ error: 'Failed to send notifications' });
+  }
+});
+
 export default router;

@@ -12,6 +12,8 @@ const EditEvent = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [selectedCharityIds, setSelectedCharityIds] = useState<number[]>([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
+  const [sendingNotifications, setSendingNotifications] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -90,12 +92,33 @@ const EditEvent = () => {
       await api.put(`/events/${slug}`, eventData);
       toast.success('Event updated successfully!');
 
-      navigate(`/event/${slug}/manage`);
+      // Show notification modal
+      setShowNotifyModal(true);
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to update event');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSendNotifications = async () => {
+    setSendingNotifications(true);
+    try {
+      await api.post(`/events/${slug}/notify-guests`);
+      toast.success('Guests have been notified of the updates!');
+      navigate(`/event/${slug}/manage`);
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to send notifications');
+      navigate(`/event/${slug}/manage`);
+    } finally {
+      setSendingNotifications(false);
+      setShowNotifyModal(false);
+    }
+  };
+
+  const handleSkipNotifications = () => {
+    setShowNotifyModal(false);
+    navigate(`/event/${slug}/manage`);
   };
 
   if (initialLoading) {
@@ -369,6 +392,37 @@ const EditEvent = () => {
             fetchCharities(); // Refresh charities list
           }}
         />
+      )}
+
+      {/* Notify Guests Modal */}
+      {showNotifyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">📧 Notify Guests?</h3>
+            <p className="text-gray-600 mb-6">
+              Your event has been updated. Would you like to notify your guests about the changes?
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              They'll receive an email letting them know the event details have been updated, with a link to view the latest information.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleSendNotifications}
+                disabled={sendingNotifications}
+                className="btn btn-primary flex-1"
+              >
+                {sendingNotifications ? 'Sending...' : 'Yes, Notify Guests'}
+              </button>
+              <button
+                onClick={handleSkipNotifications}
+                disabled={sendingNotifications}
+                className="btn btn-secondary flex-1"
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
