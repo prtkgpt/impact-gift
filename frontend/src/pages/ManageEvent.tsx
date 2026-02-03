@@ -295,7 +295,7 @@ const ManageEvent = () => {
   console.log('ManageEvent: Rendering main content');
 
   const pendingInvites = guests.filter(g => !g.invitation_sent).length;
-  const totalDonations = donations.reduce((sum, d) => sum + d.amount, 0);
+  const totalDonations = donations.reduce((sum, d) => sum + Number(d.amount), 0);
   const attendingCount = guests.filter(g => g.rsvp_status === 'attending').length;
 
   return (
@@ -507,7 +507,7 @@ const ManageEvent = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
                             {guest.has_donated ? (
-                              <span className="text-green-600 font-medium">${guest.donated_amount?.toFixed(2)}</span>
+                              <span className="text-green-600 font-medium">${Number(guest.donated_amount || 0).toFixed(2)}</span>
                             ) : (
                               <span className="text-gray-400">-</span>
                             )}
@@ -563,7 +563,7 @@ const ManageEvent = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
                             {guest.has_donated ? (
-                              <span className="text-green-600 font-medium">${guest.donated_amount?.toFixed(2)}</span>
+                              <span className="text-green-600 font-medium">${Number(guest.donated_amount || 0).toFixed(2)}</span>
                             ) : (
                               <span className="text-gray-400">-</span>
                             )}
@@ -678,17 +678,17 @@ const ManageEvent = () => {
             {event.goal_amount && (
               <div className="mb-6">
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="font-medium">Goal: ${event.goal_amount.toFixed(2)}</span>
+                  <span className="font-medium">Goal: ${Number(event.goal_amount).toFixed(2)}</span>
                   <span className="font-medium">${totalDonations.toFixed(2)} raised</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-4">
                   <div
                     className="bg-primary-600 h-4 rounded-full transition-all"
-                    style={{ width: `${Math.min((totalDonations / event.goal_amount) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((totalDonations / Number(event.goal_amount)) * 100, 100)}%` }}
                   />
                 </div>
                 <div className="text-center text-sm text-gray-600 mt-2">
-                  {((totalDonations / event.goal_amount) * 100).toFixed(1)}% of goal
+                  {((totalDonations / Number(event.goal_amount)) * 100).toFixed(1)}% of goal
                 </div>
               </div>
             )}
@@ -707,7 +707,7 @@ const ManageEvent = () => {
                       )}
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-bold text-green-600">${donation.amount.toFixed(2)}</div>
+                      <div className="text-lg font-bold text-green-600">${Number(donation.amount).toFixed(2)}</div>
                       <div className="text-xs text-gray-500">
                         {new Date(donation.created_at).toLocaleDateString()}
                       </div>
