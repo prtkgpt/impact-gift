@@ -117,7 +117,16 @@ const CreateEvent = () => {
       // Navigate to manage event page
       navigate(`/event/${response.data.slug}/manage`);
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to create event');
+      console.error('Event creation error:', error);
+      console.error('Error response:', error.response);
+      console.error('Error response data:', error.response?.data);
+
+      const errorMessage = error.response?.data?.error
+        || error.response?.data?.errors?.[0]?.msg
+        || error.message
+        || 'Failed to create event';
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
