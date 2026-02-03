@@ -46,6 +46,8 @@ const EventPage = () => {
   const fetchEvent = async () => {
     try {
       const response = await api.get<Event>(`/events/${slug}`);
+      console.log('[EventPage] Fetched event data:', response.data);
+      console.log('[EventPage] potluck_enabled:', response.data.potluck_enabled);
       setEvent(response.data);
     } catch (error) {
       toast.error('Event not found');
@@ -323,6 +325,11 @@ const EventPage = () => {
             {event.show_guest_list && <AttendingGuests eventSlug={event.slug} />}
 
             {event.potluck_enabled && <PotluckItems eventId={event.id} />}
+            {event.potluck_enabled === undefined && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
+                Debug: potluck_enabled is undefined
+              </div>
+            )}
 
             <EventUpdates eventId={event.id} isOwner={!!isOwner} />
           </div>
