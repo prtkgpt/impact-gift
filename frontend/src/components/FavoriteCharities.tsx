@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { FavoriteCharity, Charity } from '../types';
+import RequestCharityModal from './RequestCharityModal';
 
 const FavoriteCharities = () => {
   const [favorites, setFavorites] = useState<FavoriteCharity[]>([]);
@@ -13,6 +14,7 @@ const FavoriteCharities = () => {
   const [notes, setNotes] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+  const [showRequestModal, setShowRequestModal] = useState(false);
 
   useEffect(() => {
     fetchFavorites();
@@ -169,13 +171,21 @@ const FavoriteCharities = () => {
             Track your favorite causes and donation commitments
           </p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="btn btn-primary"
-          disabled={availableCharities.length === 0}
-        >
-          ➕ Add Favorite
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowRequestModal(true)}
+            className="btn btn-secondary text-sm"
+          >
+            + Request a Charity
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="btn btn-primary"
+            disabled={availableCharities.length === 0}
+          >
+            ➕ Add Favorite
+          </button>
+        </div>
       </div>
 
       {/* Add/Edit Modal */}
@@ -204,6 +214,19 @@ const FavoriteCharities = () => {
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Can't find your charity?{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetForm();
+                        setShowRequestModal(true);
+                      }}
+                      className="text-primary-600 hover:text-primary-700 font-medium underline"
+                    >
+                      Request it here
+                    </button>
+                  </p>
                 </div>
               )}
 
@@ -349,6 +372,17 @@ const FavoriteCharities = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Request Charity Modal */}
+      {showRequestModal && (
+        <RequestCharityModal
+          onClose={() => setShowRequestModal(false)}
+          onSuccess={() => {
+            setShowRequestModal(false);
+            fetchCharities();
+          }}
+        />
       )}
     </div>
   );
