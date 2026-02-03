@@ -139,7 +139,7 @@ router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) =
               COUNT(DISTINCT d.id) as donation_count,
               COALESCE(
                 (
-                  SELECT json_agg(DISTINCT jsonb_build_object(
+                  SELECT json_agg(jsonb_build_object(
                     'id', c2.id,
                     'name', c2.name,
                     'logo_url', c2.logo_url
@@ -184,6 +184,7 @@ router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) =
 router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
   try {
     const { slug } = req.params;
+    console.log(`[GET /:slug] Fetching event with slug: ${slug}`);
 
     // Check if user is authenticated (for manage page access)
     const authHeader = req.headers.authorization;
@@ -195,12 +196,17 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
         const jwt = require('jsonwebtoken');
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
         authenticatedUserId = decoded.userId;
+        console.log(`[GET /:slug] Authenticated user ID: ${authenticatedUserId}`);
       } catch (err) {
+        console.log(`[GET /:slug] Invalid auth token`);
         // Invalid token, treat as unauthenticated
       }
+    } else {
+      console.log(`[GET /:slug] No auth header provided`);
     }
 
     // Get basic event info
+    console.log(`[GET /:slug] Querying database for slug=${slug}, userId=${authenticatedUserId}`);
     const eventResult = await query(
       `SELECT e.*, u.first_name, u.last_name,
               COALESCE(SUM(d.amount), 0) as total_raised,
@@ -213,13 +219,17 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
       [slug, authenticatedUserId]
     );
 
+    console.log(`[GET /:slug] Query returned ${eventResult.rows.length} rows`);
     if (eventResult.rows.length === 0) {
+      console.log(`[GET /:slug] Event not found - returning 404`);
       return res.status(404).json({ error: 'Event not found' });
     }
 
     const event = eventResult.rows[0];
+    console.log(`[GET /:slug] Event found: id=${event.id}, is_active=${event.is_active}, user_id=${event.user_id}`);
 
     // Get charities for this event from junction table
+    console.log(`[GET /:slug] Fetching charities for event ID: ${event.id}`);
     const charitiesResult = await query(
       `SELECT c.id, c.name, c.description, c.logo_url, c.website_url, c.payment_instructions,
               ec.custom_instructions
@@ -228,6 +238,8 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
        WHERE ec.event_id = $1`,
       [event.id]
     );
+
+    console.log(`[GET /:slug] Found ${charitiesResult.rows.length} charities`);
 
     // For backward compatibility, also set legacy fields if there's only one charity
     if (charitiesResult.rows.length === 1) {
@@ -241,9 +253,10 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
     // Add charities array
     event.charities = charitiesResult.rows;
 
+    console.log(`[GET /:slug] Successfully returning event data`);
     res.json(event);
   } catch (error) {
-    console.error('Error fetching event:', error);
+    console.error('[GET /:slug] ERROR:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
