@@ -16,6 +16,22 @@ const ManageEvent = () => {
   type TabType = 'guests' | 'email' | 'progress' | 'cohosts';
   const [activeTab, setActiveTab] = useState<TabType>('guests');
 
+  // Guard against missing slug
+  if (!slug) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Invalid Event URL</h2>
+          <p className="text-gray-600 mb-6">No event slug provided</p>
+          <button onClick={() => navigate('/dashboard')} className="btn btn-primary">
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Guest form
   const [guestEmail, setGuestEmail] = useState('');
   const [guestName, setGuestName] = useState('');
@@ -41,13 +57,15 @@ const ManageEvent = () => {
   }, [activeTab, guests, donations]);
 
   const fetchEventData = async () => {
+    console.log('ManageEvent: fetchEventData called for slug:', slug);
     try {
       setLoading(true);
       setError(null);
+      console.log('ManageEvent: Fetching event data...');
       // First get the event to get the event ID
       const eventRes = await api.get(`/events/${slug}`);
       setEvent(eventRes.data);
-      console.log('Event loaded:', eventRes.data);
+      console.log('ManageEvent: Event loaded successfully:', eventRes.data);
 
       // Then fetch guests and donations using event ID
       const [guestsRes, donationsRes] = await Promise.all([
@@ -74,8 +92,11 @@ const ManageEvent = () => {
       setEmailSubject(templateRes.data.subject);
       setEmailBody(templateRes.data.body);
     } catch (error: any) {
-      console.error('Error fetching event data:', error);
+      console.error('ManageEvent: Error fetching event data:', error);
+      console.error('ManageEvent: Error response:', error.response);
+      console.error('ManageEvent: Error status:', error.response?.status);
       const errorMessage = error.response?.data?.error || error.message || 'Failed to load event';
+      console.log('ManageEvent: Setting error message:', errorMessage);
       setError(errorMessage);
       if (error.response?.status === 404 || error.response?.status === 403) {
         toast.error('Event not found or you do not have permission');
@@ -84,6 +105,7 @@ const ManageEvent = () => {
         toast.error(errorMessage);
       }
     } finally {
+      console.log('ManageEvent: Setting loading to false');
       setLoading(false);
     }
   };
@@ -238,7 +260,10 @@ const ManageEvent = () => {
       .replace(/\{\{GUEST_NAME\}\}/g, 'Guest');
   };
 
+  console.log('ManageEvent: Rendering - loading:', loading, 'error:', error, 'event:', !!event);
+
   if (loading) {
+    console.log('ManageEvent: Showing loading state');
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-gray-600">Loading event...</div>
@@ -247,6 +272,7 @@ const ManageEvent = () => {
   }
 
   if (error || !event) {
+    console.log('ManageEvent: Showing error state - error:', error, 'event:', !!event);
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
@@ -265,6 +291,8 @@ const ManageEvent = () => {
       </div>
     );
   }
+
+  console.log('ManageEvent: Rendering main content');
 
   const pendingInvites = guests.filter(g => !g.invitation_sent).length;
   const totalDonations = donations.reduce((sum, d) => sum + d.amount, 0);
