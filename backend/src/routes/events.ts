@@ -27,7 +27,8 @@ router.post(
     body('rsvp_deadline').optional({ nullable: true, checkFalsy: true }).isISO8601(),
     body('charity_id').optional().isInt(),
     body('charity_ids').optional().isArray(),
-    body('goal_amount').optional().isFloat({ min: 0 })
+    body('goal_amount').optional().isFloat({ min: 0 }),
+    body('potluck_enabled').optional().isBoolean()
   ],
   async (req: AuthRequest, res: Response) => {
     try {
@@ -51,7 +52,7 @@ router.post(
         title, description, event_type, event_date, start_date, end_date,
         start_time, end_time, venue_name, address, virtual_link,
         host_name, host_phone, rsvp_deadline,
-        charity_id, charity_ids, goal_amount
+        charity_id, charity_ids, goal_amount, potluck_enabled
       }: CreateEventInput = req.body;
       const slug = generateSlug(title);
 
@@ -75,9 +76,9 @@ router.post(
           user_id, title, description, event_type, event_date, start_date, end_date,
           start_time, end_time, venue_name, address, virtual_link,
           host_name, host_phone, rsvp_deadline,
-          charity_id, goal_amount, slug
+          charity_id, goal_amount, slug, potluck_enabled
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
          RETURNING *`,
         [
           req.user!.id,
@@ -97,7 +98,8 @@ router.post(
           rsvp_deadline || null,
           charityList.length === 1 ? charityList[0] : null,
           goal_amount || null,
-          slug
+          slug,
+          potluck_enabled || false
         ]
       );
 
@@ -353,7 +355,8 @@ router.put('/:identifier', authenticate, async (req: AuthRequest, res: Response)
       goal_amount,
       is_active,
       show_guest_list,
-      charity_ids
+      charity_ids,
+      potluck_enabled
     } = req.body;
 
     // Check if identifier is a slug or ID
@@ -384,10 +387,11 @@ router.put('/:identifier', authenticate, async (req: AuthRequest, res: Response)
            goal_amount = COALESCE($7, goal_amount),
            is_active = COALESCE($8, is_active),
            show_guest_list = COALESCE($9, show_guest_list),
+           potluck_enabled = COALESCE($10, potluck_enabled),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $10
+       WHERE id = $11
        RETURNING *`,
-      [title, description, event_date, event_type, start_date, end_date, goal_amount, is_active, show_guest_list, event.id]
+      [title, description, event_date, event_type, start_date, end_date, goal_amount, is_active, show_guest_list, potluck_enabled, event.id]
     );
 
     // If charity_ids provided, update charity association

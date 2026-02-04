@@ -108,6 +108,7 @@ export interface CreateEventInput {
   charity_id?: number; // Optional since we support multiple charities via charity_ids
   charity_ids?: number[]; // Array of charity IDs for multiple charities
   goal_amount?: number;
+  potluck_enabled?: boolean;
 }
 
 export interface CreateDonationInput {
