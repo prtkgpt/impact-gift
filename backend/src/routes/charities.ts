@@ -9,12 +9,7 @@ router.get('/', async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 100;
     const offset = parseInt(req.query.offset as string) || 0;
 
-    // Get total count
-    const countResult = await query(
-      'SELECT COUNT(*) as total FROM charities WHERE is_active = true'
-    );
-
-    // Get paginated results
+    // Get paginated results (removed slow COUNT query for performance)
     const result = await query(
       'SELECT id, name, description, category, website_url, logo_url FROM charities WHERE is_active = true ORDER BY name LIMIT $1 OFFSET $2',
       [limit, offset]
@@ -22,9 +17,9 @@ router.get('/', async (req: Request, res: Response) => {
 
     res.json({
       charities: result.rows,
-      total: parseInt(countResult.rows[0].total),
       limit,
-      offset
+      offset,
+      hasMore: result.rows.length === limit // Simple pagination indicator
     });
   } catch (error) {
     console.error('Error fetching charities:', error);
