@@ -35,7 +35,6 @@
     "multer-storage-cloudinary": "^4.0.0",
     "pg": "^8.11.3",
     "resend": "^6.7.0",
-    "stripe": "^14.10.0",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
