@@ -245,29 +245,59 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
     const event = eventResult.rows[0];
     console.log(`[GET /:slug] Event found: id=${event.id}, is_active=${event.is_active}, user_id=${event.user_id}`);
 
-    // Get charities for this event from junction table
-    const charitiesResult = await query(
-      `SELECT c.id, c.name, c.description, c.logo_url, c.website_url, c.payment_instructions,
-              ec.custom_instructions
-       FROM event_charities ec
-       JOIN charities c ON ec.charity_id = c.id
-       WHERE ec.event_id = $1`,
-      [event.id]
-    );
+    // Try to get charities from junction table (newer schema)
+    try {
+      const charitiesResult = await query(
+        `SELECT c.id, c.name, c.description, c.logo_url, c.website_url, c.payment_instructions,
+                ec.custom_instructions
+         FROM event_charities ec
+         JOIN charities c ON ec.charity_id = c.id
+         WHERE ec.event_id = $1`,
+        [event.id]
+      );
 
-    console.log(`[GET /:slug] Found ${charitiesResult.rows.length} charities`);
+      console.log(`[GET /:slug] Found ${charitiesResult.rows.length} charities from junction table`);
 
-    // For backward compatibility, also set legacy fields if there's only one charity
-    if (charitiesResult.rows.length === 1) {
-      const charity = charitiesResult.rows[0];
-      event.charity_name = charity.name;
-      event.charity_description = charity.description;
-      event.charity_logo = charity.logo_url;
-      event.charity_website = charity.website_url;
+      // For backward compatibility, also set legacy fields if there's only one charity
+      if (charitiesResult.rows.length === 1) {
+        const charity = charitiesResult.rows[0];
+        event.charity_name = charity.name;
+        event.charity_description = charity.description;
+        event.charity_logo = charity.logo_url;
+        event.charity_website = charity.website_url;
+      }
+
+      // Add charities array
+      event.charities = charitiesResult.rows;
+    } catch (err) {
+      console.log(`[GET /:slug] event_charities table doesn't exist, falling back to legacy charity_id`);
+      // Fall back to legacy single charity if junction table doesn't exist
+      if (event.charity_id) {
+        try {
+          const charityResult = await query(
+            `SELECT id, name, description, logo_url, website_url, payment_instructions
+             FROM charities WHERE id = $1`,
+            [event.charity_id]
+          );
+
+          if (charityResult.rows.length > 0) {
+            const charity = charityResult.rows[0];
+            event.charity_name = charity.name;
+            event.charity_description = charity.description;
+            event.charity_logo = charity.logo_url;
+            event.charity_website = charity.website_url;
+            event.charities = [charity];
+          } else {
+            event.charities = [];
+          }
+        } catch (charityErr) {
+          console.log(`[GET /:slug] Error fetching legacy charity:`, charityErr);
+          event.charities = [];
+        }
+      } else {
+        event.charities = [];
+      }
     }
-
-    // Add charities array
-    event.charities = charitiesResult.rows;
 
     // Try to fetch additional data if tables exist (for newer deployments)
     try {
