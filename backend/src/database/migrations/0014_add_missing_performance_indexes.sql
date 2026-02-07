@@ -37,9 +37,8 @@ ON events(slug, is_active);
 CREATE INDEX IF NOT EXISTS idx_potluck_items_event_id
 ON potluck_items(event_id);
 
--- Index for event_updates by event
-CREATE INDEX IF NOT EXISTS idx_event_updates_event_id
-ON event_updates(event_id);
+-- Note: event_updates table is created via /add-new-features API endpoint, not migrations
+-- Index for event_updates is created there as well
 
 -- Index for co_hosts by event
 CREATE INDEX IF NOT EXISTS idx_co_hosts_event_id
