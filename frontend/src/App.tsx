@@ -17,6 +17,7 @@ import Profile from './pages/Profile';
 import ManageEvent from './pages/ManageEvent';
 import PublicCharityPage from './pages/PublicCharityPage';
 import MyCommitments from './pages/MyCommitments';
+import AdminCharityRequests from './pages/AdminCharityRequests';
 import NotFound from './pages/NotFound';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -94,6 +95,14 @@ function App() {
               />
               <Route path="/receipt/:donationId" element={<Receipt />} />
               <Route path="/charity/:slug" element={<PublicCharityPage />} />
+              <Route
+                path="/admin/charity-requests"
+                element={
+                  <PrivateRoute>
+                    <AdminCharityRequests />
+                  </PrivateRoute>
+                }
+              />
               {/* 404 Catch-all route - must be last */}
               <Route path="*" element={<NotFound />} />
             </Routes>

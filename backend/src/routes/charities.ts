@@ -103,9 +103,11 @@ router.get('/requests', async (req: Request, res: Response) => {
       SELECT
         cr.*,
         u.first_name || ' ' || u.last_name as requester_name,
-        u.email as requester_email
+        u.email as requester_email,
+        c.name as created_charity_name
       FROM charity_requests cr
       LEFT JOIN users u ON cr.user_id = u.id
+      LEFT JOIN charities c ON cr.created_charity_id = c.id
     `;
 
     const params: any[] = [];
@@ -121,6 +123,128 @@ router.get('/requests', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching charity requests:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Approve a charity request (admin only - should add auth middleware)
+router.patch('/requests/:id/approve', async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { admin_notes } = req.body;
+    const admin_id = req.user?.id;
+
+    // Get the request details
+    const requestResult = await query(
+      'SELECT * FROM charity_requests WHERE id = $1',
+      [id]
+    );
+
+    if (requestResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Charity request not found' });
+    }
+
+    const request = requestResult.rows[0];
+
+    if (request.status !== 'pending') {
+      return res.status(400).json({
+        error: `Request has already been ${request.status}`
+      });
+    }
+
+    // Create the charity
+    const charityResult = await query(
+      `INSERT INTO charities (
+        name,
+        description,
+        category,
+        website_url,
+        logo_url,
+        is_active
+      ) VALUES ($1, $2, $3, $4, $5, true)
+      RETURNING *`,
+      [
+        request.charity_name,
+        request.description,
+        request.category || 'Other',
+        request.website_url,
+        `https://logo.clearbit.com/${new URL(request.website_url).hostname}`
+      ]
+    );
+
+    const charity = charityResult.rows[0];
+
+    // Update the request status
+    await query(
+      `UPDATE charity_requests
+       SET status = 'approved',
+           admin_notes = $1,
+           reviewed_at = NOW(),
+           reviewed_by = $2,
+           created_charity_id = $3
+       WHERE id = $4`,
+      [admin_notes || 'Request approved', admin_id, charity.id, id]
+    );
+
+    // TODO: Send email notification to requester if contact_email exists
+
+    res.json({
+      success: true,
+      message: 'Charity request approved and charity created',
+      charity: charity,
+      request_id: id
+    });
+  } catch (error: any) {
+    console.error('Error approving charity request:', error);
+    res.status(500).json({ error: 'Failed to approve charity request' });
+  }
+});
+
+// Reject a charity request (admin only - should add auth middleware)
+router.patch('/requests/:id/reject', async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { admin_notes } = req.body;
+    const admin_id = req.user?.id;
+
+    // Check if request exists
+    const requestResult = await query(
+      'SELECT * FROM charity_requests WHERE id = $1',
+      [id]
+    );
+
+    if (requestResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Charity request not found' });
+    }
+
+    const request = requestResult.rows[0];
+
+    if (request.status !== 'pending') {
+      return res.status(400).json({
+        error: `Request has already been ${request.status}`
+      });
+    }
+
+    // Update the request status
+    await query(
+      `UPDATE charity_requests
+       SET status = 'rejected',
+           admin_notes = $1,
+           reviewed_at = NOW(),
+           reviewed_by = $2
+       WHERE id = $3`,
+      [admin_notes || 'Request rejected', admin_id, id]
+    );
+
+    // TODO: Send email notification to requester if contact_email exists
+
+    res.json({
+      success: true,
+      message: 'Charity request rejected',
+      request_id: id
+    });
+  } catch (error: any) {
+    console.error('Error rejecting charity request:', error);
+    res.status(500).json({ error: 'Failed to reject charity request' });
   }
 });
 
