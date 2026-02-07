@@ -156,7 +156,7 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess }: DonationMethodSe
           Donate Directly to Charity
         </h3>
         <p className="text-xs sm:text-sm text-blue-800 leading-relaxed">
-          Click a charity below to donate on their website. Perfect for corporate matching programs - you can submit the receipt to your employer for matching.
+          Click a charity below to donate directly on their website.
         </p>
       </div>
 

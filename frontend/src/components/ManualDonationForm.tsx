@@ -80,9 +80,6 @@ const ManualDonationForm = ({ event, onSuccess, onCancel }: ManualDonationFormPr
               </div>
             )}
 
-            <p className="text-xs text-blue-700 mt-3">
-              💡 <strong>For corporate matching:</strong> After sending, notify your employer's HR department with the receipt.
-            </p>
             <p className="text-xs text-blue-700 mt-2">
               The event organizer will be notified and will confirm receipt of your donation.
             </p>
@@ -100,7 +97,7 @@ const ManualDonationForm = ({ event, onSuccess, onCancel }: ManualDonationFormPr
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
         <p className="text-sm text-blue-900">
-          <strong>💼 Perfect for corporate matching!</strong> Send your donation directly so you can submit it for employer matching.
+          <strong>💸 Send your donation directly</strong> via Venmo, Zelle, or PayPal.
         </p>
       </div>
 
