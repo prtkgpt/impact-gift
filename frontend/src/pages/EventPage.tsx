@@ -174,10 +174,12 @@ const EventPage = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
           <div className="md:col-span-2 space-y-6 lg:space-y-8">
-            <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-5 text-gray-900">About This Event</h2>
-              <p className="text-gray-700 leading-relaxed text-base sm:text-lg whitespace-pre-wrap">{event.description}</p>
-            </div>
+            {event.description && event.description.trim() && (
+              <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-5 text-gray-900">About This Event</h2>
+                <p className="text-gray-700 leading-relaxed text-base sm:text-lg whitespace-pre-wrap">{event.description}</p>
+              </div>
+            )}
 
             {/* Event Details Card */}
             {(event.start_time || event.end_time || event.venue_name || event.address || event.virtual_link || event.host_name || event.host_phone || event.rsvp_deadline) && (
@@ -354,7 +356,7 @@ const EventPage = () => {
                     </div>
                   )}
 
-                  {event.charity_id && (
+                  {event.charities && event.charities.length > 0 && (
                     <>
                       {!showDonationForm ? (
                         <div className="mt-4 pt-4 border-t border-gray-200">
