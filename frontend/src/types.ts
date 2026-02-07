@@ -62,6 +62,8 @@ export interface Event {
   first_name?: string;
   last_name?: string;
   created_at?: string;
+  updates?: EventUpdate[];
+  attending_count?: number;
 }
 
 export interface Donation {
