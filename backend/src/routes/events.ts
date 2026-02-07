@@ -329,6 +329,10 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
     }
 
     console.log(`[GET /:slug] Successfully returning event data`);
+
+    // Cache event data for 60 seconds to reduce load
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
+
     res.json(event);
   } catch (error) {
     console.error('[GET /:slug] ERROR:', error);

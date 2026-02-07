@@ -15,6 +15,9 @@ router.get('/', async (req: Request, res: Response) => {
       [limit, offset]
     );
 
+    // Cache charities list for 5 minutes (charity data changes infrequently)
+    res.setHeader('Cache-Control', 'public, max-age=300');
+
     res.json({
       charities: result.rows,
       limit,
@@ -38,6 +41,9 @@ router.get('/:id', async (req: Request, res: Response) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Charity not found' });
     }
+
+    // Cache individual charity for 10 minutes
+    res.setHeader('Cache-Control', 'public, max-age=600');
 
     res.json(result.rows[0]);
   } catch (error) {
