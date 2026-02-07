@@ -249,14 +249,14 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
     const [charitiesResult, updatesResult, guestsCountResult] = await Promise.all([
       // Get charities
       query(
-        `SELECT c.id, c.name, c.description, c.logo_url, c.website_url, c.donation_url, c.payment_instructions,
+        `SELECT c.id, c.name, c.description, c.logo_url, c.website_url, c.payment_instructions,
                 ec.custom_instructions
          FROM event_charities ec
          JOIN charities c ON ec.charity_id = c.id
          WHERE ec.event_id = $1`,
         [event.id]
       ),
-      // Get recent event updates (limit to 10)
+      // Get recent event updates (limit to 10) - gracefully handle if table doesn't exist
       query(
         `SELECT id, title, content, created_at
          FROM event_updates
@@ -264,14 +264,14 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
          ORDER BY created_at DESC
          LIMIT 10`,
         [event.id]
-      ),
-      // Get attending guests count
+      ).catch(() => ({ rows: [] })),
+      // Get attending guests count - gracefully handle if table doesn't exist
       query(
         `SELECT COUNT(*) as count
          FROM guests
          WHERE event_id = $1 AND rsvp_status = 'attending'`,
         [event.id]
-      )
+      ).catch(() => ({ rows: [{ count: 0 }] }))
     ]);
 
     console.log(`[GET /:slug] Found ${charitiesResult.rows.length} charities, ${updatesResult.rows.length} updates`);
