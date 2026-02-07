@@ -222,7 +222,7 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
       console.log(`[GET /:slug] No auth header provided`);
     }
 
-    // Get basic event info
+    // Get basic event info with optimized single query
     console.log(`[GET /:slug] Querying database for slug=${slug}, userId=${authenticatedUserId}`);
     const eventResult = await query(
       `SELECT e.*, u.first_name, u.last_name,
@@ -245,18 +245,36 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
     const event = eventResult.rows[0];
     console.log(`[GET /:slug] Event found: id=${event.id}, is_active=${event.is_active}, user_id=${event.user_id}`);
 
-    // Get charities for this event from junction table
-    console.log(`[GET /:slug] Fetching charities for event ID: ${event.id}`);
-    const charitiesResult = await query(
-      `SELECT c.id, c.name, c.description, c.logo_url, c.website_url, c.payment_instructions,
-              ec.custom_instructions
-       FROM event_charities ec
-       JOIN charities c ON ec.charity_id = c.id
-       WHERE ec.event_id = $1`,
-      [event.id]
-    );
+    // Fetch all related data in parallel for better performance
+    const [charitiesResult, updatesResult, guestsCountResult] = await Promise.all([
+      // Get charities
+      query(
+        `SELECT c.id, c.name, c.description, c.logo_url, c.website_url, c.donation_url, c.payment_instructions,
+                ec.custom_instructions
+         FROM event_charities ec
+         JOIN charities c ON ec.charity_id = c.id
+         WHERE ec.event_id = $1`,
+        [event.id]
+      ),
+      // Get recent event updates (limit to 10)
+      query(
+        `SELECT id, title, content, created_at
+         FROM event_updates
+         WHERE event_id = $1
+         ORDER BY created_at DESC
+         LIMIT 10`,
+        [event.id]
+      ),
+      // Get attending guests count
+      query(
+        `SELECT COUNT(*) as count
+         FROM guests
+         WHERE event_id = $1 AND rsvp_status = 'attending'`,
+        [event.id]
+      )
+    ]);
 
-    console.log(`[GET /:slug] Found ${charitiesResult.rows.length} charities`);
+    console.log(`[GET /:slug] Found ${charitiesResult.rows.length} charities, ${updatesResult.rows.length} updates`);
 
     // For backward compatibility, also set legacy fields if there's only one charity
     if (charitiesResult.rows.length === 1) {
@@ -267,8 +285,10 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
       event.charity_website = charity.website_url;
     }
 
-    // Add charities array
+    // Add all fetched data to event response
     event.charities = charitiesResult.rows;
+    event.updates = updatesResult.rows;
+    event.attending_count = parseInt(guestsCountResult.rows[0]?.count || '0');
 
     console.log(`[GET /:slug] Successfully returning event data`);
     res.json(event);

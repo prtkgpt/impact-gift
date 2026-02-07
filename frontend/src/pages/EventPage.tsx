@@ -333,7 +333,7 @@ const EventPage = () => {
               </div>
             )}
 
-            <EventUpdates eventId={event.id} isOwner={!!isOwner} />
+            <EventUpdates eventId={event.id} isOwner={!!isOwner} initialUpdates={event.updates || []} />
           </div>
 
           <div className="md:col-span-1">

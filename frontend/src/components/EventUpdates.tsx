@@ -7,10 +7,11 @@ import toast from 'react-hot-toast';
 interface EventUpdatesProps {
   eventId: number;
   isOwner: boolean;
+  initialUpdates?: EventUpdate[];
 }
 
-const EventUpdates: React.FC<EventUpdatesProps> = ({ eventId, isOwner }) => {
-  const [updates, setUpdates] = useState<EventUpdate[]>([]);
+const EventUpdates: React.FC<EventUpdatesProps> = ({ eventId, isOwner, initialUpdates = [] }) => {
+  const [updates, setUpdates] = useState<EventUpdate[]>(initialUpdates);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -18,9 +19,10 @@ const EventUpdates: React.FC<EventUpdatesProps> = ({ eventId, isOwner }) => {
     content: ''
   });
 
+  // Update local state when initialUpdates changes
   useEffect(() => {
-    fetchUpdates();
-  }, [eventId]);
+    setUpdates(initialUpdates);
+  }, [initialUpdates]);
 
   const fetchUpdates = async () => {
     try {
