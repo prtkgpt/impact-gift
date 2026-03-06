@@ -31,7 +31,7 @@ const AcceptCoHostInvitation = () => {
   const fetchEventDetails = async () => {
     try {
       // Fetch event details using the slug
-      const response = await api.get(`/events/slug/${slug}`);
+      const response = await api.get(`/events/${slug}`);
       const event = response.data;
 
       setEventTitle(event.title);
