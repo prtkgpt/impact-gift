@@ -99,19 +99,6 @@ const EventPage = () => {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Custom Event Image Banner */}
-      {event.event_image_url && (
-        <div className="relative w-full h-64 sm:h-80 md:h-96 lg:h-[500px] overflow-hidden bg-gray-900">
-          <img
-            src={event.event_image_url}
-            alt={event.title}
-            className="w-full h-full object-cover opacity-90"
-          />
-          {/* Gradient overlay for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60"></div>
-        </div>
-      )}
-
       <div className="relative bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 text-white py-12 sm:py-16 lg:py-20 overflow-hidden">
         {/* Decorative background elements */}
         <div className="absolute inset-0 opacity-10 overflow-hidden">
@@ -170,6 +157,19 @@ const EventPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Event Image - displayed below header, full image without cropping */}
+      {event.event_image_url && (
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-10">
+          <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
+            <img
+              src={event.event_image_url}
+              alt={event.title}
+              className="w-full h-auto object-contain"
+            />
+          </div>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">

@@ -1,24 +1,26 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import Dashboard from './pages/Dashboard';
-import CreateEvent from './pages/CreateEvent';
-import EditEvent from './pages/EditEvent';
-import EventPage from './pages/EventPage';
-import Receipt from './pages/Receipt';
-import Profile from './pages/Profile';
-import ManageEvent from './pages/ManageEvent';
-import PublicCharityPage from './pages/PublicCharityPage';
-import MyCommitments from './pages/MyCommitments';
-import AdminCharityRequests from './pages/AdminCharityRequests';
-import NotFound from './pages/NotFound';
+
+const Home = lazy(() => import('./pages/Home'));
+const Login = lazy(() => import('./pages/Login'));
+const Signup = lazy(() => import('./pages/Signup'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const CreateEvent = lazy(() => import('./pages/CreateEvent'));
+const EditEvent = lazy(() => import('./pages/EditEvent'));
+const EventPage = lazy(() => import('./pages/EventPage'));
+const Receipt = lazy(() => import('./pages/Receipt'));
+const Profile = lazy(() => import('./pages/Profile'));
+const ManageEvent = lazy(() => import('./pages/ManageEvent'));
+const PublicCharityPage = lazy(() => import('./pages/PublicCharityPage'));
+const MyCommitments = lazy(() => import('./pages/MyCommitments'));
+const AdminCharityRequests = lazy(() => import('./pages/AdminCharityRequests'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -38,6 +40,7 @@ function App() {
           <div className="min-h-screen bg-gray-50">
             <Navbar />
             <Toaster position="top-right" />
+            <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading...</div>}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
@@ -106,6 +109,7 @@ function App() {
               {/* 404 Catch-all route - must be last */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
           </div>
         </Router>
       </AuthProvider>
