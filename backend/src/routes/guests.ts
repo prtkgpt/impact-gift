@@ -6,6 +6,36 @@ import { AddGuestInput } from '../types';
 
 const router = Router();
 
+// Get all invitations for the current user (by email)
+router.get('/my-invitations', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userEmail = req.user!.email;
+
+    const result = await query(
+      `SELECT g.*,
+              e.title as event_title,
+              e.slug as event_slug,
+              e.event_date,
+              e.event_type,
+              e.venue_name,
+              e.start_time,
+              u.first_name as host_first_name,
+              u.last_name as host_last_name
+       FROM guests g
+       JOIN events e ON g.event_id = e.id
+       JOIN users u ON e.user_id = u.id
+       WHERE LOWER(g.email) = LOWER($1)
+       ORDER BY e.event_date DESC`,
+      [userEmail]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching user invitations:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Get all guests for an event
 router.get('/event/:eventId', authenticate, async (req: AuthRequest, res: Response) => {
   try {

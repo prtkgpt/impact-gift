@@ -147,9 +147,11 @@ const EventPage = () => {
               📅 {format(parseLocalDate(event.event_date), 'MMMM dd, yyyy')}
               {event.start_time && ` at ${event.start_time}`}
             </span>
-            <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm capitalize">
-              🎉 {event.event_type}
-            </span>
+            {event.event_type && event.event_type.toLowerCase() !== 'other' && (
+              <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm capitalize">
+                🎉 {event.event_type}
+              </span>
+            )}
             {event.venue_name && (
               <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm">
                 📍 {event.venue_name}
@@ -367,18 +369,6 @@ const EventPage = () => {
                   )}
                 </div>
 
-                <div className="px-6 sm:px-8 py-5 sm:py-6 bg-gray-50 border-t border-gray-100">
-                  <button
-                    onClick={() => {
-                      const url = window.location.href;
-                      navigator.clipboard.writeText(url);
-                      toast.success('Link copied to clipboard!');
-                    }}
-                    className="btn btn-secondary w-full py-3 font-semibold hover:bg-gray-200 transition-colors active:scale-95"
-                  >
-                    📋 Share Invitation
-                  </button>
-                </div>
               </div>
             </div>
           </div>

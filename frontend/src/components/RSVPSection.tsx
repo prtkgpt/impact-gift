@@ -97,16 +97,19 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
         <div className="space-y-4">
           <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
             <p className="font-semibold text-green-900 mb-1">Your RSVP:</p>
-            <p className="text-lg font-bold text-green-700 capitalize">
-              {guest.rsvp_status === 'attending' && '✅ Attending'}
+            <p className="text-lg font-bold text-green-700">
+              {guest.rsvp_status === 'attending' && (
+                guest.additional_guests && guest.additional_guests > 0
+                  ? `✅ Attending with ${guest.additional_guests} guest${guest.additional_guests !== 1 ? 's' : ''}`
+                  : '✅ Attending'
+              )}
               {guest.rsvp_status === 'not_attending' && '❌ Not Attending'}
-              {guest.rsvp_status === 'maybe' && '🤔 Maybe'}
+              {guest.rsvp_status === 'maybe' && (
+                guest.additional_guests && guest.additional_guests > 0
+                  ? `🤔 Maybe with ${guest.additional_guests} guest${guest.additional_guests !== 1 ? 's' : ''}`
+                  : '🤔 Maybe'
+              )}
             </p>
-            {guest.additional_guests && guest.additional_guests > 0 && (
-              <p className="text-sm text-green-800 mt-1">
-                +{guest.additional_guests} additional guest{guest.additional_guests !== 1 ? 's' : ''}
-              </p>
-            )}
             {guest.rsvp_comment && (
               <p className="text-sm text-green-800 mt-2 italic">"{guest.rsvp_comment}"</p>
             )}

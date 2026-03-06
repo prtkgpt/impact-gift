@@ -8,12 +8,31 @@ import toast from 'react-hot-toast';
 import CharityPageCard from '../components/CharityPageCard';
 import FavoriteCharities from '../components/FavoriteCharities';
 
+interface Invitation {
+  id: number;
+  event_id: number;
+  email: string;
+  name: string;
+  rsvp_status: string;
+  event_title: string;
+  event_slug: string;
+  event_date: string;
+  event_type: string;
+  venue_name: string;
+  start_time: string;
+  host_first_name: string;
+  host_last_name: string;
+  additional_guests?: number;
+}
+
 const Dashboard = () => {
   const [events, setEvents] = useState<Event[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchEvents();
+    fetchInvitations();
   }, []);
 
   const fetchEvents = async () => {
@@ -24,6 +43,15 @@ const Dashboard = () => {
       toast.error('Failed to load events');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchInvitations = async () => {
+    try {
+      const response = await api.get<Invitation[]>('/guests/my-invitations');
+      setInvitations(response.data);
+    } catch (error) {
+      console.error('Failed to load invitations:', error);
     }
   };
 
@@ -185,6 +213,101 @@ const Dashboard = () => {
                       View Page
                     </Link>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Received Invitations Section */}
+        <div className="mb-16">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">My Invitations</h2>
+            <p className="text-lg text-gray-600">Events you've been invited to</p>
+          </div>
+
+          {invitations.length === 0 ? (
+            <div className="card-highlight text-center py-12 animate-fade-in">
+              <div className="text-5xl mb-4">📭</div>
+              <h3 className="text-xl font-bold mb-2 text-gray-900">No invitations yet</h3>
+              <p className="text-gray-600">When you receive event invitations, they'll appear here</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {invitations.map((invitation, index) => (
+                <div
+                  key={invitation.id}
+                  className="card-hover group overflow-hidden animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  {/* Event Header */}
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
+                      {invitation.event_title}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Hosted by {invitation.host_first_name} {invitation.host_last_name}
+                    </p>
+                  </div>
+
+                  {/* Event Details */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      {format(parseLocalDate(invitation.event_date), 'MMM dd, yyyy')}
+                      {invitation.start_time && ` at ${invitation.start_time}`}
+                    </div>
+                    {invitation.venue_name && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <span className="mr-2">📍</span>
+                        {invitation.venue_name}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* RSVP Status */}
+                  <div className="mb-4">
+                    {invitation.rsvp_status === 'no_response' ? (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <p className="text-sm font-semibold text-yellow-800">
+                          ⏳ RSVP Pending
+                        </p>
+                      </div>
+                    ) : invitation.rsvp_status === 'attending' ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <p className="text-sm font-semibold text-green-800">
+                          {invitation.additional_guests && invitation.additional_guests > 0
+                            ? `✅ Attending with ${invitation.additional_guests} guest${invitation.additional_guests !== 1 ? 's' : ''}`
+                            : '✅ Attending'}
+                        </p>
+                      </div>
+                    ) : invitation.rsvp_status === 'not_attending' ? (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-sm font-semibold text-red-800">
+                          ❌ Not Attending
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <p className="text-sm font-semibold text-gray-800">
+                          🤔 Maybe
+                          {invitation.additional_guests && invitation.additional_guests > 0
+                            ? ` with ${invitation.additional_guests} guest${invitation.additional_guests !== 1 ? 's' : ''}`
+                            : ''}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Button */}
+                  <Link
+                    to={`/event/${invitation.event_slug}?email=${encodeURIComponent(invitation.email)}`}
+                    className="btn btn-primary w-full text-center text-sm"
+                  >
+                    View Event
+                  </Link>
                 </div>
               ))}
             </div>
