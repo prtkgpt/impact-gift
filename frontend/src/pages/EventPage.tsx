@@ -325,51 +325,52 @@ const EventPage = () => {
             <div className="space-y-4 sm:space-y-6 md:sticky md:top-4">
               <EventCountdown eventDate={event.event_date} />
 
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                <div className="p-6 sm:p-8">
-                  {isOwner && event.charity_id && (event.donation_count || 0) > 0 && (
-                    <div className="mb-6 sm:mb-8 pb-6 border-b border-gray-200">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-2 gap-2">
-                        <span className="text-xs font-medium text-gray-500">Charity Donations</span>
-                        <span className="text-2xl font-bold text-primary-600">
-                          ${Number(event.total_raised || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                  )}
-
-                  {event.charities && event.charities.length > 0 && (
-                    <>
-                      {!showDonationForm ? (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <p className="text-xs text-gray-500 mb-3 text-center">
-                            In lieu of gifts, consider a donation
-                          </p>
-                          <button
-                            onClick={() => setShowDonationForm(true)}
-                            className="w-full bg-white border-2 border-primary-500 text-primary-600 hover:bg-primary-50 font-semibold text-sm py-2.5 px-4 rounded-lg transition-colors"
-                          >
-                            💝 Make a Donation
-                          </button>
+              {((isOwner && event.charity_id && (event.donation_count || 0) > 0) || (event.charities && event.charities.length > 0)) && (
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                  <div className="p-6 sm:p-8">
+                    {isOwner && event.charity_id && (event.donation_count || 0) > 0 && (
+                      <div className="mb-6 sm:mb-8 pb-6 border-b border-gray-200">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-2 gap-2">
+                          <span className="text-xs font-medium text-gray-500">Charity Donations</span>
+                          <span className="text-2xl font-bold text-primary-600">
+                            ${Number(event.total_raised || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
                         </div>
-                      ) : (
-                        <DonationMethodSelector
-                          event={event}
-                          onCancel={() => setShowDonationForm(false)}
-                          onSuccess={() => {
-                            fetchEvent();
-                            setShowDonationForm(false);
-                          }}
-                        />
-                      )}
-                    </>
-                  )}
-                </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    )}
 
-              </div>
+                    {event.charities && event.charities.length > 0 && (
+                      <>
+                        {!showDonationForm ? (
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <p className="text-xs text-gray-500 mb-3 text-center">
+                              In lieu of gifts, consider a donation
+                            </p>
+                            <button
+                              onClick={() => setShowDonationForm(true)}
+                              className="w-full bg-white border-2 border-primary-500 text-primary-600 hover:bg-primary-50 font-semibold text-sm py-2.5 px-4 rounded-lg transition-colors"
+                            >
+                              💝 Make a Donation
+                            </button>
+                          </div>
+                        ) : (
+                          <DonationMethodSelector
+                            event={event}
+                            onCancel={() => setShowDonationForm(false)}
+                            onSuccess={() => {
+                              fetchEvent();
+                              setShowDonationForm(false);
+                            }}
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
