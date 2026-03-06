@@ -4,6 +4,7 @@ import { query } from '../database/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { generateSlug } from '../utils/slug';
 import { CreateEventInput } from '../types';
+import { isOwnerOrCoHost } from '../utils/coHostHelpers';
 
 const router = Router();
 
@@ -481,7 +482,9 @@ router.put('/:identifier', authenticate, async (req: AuthRequest, res: Response)
 
     const event = eventCheck.rows[0];
 
-    if (event.user_id !== req.user!.id) {
+    // Verify the user is owner or accepted co-host
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, event.id);
+    if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -541,8 +544,9 @@ router.post('/:slug/notify-guests', authenticate, async (req: AuthRequest, res: 
 
     const event = eventResult.rows[0];
 
-    // Verify ownership
-    if (event.user_id !== req.user!.id) {
+    // Verify the user is owner or accepted co-host
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, event.id);
+    if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 

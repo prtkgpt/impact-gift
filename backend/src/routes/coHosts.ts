@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator';
 import { query } from '../database/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { sendCoHostInvitation } from '../services/emailService';
+import { isOwnerOrCoHost } from '../utils/coHostHelpers';
 
 const router = Router();
 
@@ -12,13 +13,14 @@ router.get('/event/:eventId', authenticate, async (req: AuthRequest, res: Respon
     const { eventId } = req.params;
     const userId = req.user!.id;
 
-    // Verify user owns the event
-    const eventCheck = await query('SELECT user_id FROM events WHERE id = $1', [eventId]);
+    // Verify user is owner or accepted co-host
+    const eventCheck = await query('SELECT id FROM events WHERE id = $1', [eventId]);
     if (eventCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    if (eventCheck.rows[0].user_id !== userId) {
+    const hasAccess = await isOwnerOrCoHost(userId, parseInt(eventId));
+    if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -58,9 +60,9 @@ router.post(
       const userId = req.user!.id;
       const { email, name } = req.body;
 
-      // Verify user owns the event and get event details
+      // Verify user is owner or accepted co-host and get event details
       const eventCheck = await query(
-        `SELECT e.user_id, e.title, e.description, e.event_date, e.slug,
+        `SELECT e.id, e.user_id, e.title, e.description, e.event_date, e.slug,
                 u.first_name, u.last_name
          FROM events e
          JOIN users u ON e.user_id = u.id
@@ -71,7 +73,8 @@ router.post(
         return res.status(404).json({ error: 'Event not found' });
       }
 
-      if (eventCheck.rows[0].user_id !== userId) {
+      const hasAccess = await isOwnerOrCoHost(userId, parseInt(eventId));
+      if (!hasAccess) {
         return res.status(403).json({ error: 'Not authorized' });
       }
 
@@ -160,7 +163,9 @@ router.post('/:coHostId/resend', authenticate, async (req: AuthRequest, res: Res
 
     const data = result.rows[0];
 
-    if (data.user_id !== userId) {
+    // Verify user is owner or accepted co-host
+    const hasAccess = await isOwnerOrCoHost(userId, data.event_id);
+    if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -246,9 +251,9 @@ router.delete('/:coHostId', authenticate, async (req: AuthRequest, res: Response
     const { coHostId } = req.params;
     const userId = req.user!.id;
 
-    // Get co-host and verify event ownership
+    // Get co-host and verify user is owner or accepted co-host
     const coHostCheck = await query(
-      `SELECT ch.event_id, e.user_id
+      `SELECT ch.event_id, e.id as event_id
        FROM co_hosts ch
        JOIN events e ON ch.event_id = e.id
        WHERE ch.id = $1`,
@@ -259,7 +264,8 @@ router.delete('/:coHostId', authenticate, async (req: AuthRequest, res: Response
       return res.status(404).json({ error: 'Co-host not found' });
     }
 
-    if (coHostCheck.rows[0].user_id !== userId) {
+    const hasAccess = await isOwnerOrCoHost(userId, coHostCheck.rows[0].event_id);
+    if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
