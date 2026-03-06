@@ -20,6 +20,7 @@ const ManageEvent = lazy(() => import('./pages/ManageEvent'));
 const PublicCharityPage = lazy(() => import('./pages/PublicCharityPage'));
 const MyCommitments = lazy(() => import('./pages/MyCommitments'));
 const AdminCharityRequests = lazy(() => import('./pages/AdminCharityRequests'));
+const AcceptCoHostInvitation = lazy(() => import('./pages/AcceptCoHostInvitation'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -93,6 +94,7 @@ function App() {
                   </PrivateRoute>
                 }
               />
+              <Route path="/events/:slug/co-host/accept" element={<AcceptCoHostInvitation />} />
               <Route path="/event/:slug" element={<EventPage />} />
               <Route
                 path="/event/:slug/manage"
