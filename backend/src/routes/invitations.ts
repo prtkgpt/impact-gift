@@ -32,7 +32,7 @@ router.get('/template/:eventId', authenticate, async (req: AuthRequest, res: Res
       return res.json({
         event_id: eventId,
         subject: `You're invited to support my ${eventCheck.rows[0].title}!`,
-        body: `Dear Family and Friends,\n\nI'm so excited to celebrate my ${eventCheck.rows[0].title} with you!\n\nI would humbly request that you please don't bring any kind of gift (boxed or otherwise). Your presence and blessings would be the best gift.\n\nI know not everyone heeds such requests :) So if you must give a gift, may I request you please make a donation to the charities that I support.\n\nYou can view the event and donate here:\n{{EVENT_LINK}}\n\nThank you so much. Look forward to celebrating with you!\n\nWith love,\n{{YOUR_NAME}}`,
+        body: `Dear Family and Friends,\n\nI'm so excited to celebrate my ${eventCheck.rows[0].title} with you!\n\nI would humbly request that you please don't bring any kind of gift (boxed or otherwise). Your presence and blessings would be the best gift.\n\nI know not everyone heeds such requests :) So if you must give a gift, may I request you please make a donation to the charities that I support.\n\nThank you so much. Look forward to celebrating with you!\n\nWith love,\n{{YOUR_NAME}}`,
         is_default: true
       });
     }
@@ -158,7 +158,7 @@ router.post(
       } else {
         // Use default template
         subject = `You're invited to support my ${event.title}!`;
-        bodyTemplate = `Dear Family and Friends,\n\nI'm so excited to celebrate my ${event.title} with you!\n\nI would humbly request that you please don't bring any kind of gift (boxed or otherwise). Your presence and blessings would be the best gift.\n\nI know not everyone heeds such requests :) So if you must give a gift, may I request you please make a donation to the charities that I support.\n\nYou can view the event and donate here:\n{{EVENT_LINK}}\n\nThank you so much. Look forward to celebrating with you!\n\nWith love,\n{{YOUR_NAME}}`;
+        bodyTemplate = `Dear Family and Friends,\n\nI'm so excited to celebrate my ${event.title} with you!\n\nI would humbly request that you please don't bring any kind of gift (boxed or otherwise). Your presence and blessings would be the best gift.\n\nI know not everyone heeds such requests :) So if you must give a gift, may I request you please make a donation to the charities that I support.\n\nThank you so much. Look forward to celebrating with you!\n\nWith love,\n{{YOUR_NAME}}`;
       }
 
       // Get guests who haven't been sent an invitation yet
@@ -454,7 +454,7 @@ router.post(
         console.log(`[RESEND] Using custom template`);
       } else {
         subject = `You're invited to support my ${guest.title}!`;
-        bodyTemplate = `Dear Family and Friends,\n\nI'm so excited to celebrate my ${guest.title} with you!\n\nI would humbly request that you please don't bring any kind of gift (boxed or otherwise). Your presence and blessings would be the best gift.\n\nI know not everyone heeds such requests :) So if you must give a gift, may I request you please make a donation to the charities that I support.\n\nYou can view the event and donate here:\n{{EVENT_LINK}}\n\nThank you so much. Look forward to celebrating with you!\n\nWith love,\n{{YOUR_NAME}}`;
+        bodyTemplate = `Dear Family and Friends,\n\nI'm so excited to celebrate my ${guest.title} with you!\n\nI would humbly request that you please don't bring any kind of gift (boxed or otherwise). Your presence and blessings would be the best gift.\n\nI know not everyone heeds such requests :) So if you must give a gift, may I request you please make a donation to the charities that I support.\n\nThank you so much. Look forward to celebrating with you!\n\nWith love,\n{{YOUR_NAME}}`;
         console.log(`[RESEND] Using default template`);
       }
 
