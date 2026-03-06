@@ -149,7 +149,7 @@ router.post(
 
 router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    // Get all events with their charities in a single query using json_agg
+    // Get all events (owned + co-hosted) with their charities in a single query
     const eventsResult = await query(
       `SELECT e.*,
               COALESCE(SUM(d.amount), 0) as total_raised,
@@ -174,10 +174,18 @@ router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) =
                   WHERE ec2.event_id = e.id
                 ),
                 '[]'
-              ) as charities
+              ) as charities,
+              CASE
+                WHEN e.user_id = $1 THEN 'owner'
+                ELSE 'cohost'
+              END as user_role
        FROM events e
        LEFT JOIN donations d ON e.id = d.event_id AND d.status IN ('completed', 'committed')
        WHERE e.user_id = $1
+          OR e.id IN (
+            SELECT event_id FROM co_hosts
+            WHERE user_id = $1 AND accepted_at IS NOT NULL
+          )
        GROUP BY e.id
        ORDER BY e.event_date DESC`,
       [req.user!.id]
@@ -334,6 +342,38 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
     } catch (err) {
       // Table doesn't exist yet, skip
       event.attending_count = 0;
+    }
+
+    // Fetch co-hosts for the event
+    try {
+      const coHostsResult = await query(
+        `SELECT ch.id, ch.event_id, ch.user_id, ch.email, ch.name,
+                ch.invited_at, ch.accepted_at,
+                u.first_name, u.last_name, u.email as user_email
+         FROM co_hosts ch
+         LEFT JOIN users u ON ch.user_id = u.id
+         WHERE ch.event_id = $1
+         ORDER BY ch.accepted_at DESC NULLS LAST, ch.invited_at ASC`,
+        [event.id]
+      );
+      event.co_hosts = coHostsResult.rows;
+
+      // Check if authenticated user is a co-host
+      if (authenticatedUserId) {
+        const isCoHost = coHostsResult.rows.some(
+          (ch: any) => ch.user_id === authenticatedUserId && ch.accepted_at !== null
+        );
+        event.is_cohost = isCoHost;
+        event.user_role = event.user_id === authenticatedUserId ? 'owner' : (isCoHost ? 'cohost' : 'guest');
+      } else {
+        event.is_cohost = false;
+        event.user_role = 'guest';
+      }
+    } catch (err) {
+      // Table doesn't exist yet, skip
+      event.co_hosts = [];
+      event.is_cohost = false;
+      event.user_role = authenticatedUserId && event.user_id === authenticatedUserId ? 'owner' : 'guest';
     }
 
     console.log(`[GET /:slug] Successfully returning event data`);

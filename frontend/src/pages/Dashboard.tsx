@@ -145,9 +145,14 @@ const Dashboard = () => {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold text-gray-900 mb-1 truncate group-hover:text-primary-600 transition-colors">
-                        {event.title}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-xl font-bold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
+                          {event.title}
+                        </h3>
+                        {event.user_role === 'cohost' && (
+                          <span className="badge badge-primary text-xs flex-shrink-0">Co-Host</span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-600 truncate">{event.charity_name}</p>
                     </div>
                   </div>

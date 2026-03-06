@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator';
 import { query } from '../database/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { AddGuestInput } from '../types';
+import { isOwnerOrCoHost } from '../utils/coHostHelpers';
 
 const router = Router();
 
@@ -41,12 +42,9 @@ router.get('/event/:eventId', authenticate, async (req: AuthRequest, res: Respon
   try {
     const { eventId } = req.params;
 
-    // Verify the user owns this event
-    const eventCheck = await query('SELECT user_id FROM events WHERE id = $1', [eventId]);
-    if (eventCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-    if (eventCheck.rows[0].user_id !== req.user!.id) {
+    // Verify the user is owner or accepted co-host
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, parseInt(eventId));
+    if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -87,12 +85,9 @@ router.post(
 
       const { event_id, email, name }: AddGuestInput = req.body;
 
-      // Verify the user owns this event
-      const eventCheck = await query('SELECT user_id FROM events WHERE id = $1', [event_id]);
-      if (eventCheck.rows.length === 0) {
-        return res.status(404).json({ error: 'Event not found' });
-      }
-      if (eventCheck.rows[0].user_id !== req.user!.id) {
+      // Verify the user is owner or accepted co-host
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id);
+      if (!hasAccess) {
         return res.status(403).json({ error: 'Not authorized' });
       }
 
@@ -133,12 +128,9 @@ router.post(
 
       const { event_id, guests } = req.body;
 
-      // Verify the user owns this event
-      const eventCheck = await query('SELECT user_id FROM events WHERE id = $1', [event_id]);
-      if (eventCheck.rows.length === 0) {
-        return res.status(404).json({ error: 'Event not found' });
-      }
-      if (eventCheck.rows[0].user_id !== req.user!.id) {
+      // Verify the user is owner or accepted co-host
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id);
+      if (!hasAccess) {
         return res.status(403).json({ error: 'Not authorized' });
       }
 
@@ -191,9 +183,9 @@ router.put(
         return res.status(400).json({ error: 'At least one field (name or email) must be provided' });
       }
 
-      // Verify the user owns the event for this guest
+      // Verify the user is owner or accepted co-host for this guest's event
       const guestCheck = await query(
-        `SELECT g.*, e.user_id
+        `SELECT g.*, e.id as event_id
          FROM guests g
          JOIN events e ON g.event_id = e.id
          WHERE g.id = $1`,
@@ -204,11 +196,12 @@ router.put(
         return res.status(404).json({ error: 'Guest not found' });
       }
 
-      if (guestCheck.rows[0].user_id !== req.user!.id) {
+      const guest = guestCheck.rows[0];
+
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, guest.event_id);
+      if (!hasAccess) {
         return res.status(403).json({ error: 'Not authorized' });
       }
-
-      const guest = guestCheck.rows[0];
 
       // If email is being changed, check for conflicts
       if (email && email !== guest.email) {
@@ -264,9 +257,9 @@ router.delete('/:guestId', authenticate, async (req: AuthRequest, res: Response)
   try {
     const { guestId } = req.params;
 
-    // Verify the user owns the event for this guest
+    // Verify the user is owner or accepted co-host for this guest's event
     const guestCheck = await query(
-      `SELECT g.*, e.user_id
+      `SELECT g.*, e.id as event_id
        FROM guests g
        JOIN events e ON g.event_id = e.id
        WHERE g.id = $1`,
@@ -277,7 +270,8 @@ router.delete('/:guestId', authenticate, async (req: AuthRequest, res: Response)
       return res.status(404).json({ error: 'Guest not found' });
     }
 
-    if (guestCheck.rows[0].user_id !== req.user!.id) {
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, guestCheck.rows[0].event_id);
+    if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 

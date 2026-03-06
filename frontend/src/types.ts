@@ -64,6 +64,9 @@ export interface Event {
   created_at?: string;
   updates?: EventUpdate[];
   attending_count?: number;
+  co_hosts?: CoHost[]; // List of co-hosts for the event
+  is_cohost?: boolean; // Whether current user is a co-host
+  user_role?: 'owner' | 'cohost' | 'guest'; // Current user's role for this event
 }
 
 export interface Donation {

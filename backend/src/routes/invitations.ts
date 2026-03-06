@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { query } from '../database/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { CreateEmailTemplateInput } from '../types';
+import { isOwnerOrCoHost } from '../utils/coHostHelpers';
 
 const router = Router();
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -13,13 +14,16 @@ router.get('/template/:eventId', authenticate, async (req: AuthRequest, res: Res
   try {
     const { eventId } = req.params;
 
-    // Verify the user owns this event
+    // Verify the user is owner or accepted co-host
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, parseInt(eventId));
+    if (!hasAccess) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    // Get event details for template
     const eventCheck = await query('SELECT user_id, title FROM events WHERE id = $1', [eventId]);
     if (eventCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
-    }
-    if (eventCheck.rows[0].user_id !== req.user!.id) {
-      return res.status(403).json({ error: 'Not authorized' });
     }
 
     const result = await query(
@@ -62,12 +66,9 @@ router.post(
 
       const { event_id, subject, body }: CreateEmailTemplateInput = req.body;
 
-      // Verify the user owns this event
-      const eventCheck = await query('SELECT user_id FROM events WHERE id = $1', [event_id]);
-      if (eventCheck.rows.length === 0) {
-        return res.status(404).json({ error: 'Event not found' });
-      }
-      if (eventCheck.rows[0].user_id !== req.user!.id) {
+      // Verify the user is owner or accepted co-host
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id);
+      if (!hasAccess) {
         return res.status(403).json({ error: 'Not authorized' });
       }
 
@@ -119,7 +120,13 @@ router.post(
 
       const { event_id } = req.body;
 
-      // Verify the user owns this event
+      // Verify the user is owner or accepted co-host
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id);
+      if (!hasAccess) {
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+
+      // Get event details
       const eventResult = await query(
         `SELECT e.*, u.first_name, u.last_name, u.email as user_email
          FROM events e
@@ -133,10 +140,6 @@ router.post(
       }
 
       const event = eventResult.rows[0];
-
-      if (event.user_id !== req.user!.id) {
-        return res.status(403).json({ error: 'Not authorized' });
-      }
 
       // Check if event has charities (for donate to charity use case)
       const charitiesResult = await query(
@@ -407,9 +410,9 @@ router.post(
       console.log(`[RESEND] Starting resend invitation for guest ID: ${guestId}`);
       console.log(`[RESEND] Authenticated user ID: ${req.user!.id}`);
 
-      // Get guest and verify ownership
+      // Get guest details
       const guestResult = await query(
-        `SELECT g.*, e.slug, e.title, e.user_id, u.first_name, u.last_name, u.email as user_email
+        `SELECT g.*, e.id as event_id, e.slug, e.title, e.user_id, u.first_name, u.last_name, u.email as user_email
          FROM guests g
          JOIN events e ON g.event_id = e.id
          JOIN users u ON e.user_id = u.id
@@ -427,8 +430,10 @@ router.post(
       const guest = guestResult.rows[0];
       console.log(`[RESEND] Guest found: ${guest.email}, event: ${guest.title}`);
 
-      if (guest.user_id !== req.user!.id) {
-        console.log(`[RESEND] User ${req.user!.id} not authorized for guest owned by ${guest.user_id}`);
+      // Verify the user is owner or accepted co-host
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, guest.event_id);
+      if (!hasAccess) {
+        console.log(`[RESEND] User ${req.user!.id} not authorized for event ${guest.event_id}`);
         return res.status(403).json({ error: 'Not authorized' });
       }
 

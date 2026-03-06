@@ -73,6 +73,8 @@ const EventPage = () => {
   }
 
   const isOwner = user && event && user.id === event.user_id;
+  const isCoHost = user && event && event.is_cohost === true;
+  const canManage = isOwner || isCoHost;
 
   const pageUrl = window.location.href;
   const shareTitle = `You're invited to ${event.title}`;
@@ -131,13 +133,22 @@ const EventPage = () => {
                     </p>
                   )}
                 </div>
-                {isOwner && (
-                  <button
-                    onClick={() => navigate(`/event/${event.slug}/edit`)}
-                    className="flex-shrink-0 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white font-medium transition-all duration-200 border border-white/30 hover:border-white/50"
-                  >
-                    ✏️ Edit Event
-                  </button>
+                {canManage && (
+                  <div className="flex gap-2">
+                    {isCoHost && !isOwner && (
+                      <span className="flex-shrink-0 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white font-medium border border-white/30">
+                        👥 Co-Host
+                      </span>
+                    )}
+                    {isOwner && (
+                      <button
+                        onClick={() => navigate(`/event/${event.slug}/edit`)}
+                        className="flex-shrink-0 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white font-medium transition-all duration-200 border border-white/30 hover:border-white/50"
+                      >
+                        ✏️ Edit Event
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
