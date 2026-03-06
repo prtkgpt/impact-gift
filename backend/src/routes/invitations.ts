@@ -138,6 +138,13 @@ router.post(
         return res.status(403).json({ error: 'Not authorized' });
       }
 
+      // Check if event has charities (for donate to charity use case)
+      const charitiesResult = await query(
+        'SELECT COUNT(*) as count FROM event_charities WHERE event_id = $1',
+        [event_id]
+      );
+      const hasCharities = parseInt(charitiesResult.rows[0].count) > 0;
+
       // Get email template
       const templateResult = await query(
         'SELECT * FROM email_templates WHERE event_id = $1',
@@ -180,10 +187,18 @@ router.post(
         const eventUrl = `${baseEventUrl}?email=${encodeURIComponent(guest.email)}`;
 
         // Replace template variables
-        const personalizedBody = bodyTemplate
+        let personalizedBody = bodyTemplate
           .replace(/\{\{EVENT_LINK\}\}/g, eventUrl)
           .replace(/\{\{YOUR_NAME\}\}/g, senderName)
           .replace(/\{\{GUEST_NAME\}\}/g, guest.name || 'Friend');
+
+        // For non-charity events, remove lines containing the event link
+        if (!hasCharities) {
+          personalizedBody = personalizedBody
+            .split('\n')
+            .filter(line => !line.includes(eventUrl))
+            .join('\n');
+        }
 
         if (resend) {
           try {
@@ -259,6 +274,7 @@ router.post(
                     </a>
                   </td>
                 </tr>
+                ${hasCharities ? `
                 <tr>
                   <td align="center" style="padding-top: 10px;">
                     <a href="${eventUrl}" style="display: inline-block; padding: 12px 24px; background-color: white; color: #22c55e; text-decoration: none; border: 2px solid #22c55e; border-radius: 8px; font-size: 16px; font-weight: 600; margin: 10px;">
@@ -266,6 +282,7 @@ router.post(
                     </a>
                   </td>
                 </tr>
+                ` : ''}
               </table>
             </td>
           </tr>
@@ -415,6 +432,14 @@ router.post(
         return res.status(403).json({ error: 'Not authorized' });
       }
 
+      // Check if event has charities (for donate to charity use case)
+      const charitiesResult = await query(
+        'SELECT COUNT(*) as count FROM event_charities WHERE event_id = $1',
+        [guest.event_id]
+      );
+      const hasCharities = parseInt(charitiesResult.rows[0].count) > 0;
+      console.log(`[RESEND] Event has charities: ${hasCharities}`);
+
       // Get email template
       console.log(`[RESEND] Fetching email template for event ID: ${guest.event_id}`);
       const templateResult = await query(
@@ -437,10 +462,18 @@ router.post(
       const eventUrl = `${process.env.FRONTEND_URL}/event/${guest.slug}?email=${encodeURIComponent(guest.email)}`;
       const senderName = `${guest.first_name} ${guest.last_name}`;
 
-      const personalizedBody = bodyTemplate
+      let personalizedBody = bodyTemplate
         .replace(/\{\{EVENT_LINK\}\}/g, eventUrl)
         .replace(/\{\{YOUR_NAME\}\}/g, senderName)
         .replace(/\{\{GUEST_NAME\}\}/g, guest.name || 'Friend');
+
+      // For non-charity events, remove lines containing the event link
+      if (!hasCharities) {
+        personalizedBody = personalizedBody
+          .split('\n')
+          .filter(line => !line.includes(eventUrl))
+          .join('\n');
+      }
 
       console.log(`[RESEND] Email details - To: ${guest.email}, ReplyTo: ${guest.user_email}`);
       console.log(`[RESEND] Resend configured: ${!!resend}`);
@@ -522,6 +555,7 @@ router.post(
                     </a>
                   </td>
                 </tr>
+                ${hasCharities ? `
                 <tr>
                   <td align="center" style="padding-top: 10px;">
                     <a href="${eventUrl}" style="display: inline-block; padding: 12px 24px; background-color: white; color: #22c55e; text-decoration: none; border: 2px solid #22c55e; border-radius: 8px; font-size: 16px; font-weight: 600; margin: 10px;">
@@ -529,6 +563,7 @@ router.post(
                     </a>
                   </td>
                 </tr>
+                ` : ''}
               </table>
             </td>
           </tr>
