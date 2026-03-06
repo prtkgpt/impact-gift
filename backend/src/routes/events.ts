@@ -156,6 +156,14 @@ router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) =
               COUNT(DISTINCT d.id) as donation_count,
               COALESCE(
                 (
+                  SELECT COUNT(*)
+                  FROM guests g
+                  WHERE g.event_id = e.id AND g.rsvp_status = 'attending'
+                ),
+                0
+              ) as attending_count,
+              COALESCE(
+                (
                   SELECT json_agg(jsonb_build_object(
                     'id', c2.id,
                     'name', c2.name,

@@ -165,36 +165,64 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-                  {/* Fundraising Progress */}
+                  {/* Event Stats - Show different stats based on whether event has charities */}
                   <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 mb-6">
-                    <div className="flex justify-between items-baseline mb-3">
-                      <span className="text-sm font-medium text-gray-600">Total Raised</span>
-                      <span className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
-                        ${Number(event.total_raised || 0).toFixed(2)}
-                      </span>
-                    </div>
-
-                    {event.goal_amount && (
+                    {event.charities && event.charities.length > 0 ? (
+                      // Event with charities - show Total Raised + RSVP count
                       <>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2 overflow-hidden">
-                          <div
-                            className="bg-gradient-to-r from-primary-600 to-accent-500 h-2.5 rounded-full transition-all duration-500"
-                            style={{
-                              width: `${Math.min((Number(event.total_raised) / Number(event.goal_amount)) * 100, 100)}%`
-                            }}
-                          />
+                        <div className="flex justify-between items-baseline mb-3">
+                          <span className="text-sm font-medium text-gray-600">Total Raised</span>
+                          <span className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
+                            ${Number(event.total_raised || 0).toFixed(2)}
+                          </span>
                         </div>
-                        <div className="flex justify-between text-xs text-gray-600">
-                          <span>{event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}</span>
-                          <span>Goal: ${Number(event.goal_amount).toFixed(2)}</span>
+
+                        {event.goal_amount && (
+                          <>
+                            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2 overflow-hidden">
+                              <div
+                                className="bg-gradient-to-r from-primary-600 to-accent-500 h-2.5 rounded-full transition-all duration-500"
+                                style={{
+                                  width: `${Math.min((Number(event.total_raised) / Number(event.goal_amount)) * 100, 100)}%`
+                                }}
+                              />
+                            </div>
+                            <div className="flex justify-between text-xs text-gray-600">
+                              <span>{event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}</span>
+                              <span>Goal: ${Number(event.goal_amount).toFixed(2)}</span>
+                            </div>
+                          </>
+                        )}
+
+                        {!event.goal_amount && (
+                          <p className="text-xs text-gray-600 mb-2">
+                            {event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}
+                          </p>
+                        )}
+
+                        {/* Show RSVP count for charity events too */}
+                        <div className="pt-3 border-t border-gray-200 mt-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-600">RSVPs</span>
+                            <span className="text-lg font-bold text-gray-900">
+                              {event.attending_count || 0} attending
+                            </span>
+                          </div>
                         </div>
                       </>
-                    )}
-
-                    {!event.goal_amount && (
-                      <p className="text-xs text-gray-600">
-                        {event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}
-                      </p>
+                    ) : (
+                      // Event without charities - show RSVP count only
+                      <>
+                        <div className="flex justify-between items-baseline mb-3">
+                          <span className="text-sm font-medium text-gray-600">RSVPs</span>
+                          <span className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
+                            {event.attending_count || 0}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600">
+                          {event.attending_count === 1 ? 'guest' : 'guests'} attending
+                        </p>
+                      </>
                     )}
                   </div>
 

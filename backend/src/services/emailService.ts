@@ -66,13 +66,19 @@ const fromEmail = process.env.RESEND_FROM_EMAIL || 'Impact Gift <noreply@giftwit
  * Send a generic email
  */
 export async function sendEmail({ to, subject, html, from }: SendEmailParams) {
+  console.log('[sendEmail] Starting email send process');
+  console.log('[sendEmail] To:', to);
+  console.log('[sendEmail] Subject:', subject);
+  console.log('[sendEmail] From:', from || fromEmail);
+
   try {
     if (!process.env.RESEND_API_KEY || !resend) {
-      console.warn('RESEND_API_KEY not configured. Email would have been sent:');
+      console.warn('[sendEmail] RESEND_API_KEY not configured. Email would have been sent:');
       console.log({ to, subject });
       return { success: false, message: 'Email service not configured' };
     }
 
+    console.log('[sendEmail] Resend is configured, calling resend.emails.send()...');
     const result = await resend.emails.send({
       from: from || fromEmail,
       to: Array.isArray(to) ? to : [to],
@@ -80,15 +86,22 @@ export async function sendEmail({ to, subject, html, from }: SendEmailParams) {
       html,
     });
 
+    console.log('[sendEmail] Resend API response:', JSON.stringify(result, null, 2));
+
     if (result.error) {
-      console.error('Failed to send email:', result.error);
+      console.error('[sendEmail] Failed to send email:', result.error);
       return { success: false, error: result.error.message };
     }
 
-    console.log('Email sent successfully:', result.data?.id);
+    console.log('[sendEmail] Email sent successfully! ID:', result.data?.id);
     return { success: true, id: result.data?.id };
   } catch (error: any) {
-    console.error('Failed to send email:', error);
+    console.error('[sendEmail] Exception caught:', error);
+    console.error('[sendEmail] Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return { success: false, error: error.message };
   }
 }
