@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { query } from '../database/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { sendCoHostInvitation } from '../services/emailService';
 
 const router = Router();
 
@@ -57,8 +58,15 @@ router.post(
       const userId = req.user!.id;
       const { email, name } = req.body;
 
-      // Verify user owns the event
-      const eventCheck = await query('SELECT user_id FROM events WHERE id = $1', [eventId]);
+      // Verify user owns the event and get event details
+      const eventCheck = await query(
+        `SELECT e.user_id, e.title, e.description, e.event_date, e.slug,
+                u.first_name, u.last_name
+         FROM events e
+         JOIN users u ON e.user_id = u.id
+         WHERE e.id = $1`,
+        [eventId]
+      );
       if (eventCheck.rows.length === 0) {
         return res.status(404).json({ error: 'Event not found' });
       }
@@ -66,6 +74,8 @@ router.post(
       if (eventCheck.rows[0].user_id !== userId) {
         return res.status(403).json({ error: 'Not authorized' });
       }
+
+      const event = eventCheck.rows[0];
 
       // Check if user exists by email
       const userCheck = await query('SELECT id FROM users WHERE email = $1', [email]);
@@ -89,6 +99,30 @@ router.post(
         [eventId, coHostUserId, email, name || null]
       );
 
+      // Send co-host invitation email
+      const coHostId = result.rows[0].id;
+      const eventOwnerName = `${event.first_name} ${event.last_name}`;
+      const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const acceptUrl = `${baseUrl}/events/${event.slug}/co-host/accept?id=${coHostId}`;
+      const eventUrl = `${baseUrl}/events/${event.slug}`;
+
+      try {
+        await sendCoHostInvitation({
+          coHostName: name,
+          coHostEmail: email,
+          eventTitle: event.title,
+          eventDescription: event.description,
+          eventDate: event.event_date,
+          eventOwnerName,
+          acceptUrl,
+          eventUrl,
+        });
+        console.log('Co-host invitation email sent successfully');
+      } catch (emailError) {
+        console.error('Error sending co-host invitation email:', emailError);
+        // Don't fail the request if email fails
+      }
+
       res.status(201).json(result.rows[0]);
     } catch (error) {
       console.error('Error adding co-host:', error);
@@ -96,6 +130,104 @@ router.post(
     }
   }
 );
+
+// Resend co-host invitation
+router.post('/:coHostId/resend', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { coHostId } = req.params;
+    const userId = req.user!.id;
+
+    // Get co-host and event details
+    const result = await query(
+      `SELECT ch.id, ch.email, ch.name, ch.accepted_at,
+              e.id as event_id, e.title, e.description, e.event_date, e.slug, e.user_id,
+              u.first_name, u.last_name
+       FROM co_hosts ch
+       JOIN events e ON ch.event_id = e.id
+       JOIN users u ON e.user_id = u.id
+       WHERE ch.id = $1`,
+      [coHostId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Co-host not found' });
+    }
+
+    const data = result.rows[0];
+
+    if (data.user_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    if (data.accepted_at) {
+      return res.status(400).json({ error: 'Co-host has already accepted the invitation' });
+    }
+
+    // Send co-host invitation email
+    const eventOwnerName = `${data.first_name} ${data.last_name}`;
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const acceptUrl = `${baseUrl}/events/${data.slug}/co-host/accept?id=${coHostId}`;
+    const eventUrl = `${baseUrl}/events/${data.slug}`;
+
+    await sendCoHostInvitation({
+      coHostName: data.name,
+      coHostEmail: data.email,
+      eventTitle: data.title,
+      eventDescription: data.description,
+      eventDate: data.event_date,
+      eventOwnerName,
+      acceptUrl,
+      eventUrl,
+    });
+
+    res.json({ message: 'Invitation resent successfully' });
+  } catch (error) {
+    console.error('Error resending co-host invitation:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Accept co-host invitation
+router.post('/:coHostId/accept', async (req, res: Response) => {
+  try {
+    const { coHostId } = req.params;
+
+    // Get co-host details
+    const coHostCheck = await query(
+      `SELECT id, event_id, email, accepted_at
+       FROM co_hosts
+       WHERE id = $1`,
+      [coHostId]
+    );
+
+    if (coHostCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Co-host invitation not found' });
+    }
+
+    const coHost = coHostCheck.rows[0];
+
+    if (coHost.accepted_at) {
+      return res.status(400).json({ error: 'Invitation already accepted' });
+    }
+
+    // Update accepted_at timestamp
+    const result = await query(
+      `UPDATE co_hosts
+       SET accepted_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+       RETURNING *`,
+      [coHostId]
+    );
+
+    res.json({
+      message: 'Co-host invitation accepted successfully',
+      coHost: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error accepting co-host invitation:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // Remove co-host
 router.delete('/:coHostId', authenticate, async (req: AuthRequest, res: Response) => {

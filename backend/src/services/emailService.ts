@@ -49,6 +49,17 @@ export interface CharityCommitmentEmailParams {
   charityPageSlug: string;
 }
 
+export interface CoHostInvitationEmailParams {
+  coHostName?: string;
+  coHostEmail: string;
+  eventTitle: string;
+  eventDescription?: string;
+  eventDate: string;
+  eventOwnerName: string;
+  acceptUrl: string;
+  eventUrl: string;
+}
+
 const fromEmail = process.env.RESEND_FROM_EMAIL || 'Impact Gift <noreply@giftwithimpact.com>';
 
 /**
@@ -426,10 +437,113 @@ export async function sendCharityCommitmentNotification(params: CharityCommitmen
   });
 }
 
+/**
+ * Send co-host invitation email
+ */
+export async function sendCoHostInvitation(params: CoHostInvitationEmailParams) {
+  const { coHostName, coHostEmail, eventTitle, eventDescription, eventDate, eventOwnerName, acceptUrl, eventUrl } = params;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Co-Host Invitation</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f9fafb;">
+        <table role="presentation" style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 40px 20px;">
+              <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <!-- Header -->
+                <tr>
+                  <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); border-radius: 16px 16px 0 0;">
+                    <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: bold;">🎉 Co-Host Invitation</h1>
+                  </td>
+                </tr>
+
+                <!-- Content -->
+                <tr>
+                  <td style="padding: 40px;">
+                    <p style="margin: 0 0 24px; font-size: 18px; color: #1f2937; line-height: 1.6;">
+                      ${coHostName ? `Hi ${coHostName},` : 'Hello,'}
+                    </p>
+
+                    <p style="margin: 0 0 24px; font-size: 16px; color: #4b5563; line-height: 1.6;">
+                      <strong>${eventOwnerName}</strong> has invited you to be a co-host for their upcoming event!
+                    </p>
+
+                    <!-- Event Details Box -->
+                    <div style="background: linear-gradient(135deg, #dbeafe 0%, #ede9fe 100%); border-radius: 12px; padding: 24px; margin: 32px 0;">
+                      <h2 style="margin: 0 0 16px; font-size: 24px; color: #1e40af; font-weight: bold;">
+                        ${eventTitle}
+                      </h2>
+                      <p style="margin: 0 0 12px; font-size: 14px; color: #4b5563; line-height: 1.6;">
+                        📅 ${new Date(eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                      </p>
+                      ${eventDescription ? `
+                        <p style="margin: 12px 0 0; font-size: 14px; color: #4b5563; line-height: 1.6;">
+                          ${eventDescription}
+                        </p>
+                      ` : ''}
+                    </div>
+
+                    <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                      <p style="margin: 0; font-size: 14px; color: #92400e; line-height: 1.6;">
+                        <strong>As a co-host, you'll be able to:</strong><br>
+                        • Help manage event details and guest list<br>
+                        • View donations and track progress<br>
+                        • Send invitations to guests<br>
+                        • Collaborate with ${eventOwnerName} on event planning
+                      </p>
+                    </div>
+
+                    <p style="margin: 24px 0; font-size: 16px; color: #4b5563; line-height: 1.6;">
+                      Click the button below to accept the invitation and start collaborating!
+                    </p>
+
+                    <!-- CTA Buttons -->
+                    <div style="text-align: center; margin: 32px 0;">
+                      <a href="${acceptUrl}" style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); margin-right: 12px;">
+                        Accept Invitation ✓
+                      </a>
+                      <a href="${eventUrl}" style="display: inline-block; padding: 16px 32px; background: #ffffff; color: #4b5563; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; border: 2px solid #e5e7eb;">
+                        View Event
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                  <td style="padding: 24px 40px; background-color: #f9fafb; border-radius: 0 0 16px 16px; text-align: center;">
+                    <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.5;">
+                      Impact Gift - Transform celebrations into meaningful impact<br>
+                      <a href="https://giftwithimpact.com" style="color: #ec4899; text-decoration: none;">giftwithimpact.com</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+  `;
+
+  return sendEmail({
+    to: coHostEmail,
+    subject: `🎉 You're invited to co-host "${eventTitle}"!`,
+    html,
+  });
+}
+
 export default {
   sendEmail,
   sendDonationNotification,
   sendEventInvitation,
   sendThankYouEmail,
   sendCharityCommitmentNotification,
+  sendCoHostInvitation,
 };
