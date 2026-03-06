@@ -117,7 +117,7 @@ const Dashboard = () => {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold text-gray-900 mb-1 truncate group-hover:text-rose-600 transition-colors">
+                      <h3 className="text-xl font-bold text-gray-900 mb-1 truncate group-hover:text-primary-600 transition-colors">
                         {event.title}
                       </h3>
                       <p className="text-sm text-gray-600 truncate">{event.charity_name}</p>
@@ -141,7 +141,7 @@ const Dashboard = () => {
                   <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 mb-6">
                     <div className="flex justify-between items-baseline mb-3">
                       <span className="text-sm font-medium text-gray-600">Total Raised</span>
-                      <span className="text-3xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
+                      <span className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
                         ${Number(event.total_raised || 0).toFixed(2)}
                       </span>
                     </div>
@@ -150,7 +150,7 @@ const Dashboard = () => {
                       <>
                         <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2 overflow-hidden">
                           <div
-                            className="bg-gradient-to-r from-rose-500 to-pink-500 h-2.5 rounded-full transition-all duration-500"
+                            className="bg-gradient-to-r from-primary-600 to-accent-500 h-2.5 rounded-full transition-all duration-500"
                             style={{
                               width: `${Math.min((Number(event.total_raised) / Number(event.goal_amount)) * 100, 100)}%`
                             }}

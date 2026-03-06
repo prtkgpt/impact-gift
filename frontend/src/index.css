@@ -24,7 +24,7 @@ body {
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-600 hover:to-pink-600 shadow-md hover:shadow-xl;
+    @apply bg-gradient-to-r from-primary-600 to-accent-500 text-white hover:from-primary-700 hover:to-accent-600 shadow-md hover:shadow-xl;
   }
 
   .btn-secondary {
@@ -37,7 +37,7 @@ body {
 
   /* Inputs */
   .input {
-    @apply w-full px-4 py-3.5 text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition-all duration-200 bg-white hover:border-gray-300;
+    @apply w-full px-4 py-3.5 text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 bg-white hover:border-gray-300;
   }
 
   .input:focus {
@@ -54,7 +54,7 @@ body {
   }
 
   .card-highlight {
-    @apply bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 rounded-3xl border-2 border-rose-100 p-8 shadow-lg;
+    @apply bg-gradient-to-br from-primary-50 via-accent-50 to-purple-50 rounded-3xl border-2 border-primary-100 p-8 shadow-lg;
   }
 
   /* Typography */
@@ -80,7 +80,7 @@ body {
   }
 
   .badge-primary {
-    @apply bg-rose-100 text-rose-700;
+    @apply bg-primary-100 text-primary-700;
   }
 
   .badge-success {
@@ -118,10 +118,10 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #e9d5ff;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: #c084fc;
 }

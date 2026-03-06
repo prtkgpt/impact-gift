@@ -28,7 +28,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ donations, event }) => {
 
     // First donor badge
     if (index === donations.length - 1) {
-      badges.push({ icon: '⭐', label: 'First Supporter', color: 'bg-blue-100 text-blue-800' });
+      badges.push({ icon: '⭐', label: 'First Supporter', color: 'bg-primary-100 text-primary-800' });
     }
 
     // Early bird badge - donated in first 24 hours
@@ -44,12 +44,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ donations, event }) => {
 
     // Generous donor badge - $100+
     if (Number(donation.amount) >= 100) {
-      badges.push({ icon: '💎', label: 'Generous Donor', color: 'bg-indigo-100 text-indigo-800' });
+      badges.push({ icon: '💎', label: 'Generous Donor', color: 'bg-primary-100 text-primary-800' });
     }
 
     // Super supporter - $250+
     if (Number(donation.amount) >= 250) {
-      badges.push({ icon: '⚡', label: 'Super Supporter', color: 'bg-pink-100 text-pink-800' });
+      badges.push({ icon: '⚡', label: 'Super Supporter', color: 'bg-accent-100 text-accent-800' });
     }
 
     // Employer match badge

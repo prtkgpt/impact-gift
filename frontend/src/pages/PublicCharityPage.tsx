@@ -170,7 +170,7 @@ const PublicCharityPage = () => {
               >
                 {/* Charity Logo - REDESIGNED */}
                 <div
-                  className="bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center"
+                  className="bg-gradient-to-br from-primary-50 via-pink-50 to-orange-50 flex items-center justify-center"
                   style={{ height: '240px', padding: '32px' }}
                 >
                   <img
@@ -189,7 +189,7 @@ const PublicCharityPage = () => {
 
                 <div className="p-6">
                   {charity.category && (
-                    <span className="inline-block px-3 py-1 text-xs font-semibold text-pink-600 bg-pink-100 rounded-full mb-3">
+                    <span className="inline-block px-3 py-1 text-xs font-semibold text-accent-600 bg-accent-100 rounded-full mb-3">
                       {charity.category}
                     </span>
                   )}
@@ -203,7 +203,7 @@ const PublicCharityPage = () => {
                   )}
 
                   {charity.notes && (
-                    <div className="mb-4 p-3 bg-gray-50 rounded-lg border-l-4 border-pink-500">
+                    <div className="mb-4 p-3 bg-gray-50 rounded-lg border-l-4 border-accent-500">
                       <p className="text-xs text-gray-500 mb-1">Why {data.user.first_name} loves this charity:</p>
                       <p className="text-sm text-gray-700 italic">
                         "{charity.notes}"
@@ -214,7 +214,7 @@ const PublicCharityPage = () => {
                   {charity.commitment_amount > 0 && (
                     <div className="mb-4 p-3 bg-gradient-to-r from-pink-50 to-rose-50 rounded-lg">
                       <p className="text-xs text-gray-600 mb-1">Personal commitment</p>
-                      <p className="text-2xl font-bold text-pink-600">
+                      <p className="text-2xl font-bold text-accent-600">
                         ${Number(charity.commitment_amount).toFixed(2)}
                       </p>
                     </div>
@@ -255,7 +255,7 @@ const PublicCharityPage = () => {
               </button>
             </div>
 
-            <div className="mb-4 p-3 bg-pink-50 rounded-lg">
+            <div className="mb-4 p-3 bg-accent-50 rounded-lg">
               <p className="text-sm text-gray-700 mb-1">You're supporting:</p>
               <p className="font-bold text-gray-900">{selectedCharity.name}</p>
             </div>

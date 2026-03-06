@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import compression from 'compression';
 import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth';
@@ -31,6 +32,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(helmet());
+app.use(compression()); // Enable gzip compression for responses
 
 // CORS configuration - allow multiple origins in production
 const allowedOrigins = [

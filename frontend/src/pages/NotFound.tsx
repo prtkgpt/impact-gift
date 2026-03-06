@@ -12,7 +12,7 @@ const NotFound = () => {
         <div className="max-w-2xl w-full text-center">
           {/* 404 Illustration */}
           <div className="mb-8">
-            <div className="text-9xl font-bold bg-gradient-to-r from-rose-500 to-pink-500 bg-clip-text text-transparent">
+            <div className="text-9xl font-bold bg-gradient-to-r from-primary-500 to-accent-500 bg-clip-text text-transparent">
               404
             </div>
           </div>

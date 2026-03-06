@@ -47,7 +47,7 @@ const CharityPageCard = () => {
 
   if (!stats?.has_charity_page) {
     return (
-      <div className="card border-2 border-dashed border-pink-300 bg-gradient-to-r from-pink-50 to-rose-50">
+      <div className="card border-2 border-dashed border-primary-300 bg-gradient-to-r from-primary-50 to-accent-50">
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">💝 Create Your Charity Page</h2>
           <p className="text-gray-600 mb-6">
@@ -65,7 +65,7 @@ const CharityPageCard = () => {
   }
 
   return (
-    <div className="card bg-gradient-to-r from-pink-50 to-rose-50 border-pink-200">
+    <div className="card bg-gradient-to-r from-primary-50 to-accent-50 border-primary-200">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">💝 My Charity Page</h2>
@@ -99,11 +99,11 @@ const CharityPageCard = () => {
       <div className="grid grid-cols-2 gap-4 mt-6">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <p className="text-sm text-gray-600 mb-1">Total Commitments</p>
-          <p className="text-3xl font-bold text-pink-600">{stats.total_commitments}</p>
+          <p className="text-3xl font-bold text-primary-600">{stats.total_commitments}</p>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <p className="text-sm text-gray-600 mb-1">Total Amount</p>
-          <p className="text-3xl font-bold text-pink-600">
+          <p className="text-3xl font-bold text-primary-600">
             ${stats.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
@@ -113,7 +113,7 @@ const CharityPageCard = () => {
         <div className="mt-4">
           <button
             onClick={() => navigate('/commitments')}
-            className="text-sm text-pink-600 hover:text-pink-700 font-medium"
+            className="text-sm text-primary-600 hover:text-primary-700 font-medium"
           >
             View all commitments →
           </button>

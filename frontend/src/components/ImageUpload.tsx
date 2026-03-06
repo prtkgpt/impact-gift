@@ -119,17 +119,17 @@ const ImageUpload = ({ onImageUploaded, currentImageUrl, label, helpText }: Imag
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="w-full h-64 border-2 border-dashed border-gray-300 rounded-xl hover:border-rose-500 hover:bg-rose-50 transition-all flex flex-col items-center justify-center gap-3 group"
+            className="w-full h-64 border-2 border-dashed border-gray-300 rounded-xl hover:border-primary-500 hover:bg-primary-50 transition-all flex flex-col items-center justify-center gap-3 group"
           >
             {uploading ? (
               <>
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
                 <span className="text-sm text-gray-600">Uploading...</span>
               </>
             ) : (
               <>
                 <svg
-                  className="w-12 h-12 text-gray-400 group-hover:text-rose-500 transition-colors"
+                  className="w-12 h-12 text-gray-400 group-hover:text-primary-500 transition-colors"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -142,7 +142,7 @@ const ImageUpload = ({ onImageUploaded, currentImageUrl, label, helpText }: Imag
                   />
                 </svg>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-gray-700 group-hover:text-rose-600">
+                  <p className="text-sm font-medium text-gray-700 group-hover:text-primary-600">
                     Click to upload an image
                   </p>
                   <p className="text-xs text-gray-500 mt-1">

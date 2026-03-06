@@ -70,7 +70,7 @@ const EventUpdates: React.FC<EventUpdatesProps> = ({ eventId, isOwner, initialUp
       </div>
 
       {showForm && isOwner && (
-        <form onSubmit={handleSubmit} className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <form onSubmit={handleSubmit} className="mb-6 p-4 bg-primary-50 rounded-lg border border-primary-200">
           <div className="mb-3">
             <label htmlFor="update_title" className="block text-sm font-medium text-gray-700 mb-1">
               Update Title *

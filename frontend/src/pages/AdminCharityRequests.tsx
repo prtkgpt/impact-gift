@@ -145,7 +145,7 @@ const AdminCharityRequests = () => {
                 onClick={() => setFilter(status)}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   filter === status
-                    ? 'bg-pink-600 text-white'
+                    ? 'bg-accent-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -163,7 +163,7 @@ const AdminCharityRequests = () => {
         {/* Requests List */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading requests...</p>
           </div>
         ) : requests.length === 0 ? (
@@ -190,7 +190,7 @@ const AdminCharityRequests = () => {
                         href={request.website_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-pink-600 hover:underline text-sm"
+                        className="text-accent-600 hover:underline text-sm"
                       >
                         {request.website_url}
                       </a>

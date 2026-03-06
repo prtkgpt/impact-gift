@@ -52,11 +52,11 @@ const ThemeSelector = ({ selectedThemeId, onSelectTheme }: ThemeSelectorProps) =
           onClick={() => onSelectTheme(null)}
           className={`p-4 rounded-xl border-2 transition-all text-left ${
             !selectedThemeId
-              ? 'border-rose-500 bg-rose-50'
+              ? 'border-primary-500 bg-primary-50'
               : 'border-gray-200 hover:border-gray-300 bg-white'
           }`}
         >
-          <div className="h-12 rounded-lg mb-2 bg-gradient-to-r from-rose-500 to-pink-500"></div>
+          <div className="h-12 rounded-lg mb-2 bg-gradient-to-r from-primary-600 to-accent-500"></div>
           <div className="font-semibold text-xs">Default</div>
           <div className="text-xs text-gray-600 mt-0.5">Rose & Pink</div>
         </button>
@@ -69,7 +69,7 @@ const ThemeSelector = ({ selectedThemeId, onSelectTheme }: ThemeSelectorProps) =
             onClick={() => onSelectTheme(theme)}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               selectedThemeId === theme.id
-                ? 'border-rose-500 bg-rose-50'
+                ? 'border-primary-500 bg-primary-50'
                 : 'border-gray-200 hover:border-gray-300 bg-white'
             }`}
           >

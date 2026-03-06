@@ -85,8 +85,8 @@ const RequestCharityModal = ({ onClose, onSuccess }: RequestCharityModalProps) =
             </button>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-blue-900">
+          <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-primary-900">
               Don't see your favorite charity? Submit a request and we'll review it for addition to our platform.
             </p>
           </div>

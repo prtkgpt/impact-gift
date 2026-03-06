@@ -83,11 +83,11 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess }: DonationMethodSe
 
     return (
       <div className="space-y-4 sm:space-y-6">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-5 shadow-sm">
-          <h3 className="text-sm sm:text-base font-bold text-blue-900 mb-2">
+        <div className="bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200 rounded-xl p-4 sm:p-5 shadow-sm">
+          <h3 className="text-sm sm:text-base font-bold text-primary-900 mb-2">
             Donating ${amount} to {charity?.name}
           </h3>
-          <p className="text-xs sm:text-sm text-blue-800 leading-relaxed">
+          <p className="text-xs sm:text-sm text-primary-800 leading-relaxed">
             Please provide your details so we can track your donation and update the event progress.
           </p>
         </div>
@@ -150,12 +150,12 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess }: DonationMethodSe
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-5 shadow-sm">
-        <h3 className="text-sm sm:text-base font-bold text-blue-900 mb-2 flex items-center">
+      <div className="bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200 rounded-xl p-4 sm:p-5 shadow-sm">
+        <h3 className="text-sm sm:text-base font-bold text-primary-900 mb-2 flex items-center">
           <span className="text-xl sm:text-2xl mr-2">💝</span>
           Donate Directly to Charity
         </h3>
-        <p className="text-xs sm:text-sm text-blue-800 leading-relaxed">
+        <p className="text-xs sm:text-sm text-primary-800 leading-relaxed">
           Click a charity below to donate directly on their website.
         </p>
       </div>

@@ -300,7 +300,7 @@ const FavoriteCharities = () => {
               className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
             >
               {/* Charity Logo or Fallback */}
-              <div className="h-40 bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center p-6 relative overflow-hidden">
+              <div className="h-40 bg-gradient-to-br from-primary-50 via-accent-50 to-purple-50 flex items-center justify-center p-6 relative overflow-hidden">
                 {favorite.logo && !imageErrors.has(favorite.id) ? (
                   <img
                     src={favorite.logo}
@@ -314,7 +314,7 @@ const FavoriteCharities = () => {
                       {getCategoryIcon(favorite.category || '')}
                     </div>
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-md">
-                      <span className="text-xl font-bold text-rose-600">
+                      <span className="text-xl font-bold text-primary-600">
                         {getCharityInitials(favorite.name)}
                       </span>
                     </div>
@@ -322,8 +322,8 @@ const FavoriteCharities = () => {
                 )}
                 {/* Decorative background pattern */}
                 <div className="absolute inset-0 opacity-10">
-                  <div className="absolute top-0 left-0 w-32 h-32 bg-rose-300 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-                  <div className="absolute bottom-0 right-0 w-32 h-32 bg-pink-300 rounded-full translate-x-1/2 translate-y-1/2"></div>
+                  <div className="absolute top-0 left-0 w-32 h-32 bg-primary-300 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                  <div className="absolute bottom-0 right-0 w-32 h-32 bg-accent-300 rounded-full translate-x-1/2 translate-y-1/2"></div>
                 </div>
               </div>
 

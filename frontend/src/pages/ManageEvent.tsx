@@ -339,7 +339,7 @@ const ManageEvent = () => {
         </div>
         <div className="card">
           <div className="text-sm text-gray-600">RSVP Attending</div>
-          <div className="text-2xl font-bold text-blue-600">{attendingCount}</div>
+          <div className="text-2xl font-bold text-primary-600">{attendingCount}</div>
         </div>
         <div className="card">
           <div className="text-sm text-gray-600">Donations</div>
@@ -469,7 +469,7 @@ const ManageEvent = () => {
                     {guests.map((guest) => (
                       editingGuestId === guest.id ? (
                         // Edit mode
-                        <tr key={guest.id} className="bg-blue-50">
+                        <tr key={guest.id} className="bg-primary-50">
                           <td className="px-6 py-4">
                             <input
                               type="email"
@@ -577,7 +577,7 @@ const ManageEvent = () => {
                             {guest.invitation_sent && (
                               <button
                                 onClick={() => resendInvitation(guest.id)}
-                                className="text-blue-600 hover:text-blue-800"
+                                className="text-primary-600 hover:text-primary-800"
                                 title="Resend invitation"
                               >
                                 Resend

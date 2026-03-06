@@ -128,7 +128,7 @@ const Profile = () => {
 
             {/* Charity Page Section */}
             <div className="border-t border-gray-200 pt-6">
-              <div className="bg-gradient-to-r from-pink-50 to-rose-50 p-6 rounded-xl border border-pink-200 mb-4">
+              <div className="bg-gradient-to-r from-pink-50 to-rose-50 p-6 rounded-xl border border-accent-200 mb-4">
                 <h3 className="text-lg font-bold text-gray-900 mb-2">💝 Your Charity Page</h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Create a shareable page with your favorite charities. Share this instead of a gift registry for birthdays, holidays, or any occasion!
@@ -156,13 +156,13 @@ const Profile = () => {
                     Only lowercase letters, numbers, and hyphens. Min 3 characters.
                   </p>
                   {formData.charity_page_slug && (
-                    <div className="mt-3 p-3 bg-white rounded-lg border border-pink-200">
+                    <div className="mt-3 p-3 bg-white rounded-lg border border-accent-200">
                       <p className="text-xs text-gray-600 mb-1">Your shareable link:</p>
                       <a
                         href={`/charity/${formData.charity_page_slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-pink-600 hover:text-pink-700 font-medium break-all"
+                        className="text-sm text-accent-600 hover:text-accent-700 font-medium break-all"
                       >
                         {window.location.origin}/charity/{formData.charity_page_slug}
                       </a>
@@ -172,7 +172,7 @@ const Profile = () => {
                           navigator.clipboard.writeText(`${window.location.origin}/charity/${formData.charity_page_slug}`);
                           toast.success('Link copied!');
                         }}
-                        className="ml-2 text-xs text-pink-600 hover:text-pink-700"
+                        className="ml-2 text-xs text-accent-600 hover:text-accent-700"
                       >
                         📋 Copy
                       </button>

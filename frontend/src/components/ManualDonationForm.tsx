@@ -61,26 +61,26 @@ const ManualDonationForm = ({ event, onSuccess, onCancel }: ManualDonationFormPr
           </p>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-blue-900 mb-3">
+        <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-primary-900 mb-3">
             📱 Next Steps - Send ${formData.amount} via {formData.donation_method.charAt(0).toUpperCase() + formData.donation_method.slice(1)}
           </h3>
 
-          <div className="space-y-2 text-sm text-blue-900">
+          <div className="space-y-2 text-sm text-primary-900">
             <p className="font-medium text-base">{paymentInstructions}</p>
 
             {charities.length > 0 && (
               <div className="mt-3 pt-3 border-t border-blue-300">
                 <p className="font-medium mb-1">Please donate to:</p>
                 {charities.map((charity, idx) => (
-                  <div key={idx} className="text-xs text-blue-800">
+                  <div key={idx} className="text-xs text-primary-800">
                     • {charity.name}
                   </div>
                 ))}
               </div>
             )}
 
-            <p className="text-xs text-blue-700 mt-2">
+            <p className="text-xs text-primary-700 mt-2">
               The event organizer will be notified and will confirm receipt of your donation.
             </p>
           </div>
@@ -95,8 +95,8 @@ const ManualDonationForm = ({ event, onSuccess, onCancel }: ManualDonationFormPr
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <p className="text-sm text-blue-900">
+      <div className="bg-primary-50 border border-primary-200 rounded-lg p-3">
+        <p className="text-sm text-primary-900">
           <strong>💸 Send your donation directly</strong> via Venmo, Zelle, or PayPal.
         </p>
       </div>

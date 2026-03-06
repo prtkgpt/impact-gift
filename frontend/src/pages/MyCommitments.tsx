@@ -97,11 +97,11 @@ const MyCommitments = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
           <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-200">
             <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Total Commitments</p>
-            <p className="text-3xl sm:text-4xl font-bold text-pink-600">{data?.total_commitments || 0}</p>
+            <p className="text-3xl sm:text-4xl font-bold text-accent-600">{data?.total_commitments || 0}</p>
           </div>
           <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-200">
             <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Total Amount</p>
-            <p className="text-3xl sm:text-4xl font-bold text-pink-600">
+            <p className="text-3xl sm:text-4xl font-bold text-accent-600">
               ${Number(data?.total_amount || 0).toFixed(2)}
             </p>
           </div>
@@ -163,7 +163,7 @@ const MyCommitments = () => {
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="text-xs text-gray-500">Amount</p>
-                      <p className="text-xl font-bold text-pink-600">
+                      <p className="text-xl font-bold text-accent-600">
                         ${Number(commitment.commitment_amount).toFixed(2)}
                       </p>
                     </div>
@@ -231,7 +231,7 @@ const MyCommitments = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-bold text-pink-600">
+                        <span className="text-sm font-bold text-accent-600">
                           ${Number(commitment.commitment_amount).toFixed(2)}
                         </span>
                       </td>

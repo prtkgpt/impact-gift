@@ -56,7 +56,7 @@ const TemplateSelector = ({ eventType, selectedTemplateId, onSelectTemplate }: T
           onClick={() => onSelectTemplate(null)}
           className={`p-4 rounded-xl border-2 transition-all text-left ${
             !selectedTemplateId
-              ? 'border-rose-500 bg-rose-50'
+              ? 'border-primary-500 bg-primary-50'
               : 'border-gray-200 hover:border-gray-300 bg-white'
           }`}
         >
@@ -73,7 +73,7 @@ const TemplateSelector = ({ eventType, selectedTemplateId, onSelectTemplate }: T
             onClick={() => onSelectTemplate(template)}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               selectedTemplateId === template.id
-                ? 'border-rose-500 bg-rose-50'
+                ? 'border-primary-500 bg-primary-50'
                 : 'border-gray-200 hover:border-gray-300 bg-white'
             }`}
           >

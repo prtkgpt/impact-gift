@@ -20,14 +20,19 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['date-fns', 'react-hot-toast', 'react-helmet-async']
+          'ui-vendor': ['date-fns', 'react-hot-toast', 'react-helmet-async'],
+          'utils': ['axios']
         }
       }
     },
     // Chunk size warnings
     chunkSizeWarningLimit: 600,
     // Target modern browsers for smaller bundles
-    target: 'es2015'
+    target: 'es2020',
+    // Enable CSS code splitting
+    cssCodeSplit: true,
+    // Optimize source maps for production
+    sourcemap: false
   },
   // Remove console.log in production
   esbuild: {

@@ -26,7 +26,14 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return user ? <>{children}</> : <Navigate to="/login" />;
@@ -40,7 +47,14 @@ function App() {
           <div className="min-h-screen bg-gray-50">
             <Navbar />
             <Toaster position="top-right" />
-            <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading...</div>}>
+            <Suspense fallback={
+              <div className="flex justify-center items-center h-screen">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading...</p>
+                </div>
+              </div>
+            }>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
