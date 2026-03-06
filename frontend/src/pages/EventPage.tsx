@@ -296,24 +296,6 @@ const EventPage = () => {
               </div>
             )}
 
-            <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-5 text-gray-900">About {event.charity_name}</h2>
-              <p className="text-gray-700 mb-6 leading-relaxed text-base sm:text-lg">{event.charity_description}</p>
-              {event.charity_website && (
-                <a
-                  href={event.charity_website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center text-primary-600 hover:text-primary-700 font-semibold transition-colors group"
-                >
-                  Visit charity website
-                  <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </a>
-              )}
-            </div>
-
             {guestEmail && event && (
               <RSVPSection
                 guestEmail={guestEmail}
