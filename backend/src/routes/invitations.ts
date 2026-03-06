@@ -196,7 +196,7 @@ router.post(
         if (!hasCharities) {
           personalizedBody = personalizedBody
             .split('\n')
-            .filter(line => !line.includes(eventUrl))
+            .filter((line: string) => !line.includes(eventUrl))
             .join('\n');
         }
 
@@ -471,7 +471,7 @@ router.post(
       if (!hasCharities) {
         personalizedBody = personalizedBody
           .split('\n')
-          .filter(line => !line.includes(eventUrl))
+          .filter((line: string) => !line.includes(eventUrl))
           .join('\n');
       }
 
