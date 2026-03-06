@@ -107,7 +107,7 @@ router.post(
       const eventUrl = `${baseUrl}/events/${event.slug}`;
 
       try {
-        await sendCoHostInvitation({
+        const emailResult = await sendCoHostInvitation({
           coHostName: name,
           coHostEmail: email,
           eventTitle: event.title,
@@ -117,7 +117,12 @@ router.post(
           acceptUrl,
           eventUrl,
         });
-        console.log('Co-host invitation email sent successfully');
+
+        if (emailResult.success) {
+          console.log('Co-host invitation email sent successfully to:', email);
+        } else {
+          console.error('Failed to send co-host invitation email to:', email, 'Error:', emailResult.error);
+        }
       } catch (emailError) {
         console.error('Error sending co-host invitation email:', emailError);
         // Don't fail the request if email fails
@@ -169,7 +174,7 @@ router.post('/:coHostId/resend', authenticate, async (req: AuthRequest, res: Res
     const acceptUrl = `${baseUrl}/events/${data.slug}/co-host/accept?id=${coHostId}`;
     const eventUrl = `${baseUrl}/events/${data.slug}`;
 
-    await sendCoHostInvitation({
+    const emailResult = await sendCoHostInvitation({
       coHostName: data.name,
       coHostEmail: data.email,
       eventTitle: data.title,
@@ -180,6 +185,12 @@ router.post('/:coHostId/resend', authenticate, async (req: AuthRequest, res: Res
       eventUrl,
     });
 
+    if (!emailResult.success) {
+      console.error('Failed to resend co-host invitation email to:', data.email, 'Error:', emailResult.error);
+      return res.status(500).json({ error: 'Failed to send invitation email: ' + (emailResult.error || 'Unknown error') });
+    }
+
+    console.log('Co-host invitation email resent successfully to:', data.email);
     res.json({ message: 'Invitation resent successfully' });
   } catch (error) {
     console.error('Error resending co-host invitation:', error);
