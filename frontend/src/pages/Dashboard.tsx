@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import api from '../utils/api';
+import { parseLocalDate } from '../utils/dateUtils';
 import { Event } from '../types';
 import toast from 'react-hot-toast';
 import CharityPageCard from '../components/CharityPageCard';
@@ -129,7 +130,7 @@ const Dashboard = () => {
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      {format(new Date(event.event_date), 'MMMM dd, yyyy')}
+                      {format(parseLocalDate(event.event_date), 'MMMM dd, yyyy')}
                     </div>
                     <div className="flex items-center text-sm">
                       <span className="badge badge-primary capitalize">{event.event_type}</span>

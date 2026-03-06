@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import api from '../utils/api';
+import { parseLocalDate } from '../utils/dateUtils';
 import toast from 'react-hot-toast';
 
 interface ReceiptData {
@@ -116,7 +117,7 @@ const Receipt = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Event Date</p>
-                  <p className="font-semibold">{format(new Date(receipt.event_date), 'MMMM dd, yyyy')}</p>
+                  <p className="font-semibold">{format(parseLocalDate(receipt.event_date), 'MMMM dd, yyyy')}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Organized by</p>

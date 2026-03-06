@@ -3,6 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Helmet } from 'react-helmet-async';
 import api from '../utils/api';
+import { parseLocalDate } from '../utils/dateUtils';
 import { Event } from '../types';
 import toast from 'react-hot-toast';
 import DonationMethodSelector from '../components/DonationMethodSelector';
@@ -75,7 +76,7 @@ const EventPage = () => {
 
   const pageUrl = window.location.href;
   const shareTitle = `You're invited to ${event.title}`;
-  const shareDescription = `${event.first_name} ${event.last_name} invited you to ${event.title}${event.event_date ? ` on ${format(new Date(event.event_date), 'MMMM dd, yyyy')}` : ''}. RSVP and view event details.`;
+  const shareDescription = `${event.first_name} ${event.last_name} invited you to ${event.title}${event.event_date ? ` on ${format(parseLocalDate(event.event_date), 'MMMM dd, yyyy')}` : ''}. RSVP and view event details.`;
 
   return (
     <>
@@ -143,7 +144,7 @@ const EventPage = () => {
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-white/90">
             <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm">
-              📅 {format(new Date(event.event_date), 'MMMM dd, yyyy')}
+              📅 {format(parseLocalDate(event.event_date), 'MMMM dd, yyyy')}
               {event.start_time && ` at ${event.start_time}`}
             </span>
             <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm capitalize">
@@ -206,7 +207,7 @@ const EventPage = () => {
                     <div>
                       <h3 className="font-semibold text-gray-900">Date & Time</h3>
                       <p className="text-gray-700">
-                        {format(new Date(event.event_date), 'EEEE, MMMM dd, yyyy')}
+                        {format(parseLocalDate(event.event_date), 'EEEE, MMMM dd, yyyy')}
                       </p>
                       {event.start_time && (
                         <p className="text-gray-600 text-sm">
@@ -286,7 +287,7 @@ const EventPage = () => {
                       <div>
                         <h3 className="font-semibold text-gray-900">RSVP Deadline</h3>
                         <p className="text-gray-700">
-                          {format(new Date(event.rsvp_deadline), 'MMMM dd, yyyy')}
+                          {format(parseLocalDate(event.rsvp_deadline), 'MMMM dd, yyyy')}
                         </p>
                       </div>
                     </div>

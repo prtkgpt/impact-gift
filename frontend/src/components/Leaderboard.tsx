@@ -1,5 +1,6 @@
 import { Donation, Event } from '../types';
 import { format, differenceInDays } from 'date-fns';
+import { parseLocalDate } from '../utils/dateUtils';
 
 interface LeaderboardProps {
   donations: Donation[];
@@ -31,7 +32,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ donations, event }) => {
     }
 
     // Early bird badge - donated in first 24 hours
-    const eventCreated = new Date(event.created_at || event.event_date);
+    const eventCreated = event.created_at
+      ? new Date(event.created_at)
+      : parseLocalDate(event.event_date);
     const donationDate = new Date(donation.created_at);
     const daysSinceEvent = differenceInDays(donationDate, eventCreated);
 

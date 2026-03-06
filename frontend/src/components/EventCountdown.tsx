@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { differenceInSeconds, isPast } from 'date-fns';
+import { parseLocalDate } from '../utils/dateUtils';
 
 interface EventCountdownProps {
   eventDate: string;
@@ -18,7 +19,7 @@ const EventCountdown: React.FC<EventCountdownProps> = ({ eventDate }) => {
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const eventDateTime = new Date(eventDate);
+      const eventDateTime = parseLocalDate(eventDate);
       const now = new Date();
 
       if (isPast(eventDateTime)) {
