@@ -6,6 +6,7 @@ interface AttendingGuest {
   email: string;
   rsvp_comment?: string;
   rsvp_at: string;
+  additional_guests: number;
 }
 
 interface AttendingGuestsProps {
@@ -43,10 +44,13 @@ const AttendingGuests = ({ eventSlug }: AttendingGuestsProps) => {
     return null; // Don't show section if no guests are attending
   }
 
+  // Calculate total headcount including additional guests
+  const totalHeadcount = guests.reduce((sum, guest) => sum + 1 + (guest.additional_guests || 0), 0);
+
   return (
     <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
       <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-5 text-gray-900 flex items-center">
-        <span className="mr-2">👥</span> Who's Attending ({guests.length})
+        <span className="mr-2">👥</span> Who's Attending ({totalHeadcount})
       </h2>
       <div className="space-y-3">
         {guests.map((guest, index) => (
@@ -57,6 +61,11 @@ const AttendingGuests = ({ eventSlug }: AttendingGuestsProps) => {
             <div className="ml-3 flex-1">
               <div className="font-medium text-gray-900">
                 {guest.name || guest.email.split('@')[0]}
+                {guest.additional_guests > 0 && (
+                  <span className="ml-2 text-sm text-gray-500 font-normal">
+                    +{guest.additional_guests}
+                  </span>
+                )}
               </div>
               {guest.rsvp_comment && (
                 <p className="text-sm text-gray-600 mt-1 italic">"{guest.rsvp_comment}"</p>

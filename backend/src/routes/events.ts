@@ -157,7 +157,7 @@ router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) =
               COUNT(DISTINCT d.id) as donation_count,
               COALESCE(
                 (
-                  SELECT COUNT(*)
+                  SELECT SUM(1 + COALESCE(g.additional_guests, 0))
                   FROM guests g
                   WHERE g.event_id = e.id AND g.rsvp_status = 'attending'
                 ),
@@ -334,12 +334,12 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
 
     try {
       const guestsCountResult = await query(
-        `SELECT COUNT(*) as count
+        `SELECT COALESCE(SUM(1 + additional_guests), 0) as total_headcount
          FROM guests
          WHERE event_id = $1 AND rsvp_status = 'attending'`,
         [event.id]
       );
-      event.attending_count = parseInt(guestsCountResult.rows[0]?.count || '0');
+      event.attending_count = parseInt(guestsCountResult.rows[0]?.total_headcount || '0');
     } catch (err) {
       // Table doesn't exist yet, skip
       event.attending_count = 0;
@@ -437,9 +437,9 @@ router.get('/:slug/attending-guests', async (req, res: Response) => {
       return res.json([]); // Return empty array if guest list is private
     }
 
-    // Fetch only attending guests
+    // Fetch only attending guests with additional_guests count
     const guestsResult = await query(
-      `SELECT name, email, rsvp_comment, rsvp_at
+      `SELECT name, email, rsvp_comment, rsvp_at, additional_guests
        FROM guests
        WHERE event_id = $1 AND rsvp_status = 'attending'
        ORDER BY rsvp_at DESC`,
