@@ -39,8 +39,28 @@ const CharityPageCard = () => {
 
   if (loading) {
     return (
-      <div className="card animate-pulse">
-        <div className="h-32 bg-gray-200 rounded"></div>
+      <div className="card bg-gradient-to-r from-primary-50 to-accent-50 border-primary-200 animate-pulse">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex-1">
+            <div className="h-8 bg-gray-300 rounded w-2/3 mb-2"></div>
+            <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+          </div>
+          <div className="flex gap-2">
+            <div className="h-10 w-20 bg-gray-300 rounded"></div>
+            <div className="h-10 w-20 bg-gray-300 rounded"></div>
+            <div className="h-10 w-24 bg-gray-300 rounded"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4 mt-6">
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+            <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+          </div>
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+            <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </div>
       </div>
     );
   }

@@ -141,6 +141,8 @@ router.get('/my-page/stats', authenticate, async (req: AuthRequest, res: Respons
 
     const stats = statsResult.rows[0];
 
+    // Cache for 30 seconds to improve dashboard load times
+    res.setHeader('Cache-Control', 'private, max-age=30');
     res.json({
       has_charity_page: true,
       charity_page_slug,

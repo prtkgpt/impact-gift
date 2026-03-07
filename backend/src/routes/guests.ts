@@ -30,6 +30,8 @@ router.get('/my-invitations', authenticate, async (req: AuthRequest, res: Respon
       [userEmail]
     );
 
+    // Cache for 30 seconds to improve dashboard load times
+    res.setHeader('Cache-Control', 'private, max-age=30');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching user invitations:', error);

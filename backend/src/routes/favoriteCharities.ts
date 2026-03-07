@@ -19,6 +19,8 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
       [userId]
     );
 
+    // Cache for 30 seconds to improve dashboard load times
+    res.setHeader('Cache-Control', 'private, max-age=30');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching favorite charities:', error);

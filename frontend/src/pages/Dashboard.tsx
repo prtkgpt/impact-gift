@@ -28,11 +28,12 @@ interface Invitation {
 const Dashboard = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [invitationsLoading, setInvitationsLoading] = useState(true);
 
   useEffect(() => {
-    fetchEvents();
-    fetchInvitations();
+    // Load both events and invitations in parallel for better performance
+    Promise.all([fetchEvents(), fetchInvitations()]);
   }, []);
 
   const fetchEvents = async () => {
@@ -42,7 +43,7 @@ const Dashboard = () => {
     } catch (error) {
       toast.error('Failed to load events');
     } finally {
-      setLoading(false);
+      setEventsLoading(false);
     }
   };
 
@@ -52,16 +53,10 @@ const Dashboard = () => {
       setInvitations(response.data);
     } catch (error) {
       console.error('Failed to load invitations:', error);
+    } finally {
+      setInvitationsLoading(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-pulse text-gray-600">Loading your dashboard...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,7 +106,17 @@ const Dashboard = () => {
             </Link>
           </div>
 
-          {events.length === 0 ? (
+          {eventsLoading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="card animate-pulse">
+                  <div className="h-48 bg-gray-200 rounded-xl mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          ) : events.length === 0 ? (
             <div className="card-highlight text-center py-16 animate-fade-in">
               <div className="text-7xl mb-6">🎉</div>
               <h2 className="text-3xl font-bold mb-3 text-gray-900">No events yet</h2>
@@ -259,7 +264,17 @@ const Dashboard = () => {
             <p className="text-lg text-gray-600">Events you've been invited to</p>
           </div>
 
-          {invitations.length === 0 ? (
+          {invitationsLoading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2].map((i) => (
+                <div key={i} className="card animate-pulse">
+                  <div className="h-32 bg-gray-200 rounded-xl mb-3"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          ) : invitations.length === 0 ? (
             <div className="card-highlight text-center py-12 animate-fade-in">
               <div className="text-5xl mb-4">📭</div>
               <h3 className="text-xl font-bold mb-2 text-gray-900">No invitations yet</h3>
