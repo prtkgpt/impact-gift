@@ -208,6 +208,22 @@ export interface RSVPInput {
   guest_id: number;
   rsvp_status: 'attending' | 'not_attending' | 'maybe';
   rsvp_comment?: string;
+  additional_guests?: number;
+}
+
+export interface RSVPSummary {
+  attending_count: number;
+  not_attending_count: number;
+  maybe_count: number;
+  no_response_count: number;
+  total_additional_guests: number;
+  total_attending_headcount: number;
+  total_maybe_headcount: number;
+}
+
+export interface RSVPSummaryResponse {
+  summary: RSVPSummary;
+  attendingGuests: Guest[];
 }
 
 export interface CoHost {

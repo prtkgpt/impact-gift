@@ -67,6 +67,58 @@ router.get('/event/:eventId', authenticate, async (req: AuthRequest, res: Respon
   }
 });
 
+// Get RSVP summary for an event (for hosts/co-hosts)
+router.get('/event/:eventId/rsvp-summary', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { eventId } = req.params;
+
+    // Verify the user is owner or accepted co-host
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, parseInt(eventId));
+    if (!hasAccess) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    // Get summary statistics
+    const summaryResult = await query(
+      `SELECT
+        COUNT(CASE WHEN rsvp_status = 'attending' THEN 1 END) as attending_count,
+        COUNT(CASE WHEN rsvp_status = 'not_attending' THEN 1 END) as not_attending_count,
+        COUNT(CASE WHEN rsvp_status = 'maybe' THEN 1 END) as maybe_count,
+        COUNT(CASE WHEN rsvp_status = 'no_response' THEN 1 END) as no_response_count,
+        COALESCE(SUM(CASE WHEN rsvp_status = 'attending' THEN additional_guests ELSE 0 END), 0) as total_additional_guests,
+        COALESCE(SUM(CASE WHEN rsvp_status = 'attending' THEN 1 + additional_guests ELSE 0 END), 0) as total_attending_headcount,
+        COALESCE(SUM(CASE WHEN rsvp_status = 'maybe' THEN 1 + additional_guests ELSE 0 END), 0) as total_maybe_headcount
+       FROM guests
+       WHERE event_id = $1`,
+      [eventId]
+    );
+
+    // Get detailed list of attending guests
+    const attendingResult = await query(
+      `SELECT
+        id,
+        name,
+        email,
+        rsvp_status,
+        rsvp_comment,
+        additional_guests,
+        rsvp_at
+       FROM guests
+       WHERE event_id = $1 AND rsvp_status IN ('attending', 'maybe')
+       ORDER BY rsvp_status DESC, rsvp_at DESC`,
+      [eventId]
+    );
+
+    res.json({
+      summary: summaryResult.rows[0],
+      attendingGuests: attendingResult.rows
+    });
+  } catch (error) {
+    console.error('Error fetching RSVP summary:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Add a guest to an event
 router.post(
   '/',
