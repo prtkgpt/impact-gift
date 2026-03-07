@@ -5,6 +5,11 @@ import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 
+// Eagerly load critical public pages for better performance
+import EventPage from './pages/EventPage';
+import PublicCharityPage from './pages/PublicCharityPage';
+
+// Lazy load authenticated and less critical pages
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
 const Signup = lazy(() => import('./pages/Signup'));
@@ -13,11 +18,9 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const CreateEvent = lazy(() => import('./pages/CreateEvent'));
 const EditEvent = lazy(() => import('./pages/EditEvent'));
-const EventPage = lazy(() => import('./pages/EventPage'));
 const Receipt = lazy(() => import('./pages/Receipt'));
 const Profile = lazy(() => import('./pages/Profile'));
 const ManageEvent = lazy(() => import('./pages/ManageEvent'));
-const PublicCharityPage = lazy(() => import('./pages/PublicCharityPage'));
 const MyCommitments = lazy(() => import('./pages/MyCommitments'));
 const AdminCharityRequests = lazy(() => import('./pages/AdminCharityRequests'));
 const AcceptCoHostInvitation = lazy(() => import('./pages/AcceptCoHostInvitation'));
