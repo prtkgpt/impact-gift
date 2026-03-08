@@ -141,7 +141,7 @@ router.post(
 
       const { eventId } = req.params;
       const { item_name, quantity, notes } = req.body;
-      const userId = req.user!.userId;
+      const userId = req.user!.id;
 
       // Verify user is the event owner or co-host
       const eventCheck = await query(
@@ -239,7 +239,7 @@ router.post(
 router.delete('/event/:eventId/suggested-items/:itemId', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const { eventId, itemId } = req.params;
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     // Verify user is the event owner or co-host
     const eventCheck = await query(
