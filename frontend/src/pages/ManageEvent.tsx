@@ -4,6 +4,7 @@ import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { Event, Guest, Donation, RSVPSummaryResponse } from '../types';
 import CoHostsManagement from '../components/CoHostsManagement';
+import PotluckManagement from '../components/PotluckManagement';
 
 const ManageEvent = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -14,7 +15,7 @@ const ManageEvent = () => {
   const [rsvpSummary, setRsvpSummary] = useState<RSVPSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  type TabType = 'guests' | 'email' | 'progress' | 'cohosts' | 'rsvp';
+  type TabType = 'guests' | 'email' | 'progress' | 'cohosts' | 'rsvp' | 'potluck';
   const [activeTab, setActiveTab] = useState<TabType>('guests');
 
   // Guard against missing slug
@@ -370,7 +371,7 @@ const ManageEvent = () => {
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
-          {(['guests', 'rsvp', 'email', 'cohosts', 'progress'] as const).map((tab) => (
+          {(['guests', 'rsvp', 'email', 'cohosts', 'potluck', 'progress'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => {
@@ -388,6 +389,7 @@ const ManageEvent = () => {
               {tab === 'rsvp' && 'RSVP Summary'}
               {tab === 'email' && 'Email Invitations'}
               {tab === 'cohosts' && 'Co-Hosts'}
+              {tab === 'potluck' && 'Potluck'}
               {tab === 'progress' && 'Progress & Donations'}
             </button>
           ))}
@@ -818,6 +820,31 @@ const ManageEvent = () => {
       {activeTab === 'cohosts' && (
         <div className="space-y-6">
           <CoHostsManagement eventId={event.id} />
+        </div>
+      )}
+
+      {/* Potluck Tab */}
+      {activeTab === 'potluck' && (
+        <div className="space-y-6">
+          {event.potluck_enabled ? (
+            <PotluckManagement eventId={event.id} />
+          ) : (
+            <div className="card">
+              <div className="text-center py-8">
+                <div className="text-4xl mb-4">🍽️</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Potluck Not Enabled</h3>
+                <p className="text-gray-600 mb-4">
+                  Enable the potluck feature to let guests sign up to bring food and drinks.
+                </p>
+                <button
+                  onClick={() => navigate(`/event/${event.slug}/edit`)}
+                  className="btn btn-primary"
+                >
+                  Edit Event Settings
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
