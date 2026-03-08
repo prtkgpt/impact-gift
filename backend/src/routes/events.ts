@@ -284,10 +284,35 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
         event.charity_description = charity.description;
         event.charity_logo = charity.logo_url;
         event.charity_website = charity.website_url;
-      }
+        event.charities = charitiesResult.rows;
+      } else if (charitiesResult.rows.length === 0 && event.charity_id) {
+        // If junction table is empty but charity_id is set, fetch from legacy field
+        console.log(`[GET /:slug] Junction table empty, falling back to legacy charity_id: ${event.charity_id}`);
+        try {
+          const charityResult = await query(
+            `SELECT id, name, description, logo_url, website_url, payment_instructions
+             FROM charities WHERE id = $1`,
+            [event.charity_id]
+          );
 
-      // Add charities array
-      event.charities = charitiesResult.rows;
+          if (charityResult.rows.length > 0) {
+            const charity = charityResult.rows[0];
+            event.charity_name = charity.name;
+            event.charity_description = charity.description;
+            event.charity_logo = charity.logo_url;
+            event.charity_website = charity.website_url;
+            event.charities = [charity];
+          } else {
+            event.charities = [];
+          }
+        } catch (charityErr) {
+          console.log(`[GET /:slug] Error fetching legacy charity:`, charityErr);
+          event.charities = [];
+        }
+      } else {
+        // Multiple charities or no charity at all
+        event.charities = charitiesResult.rows;
+      }
     } catch (err) {
       console.log(`[GET /:slug] event_charities table doesn't exist, falling back to legacy charity_id`);
       // Fall back to legacy single charity if junction table doesn't exist
