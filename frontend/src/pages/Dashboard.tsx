@@ -106,7 +106,7 @@ const Dashboard = () => {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-2">My Events</h1>
-              <p className="text-lg text-gray-600">Manage your fundraising campaigns</p>
+              <p className="text-lg text-gray-600">Events you're hosting</p>
             </div>
             <Link to="/create-event" className="btn btn-primary">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

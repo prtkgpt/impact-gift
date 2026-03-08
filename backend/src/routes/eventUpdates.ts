@@ -19,7 +19,7 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        return res.status(400).json({ error: 'Invalid input: ' + errors.array().map(e => e.msg).join(', ') });
       }
 
       const { event_id, title, content } = req.body;
