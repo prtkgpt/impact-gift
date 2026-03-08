@@ -185,11 +185,11 @@ router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) =
        WHERE e.user_id = $1
           OR e.id IN (
             SELECT event_id FROM co_hosts
-            WHERE user_id = $1 AND accepted_at IS NOT NULL
+            WHERE (user_id = $1 OR email = $2) AND accepted_at IS NOT NULL
           )
        GROUP BY e.id
        ORDER BY e.event_date DESC`,
-      [req.user!.id]
+      [req.user!.id, req.user!.email]
     );
 
     // Process events for backward compatibility

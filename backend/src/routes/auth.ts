@@ -12,6 +12,23 @@ const router = Router();
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'Impact Gift <noreply@giftwithimpact.com>';
 
+// Helper function to link co-host invitations to user account
+async function linkCoHostInvitations(userId: number, email: string): Promise<void> {
+  try {
+    // Link any accepted co-host invitations that match this user's email
+    await query(
+      `UPDATE co_hosts
+       SET user_id = $1
+       WHERE email = $2 AND user_id IS NULL`,
+      [userId, email]
+    );
+    console.log(`Linked co-host invitations for ${email} to user ${userId}`);
+  } catch (error) {
+    console.error('Error linking co-host invitations:', error);
+    // Don't throw - this shouldn't block login/signup
+  }
+}
+
 router.post(
   '/signup',
   [
@@ -60,6 +77,9 @@ router.post(
         process.env.JWT_SECRET!,
         { expiresIn: '7d' }
       );
+
+      // Link any pending co-host invitations
+      await linkCoHostInvitations(user.id, user.email);
 
       console.log('User created successfully:', user.email);
       res.status(201).json({ token, user });
@@ -120,6 +140,9 @@ router.post(
         process.env.JWT_SECRET!,
         { expiresIn: '7d' }
       );
+
+      // Link any pending co-host invitations
+      await linkCoHostInvitations(user.id, user.email);
 
       const userPayload = {
         id: user.id,

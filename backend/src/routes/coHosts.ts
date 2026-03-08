@@ -208,9 +208,27 @@ router.post('/:coHostId/accept', async (req, res: Response) => {
   try {
     const { coHostId } = req.params;
 
+    // Check if user is authenticated (optional)
+    const authHeader = req.headers.authorization;
+    let authenticatedUserId: number | null = null;
+    let authenticatedUserEmail: string | null = null;
+
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; email: string };
+        authenticatedUserId = decoded.id;
+        authenticatedUserEmail = decoded.email;
+        console.log(`[Accept Co-Host] Authenticated user: ${authenticatedUserEmail} (${authenticatedUserId})`);
+      } catch (err) {
+        console.log(`[Accept Co-Host] Invalid token, proceeding without authentication`);
+      }
+    }
+
     // Get co-host details
     const coHostCheck = await query(
-      `SELECT id, event_id, email, accepted_at
+      `SELECT id, event_id, email, accepted_at, user_id
        FROM co_hosts
        WHERE id = $1`,
       [coHostId]
@@ -226,14 +244,21 @@ router.post('/:coHostId/accept', async (req, res: Response) => {
       return res.status(400).json({ error: 'Invitation already accepted' });
     }
 
-    // Update accepted_at timestamp
-    const result = await query(
-      `UPDATE co_hosts
-       SET accepted_at = CURRENT_TIMESTAMP
-       WHERE id = $1
-       RETURNING *`,
-      [coHostId]
-    );
+    // If user is authenticated and email matches, link the user_id
+    let updateQuery = `UPDATE co_hosts SET accepted_at = CURRENT_TIMESTAMP`;
+    let updateParams: any[] = [coHostId];
+
+    if (authenticatedUserId && authenticatedUserEmail &&
+        coHost.email.toLowerCase() === authenticatedUserEmail.toLowerCase()) {
+      updateQuery = `UPDATE co_hosts SET accepted_at = CURRENT_TIMESTAMP, user_id = $2`;
+      updateParams = [coHostId, authenticatedUserId];
+      console.log(`[Accept Co-Host] Linking co-host to user ${authenticatedUserId}`);
+    }
+
+    updateQuery += ` WHERE id = $1 RETURNING *`;
+
+    // Update accepted_at timestamp (and user_id if authenticated)
+    const result = await query(updateQuery, updateParams);
 
     res.json({
       message: 'Co-host invitation accepted successfully',
