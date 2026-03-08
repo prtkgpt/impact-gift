@@ -108,7 +108,7 @@ router.get('/requests', async (req: Request, res: Response) => {
     let queryStr = `
       SELECT
         cr.*,
-        u.first_name || ' ' || u.last_name as requester_name,
+        COALESCE(u.first_name || ' ' || u.last_name, '') as requester_name,
         u.email as requester_email,
         c.name as created_charity_name
       FROM charity_requests cr
