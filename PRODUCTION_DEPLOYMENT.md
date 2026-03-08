@@ -67,7 +67,7 @@ STRIPE_WEBHOOK_SECRET=whsec_<your-webhook-secret>
 **VERCEL (Frontend) - REQUIRED:**
 
 ```bash
-VITE_API_URL=https://impact-gift-backend.onrender.com
+VITE_API_URL=https://impact-gift-backend.onrender.com/api
 VITE_FRONTEND_URL=https://giftwithimpact.com
 ```
 

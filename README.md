@@ -317,7 +317,11 @@ This project is licensed under the MIT License.
 
 ## Support
 
-For questions or issues, please open an issue on GitHub.
+Having issues? Check out our comprehensive [Troubleshooting Guide](TROUBLESHOOTING.md) for solutions to common problems.
+
+For deployment questions, see [Production Deployment Guide](PRODUCTION_DEPLOYMENT.md).
+
+For other questions or issues, please open an issue on GitHub.
 
 ---
 
