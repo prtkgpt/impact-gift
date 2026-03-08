@@ -11,12 +11,18 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
   const [items, setItems] = useState<PotluckItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<PotluckItem | null>(null);
   const [formData, setFormData] = useState({
     item_name: '',
     guest_name: '',
     guest_email: '',
     quantity: 1,
     notes: ''
+  });
+  const [claimData, setClaimData] = useState({
+    guest_name: '',
+    guest_email: ''
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -68,12 +74,36 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
     }
 
     try {
-      await api.delete(`/potluck/items/${itemId}`);
+      await api.delete(`/potluck/items/${itemId}`, { data: { email } });
       toast.success('Item removed from potluck');
       fetchItems();
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to remove item');
     }
+  };
+
+  const handleClaimItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedItem) return;
+
+    setSubmitting(true);
+    try {
+      await api.post(`/potluck/items/${selectedItem.id}/claim`, claimData);
+      toast.success('Item claimed successfully!');
+      setShowClaimModal(false);
+      setClaimData({ guest_name: '', guest_email: '' });
+      setSelectedItem(null);
+      fetchItems();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to claim item');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openClaimModal = (item: PotluckItem) => {
+    setSelectedItem(item);
+    setShowClaimModal(true);
   };
 
   if (loading) {
@@ -83,6 +113,9 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
       </div>
     );
   }
+
+  const unclaimedItems = items.filter(item => item.is_suggested && !item.guest_email);
+  const claimedItems = items.filter(item => !item.is_suggested || item.guest_email);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -100,44 +133,94 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
         Help make this event special by signing up to bring food, drinks, or other items!
       </p>
 
-      {items.length === 0 ? (
+      {/* Unclaimed Suggested Items */}
+      {unclaimedItems.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">
+            📋 Suggested Items - Claim one!
+          </h3>
+          <div className="space-y-3">
+            {unclaimedItems.map((item) => (
+              <div
+                key={item.id}
+                className="border-2 border-primary-200 bg-primary-50 rounded-lg p-4 hover:border-primary-400 transition-colors"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900">{item.item_name}</h3>
+                      {item.quantity > 1 && (
+                        <span className="text-sm text-gray-500">× {item.quantity}</span>
+                      )}
+                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-medium">
+                        Unclaimed
+                      </span>
+                    </div>
+                    {item.notes && (
+                      <p className="text-sm text-gray-600 mt-2 italic">
+                        {item.notes}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => openClaimModal(item)}
+                    className="btn btn-primary text-sm"
+                  >
+                    Claim
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Claimed/Regular Items */}
+      {claimedItems.length === 0 && unclaimedItems.length === 0 ? (
         <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
           <p className="text-gray-500">No items yet. Be the first to sign up!</p>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900">{item.item_name}</h3>
-                    {item.quantity > 1 && (
-                      <span className="text-sm text-gray-500">× {item.quantity}</span>
+      ) : claimedItems.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">
+            ✓ Claimed Items
+          </h3>
+          <div className="space-y-3">
+            {claimedItems.map((item) => (
+              <div
+                key={item.id}
+                className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900">{item.item_name}</h3>
+                      {item.quantity > 1 && (
+                        <span className="text-sm text-gray-500">× {item.quantity}</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {item.guest_name}
+                    </p>
+                    {item.notes && (
+                      <p className="text-sm text-gray-500 mt-2 italic">
+                        {item.notes}
+                      </p>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {item.guest_name}
-                  </p>
-                  {item.notes && (
-                    <p className="text-sm text-gray-500 mt-2 italic">
-                      {item.notes}
-                    </p>
+                  {item.guest_email && (
+                    <button
+                      onClick={() => handleRemoveItem(item.id, item.guest_email)}
+                      className="text-red-600 hover:text-red-700 text-sm"
+                      title="Remove item"
+                    >
+                      ✕
+                    </button>
                   )}
                 </div>
-                <button
-                  onClick={() => handleRemoveItem(item.id, item.guest_email)}
-                  className="text-red-600 hover:text-red-700 text-sm"
-                  title="Remove item"
-                >
-                  ✕
-                </button>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 

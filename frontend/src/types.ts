@@ -243,10 +243,12 @@ export interface PotluckItem {
   id: number;
   event_id: number;
   item_name: string;
-  guest_name: string;
-  guest_email: string;
+  guest_name?: string;
+  guest_email?: string;
   quantity: number;
   notes?: string;
+  is_suggested?: boolean;
+  claimed_at?: string;
   created_at: string;
 }
 
