@@ -6,6 +6,7 @@ import { body, validationResult } from 'express-validator';
 import { Resend } from 'resend';
 import { query } from '../database/db';
 import { User, UserPayload } from '../types';
+import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -290,5 +291,24 @@ router.post(
     }
   }
 );
+
+// Get current user - used to validate token
+router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await query(
+      'SELECT id, email, first_name, last_name FROM users WHERE id = $1',
+      [req.user!.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ user: result.rows[0] });
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 export default router;

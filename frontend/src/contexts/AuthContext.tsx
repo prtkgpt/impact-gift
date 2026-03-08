@@ -17,13 +17,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
+    const validateToken = async () => {
+      const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
 
-    if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+      if (!token || !savedUser) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Validate token by making a quick API call
+        await api.get('/auth/me');
+        setUser(JSON.parse(savedUser));
+      } catch (error: any) {
+        // Only clear token if it's a 401 (unauthorized) - keep it for network errors
+        if (error.response?.status === 401) {
+          console.log('Token is invalid, clearing session');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        } else {
+          // Network error or other issue - keep the user logged in from localStorage
+          console.warn('Token validation skipped due to network error, using cached session');
+          setUser(JSON.parse(savedUser));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    validateToken();
   }, []);
 
   const login = async (email: string, password: string) => {
