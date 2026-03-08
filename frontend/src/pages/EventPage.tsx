@@ -305,40 +305,6 @@ const EventPage = () => {
                     </div>
                   )}
 
-                  {/* Co-Hosts - Debug */}
-                  {event.co_hosts && (
-                    <div className="flex items-start space-x-3 border-2 border-blue-500 p-2">
-                      <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                        <span className="text-xl">👥</span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-1">
-                          Co-hosts DEBUG (Total: {event.co_hosts.length}, Accepted: {event.co_hosts.filter(ch => ch.accepted_at).length})
-                        </h3>
-                        <div className="space-y-2 text-xs">
-                          {event.co_hosts.map((coHost) => (
-                            <div key={coHost.id} className="bg-gray-50 p-2 rounded">
-                              <p className="font-bold">
-                                {coHost.first_name && coHost.last_name
-                                  ? `${coHost.first_name} ${coHost.last_name}`
-                                  : coHost.name || coHost.email}
-                              </p>
-                              <p>Email: {coHost.email}</p>
-                              <p>Accepted: {coHost.accepted_at ? new Date(coHost.accepted_at).toLocaleString() : 'NOT ACCEPTED'}</p>
-                              <p>User ID: {coHost.user_id || 'null'}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {!event.co_hosts && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
-                      ⚠️ DEBUG: co_hosts is undefined or null
-                    </div>
-                  )}
-
                   {/* RSVP Deadline */}
                   {event.rsvp_deadline && (
                     <div className="flex items-start space-x-3">
