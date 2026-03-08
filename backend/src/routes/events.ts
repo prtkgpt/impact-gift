@@ -510,12 +510,32 @@ router.put('/:identifier', authenticate, async (req: AuthRequest, res: Response)
     );
 
     // If charity_ids provided, update charity association
-    if (charity_ids && charity_ids.length > 0) {
-      // For now, just use the first charity (maintaining single charity per event)
+    if (charity_ids && Array.isArray(charity_ids)) {
+      // Update legacy charity_id field (use first charity if multiple, null if none)
+      const singleCharityId = charity_ids.length > 0 ? charity_ids[0] : null;
       await query(
         `UPDATE events SET charity_id = $1 WHERE id = $2`,
-        [charity_ids[0], event.id]
+        [singleCharityId, event.id]
       );
+
+      // Update event_charities junction table
+      // First, remove all existing charity associations
+      await query(
+        `DELETE FROM event_charities WHERE event_id = $1`,
+        [event.id]
+      );
+
+      // Then, add new charity associations
+      if (charity_ids.length > 0) {
+        for (const charityId of charity_ids) {
+          await query(
+            `INSERT INTO event_charities (event_id, charity_id)
+             VALUES ($1, $2)
+             ON CONFLICT (event_id, charity_id) DO NOTHING`,
+            [event.id, charityId]
+          );
+        }
+      }
     }
 
     console.log(`Event ${event.id} updated successfully`);

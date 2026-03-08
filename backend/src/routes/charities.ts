@@ -30,6 +30,39 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+// Get all charity requests (for admin view - should add auth middleware)
+// IMPORTANT: This must come BEFORE /:id route to avoid matching "requests" as an ID
+router.get('/requests', async (req: Request, res: Response) => {
+  try {
+    const { status } = req.query;
+
+    let queryStr = `
+      SELECT
+        cr.*,
+        COALESCE(u.first_name || ' ' || u.last_name, '') as requester_name,
+        u.email as requester_email,
+        c.name as created_charity_name
+      FROM charity_requests cr
+      LEFT JOIN users u ON cr.user_id = u.id
+      LEFT JOIN charities c ON cr.created_charity_id = c.id
+    `;
+
+    const params: any[] = [];
+    if (status) {
+      queryStr += ' WHERE cr.status = $1';
+      params.push(status);
+    }
+
+    queryStr += ' ORDER BY cr.created_at DESC';
+
+    const result = await query(queryStr, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching charity requests:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -97,38 +130,6 @@ router.post('/request', async (req: AuthRequest, res: Response) => {
   } catch (error: any) {
     console.error('Error submitting charity request:', error);
     res.status(500).json({ error: 'Failed to submit charity request' });
-  }
-});
-
-// Get all charity requests (for admin view - should add auth middleware)
-router.get('/requests', async (req: Request, res: Response) => {
-  try {
-    const { status } = req.query;
-
-    let queryStr = `
-      SELECT
-        cr.*,
-        COALESCE(u.first_name || ' ' || u.last_name, '') as requester_name,
-        u.email as requester_email,
-        c.name as created_charity_name
-      FROM charity_requests cr
-      LEFT JOIN users u ON cr.user_id = u.id
-      LEFT JOIN charities c ON cr.created_charity_id = c.id
-    `;
-
-    const params: any[] = [];
-    if (status) {
-      queryStr += ' WHERE cr.status = $1';
-      params.push(status);
-    }
-
-    queryStr += ' ORDER BY cr.created_at DESC';
-
-    const result = await query(queryStr, params);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error fetching charity requests:', error);
-    res.status(500).json({ error: 'Server error' });
   }
 });
 
