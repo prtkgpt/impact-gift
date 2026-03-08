@@ -584,6 +584,7 @@ router.get('/create-charity-requests-table', async (req: Request, res: Response)
         reason TEXT,
         status VARCHAR(50) DEFAULT 'pending',
         admin_notes TEXT,
+        created_charity_id INTEGER REFERENCES charities(id) ON DELETE SET NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         reviewed_at TIMESTAMP,
         reviewed_by INTEGER REFERENCES users(id) ON DELETE SET NULL
@@ -593,6 +594,7 @@ router.get('/create-charity-requests-table', async (req: Request, res: Response)
     // Create indexes
     await query('CREATE INDEX IF NOT EXISTS idx_charity_requests_user_id ON charity_requests(user_id)');
     await query('CREATE INDEX IF NOT EXISTS idx_charity_requests_status ON charity_requests(status)');
+    await query('CREATE INDEX IF NOT EXISTS idx_charity_requests_created_at ON charity_requests(created_at DESC)');
 
     res.json({
       success: true,
@@ -601,7 +603,7 @@ router.get('/create-charity-requests-table', async (req: Request, res: Response)
       columns: [
         'id', 'user_id', 'charity_name', 'website_url', 'description',
         'category', 'contact_email', 'reason', 'status', 'admin_notes',
-        'created_at', 'reviewed_at', 'reviewed_by'
+        'created_charity_id', 'created_at', 'reviewed_at', 'reviewed_by'
       ]
     });
   } catch (error: any) {
