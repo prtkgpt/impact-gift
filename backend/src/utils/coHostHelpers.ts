@@ -3,7 +3,7 @@ import { query } from '../database/db';
 /**
  * Check if a user is the owner or an accepted co-host for an event
  */
-export async function isOwnerOrCoHost(userId: number, eventId: number): Promise<boolean> {
+export async function isOwnerOrCoHost(userId: number, eventId: number, userEmail?: string): Promise<boolean> {
   try {
     // Check if user is the event owner
     const eventCheck = await query(
@@ -20,11 +20,18 @@ export async function isOwnerOrCoHost(userId: number, eventId: number): Promise<
       return true;
     }
 
-    // Check if user is an accepted co-host
-    const coHostCheck = await query(
-      'SELECT id FROM co_hosts WHERE event_id = $1 AND user_id = $2 AND accepted_at IS NOT NULL',
-      [eventId, userId]
-    );
+    // Check if user is an accepted co-host (by user_id OR email)
+    let coHostQuery = 'SELECT id FROM co_hosts WHERE event_id = $1 AND accepted_at IS NOT NULL AND (user_id = $2';
+    let params: any[] = [eventId, userId];
+
+    if (userEmail) {
+      coHostQuery += ' OR LOWER(TRIM(email)) = LOWER(TRIM($3))';
+      params.push(userEmail);
+    }
+
+    coHostQuery += ')';
+
+    const coHostCheck = await query(coHostQuery, params);
 
     return coHostCheck.rows.length > 0;
   } catch (error) {
@@ -36,7 +43,7 @@ export async function isOwnerOrCoHost(userId: number, eventId: number): Promise<
 /**
  * Check if a user is the owner or an accepted co-host for an event (by slug)
  */
-export async function isOwnerOrCoHostBySlug(userId: number, eventSlug: string): Promise<{ authorized: boolean; eventId?: number; isOwner?: boolean; isCoHost?: boolean }> {
+export async function isOwnerOrCoHostBySlug(userId: number, eventSlug: string, userEmail?: string): Promise<{ authorized: boolean; eventId?: number; isOwner?: boolean; isCoHost?: boolean }> {
   try {
     // Get event by slug
     const eventCheck = await query(
@@ -60,11 +67,18 @@ export async function isOwnerOrCoHostBySlug(userId: number, eventSlug: string): 
       };
     }
 
-    // Check if user is an accepted co-host
-    const coHostCheck = await query(
-      'SELECT id FROM co_hosts WHERE event_id = $1 AND user_id = $2 AND accepted_at IS NOT NULL',
-      [event.id, userId]
-    );
+    // Check if user is an accepted co-host (by user_id OR email)
+    let coHostQuery = 'SELECT id FROM co_hosts WHERE event_id = $1 AND accepted_at IS NOT NULL AND (user_id = $2';
+    let params: any[] = [event.id, userId];
+
+    if (userEmail) {
+      coHostQuery += ' OR LOWER(TRIM(email)) = LOWER(TRIM($3))';
+      params.push(userEmail);
+    }
+
+    coHostQuery += ')';
+
+    const coHostCheck = await query(coHostQuery, params);
 
     const isCoHost = coHostCheck.rows.length > 0;
 

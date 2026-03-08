@@ -15,7 +15,7 @@ router.get('/template/:eventId', authenticate, async (req: AuthRequest, res: Res
     const { eventId } = req.params;
 
     // Verify the user is owner or accepted co-host
-    const hasAccess = await isOwnerOrCoHost(req.user!.id, parseInt(eventId));
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, parseInt(eventId), req.user!.email);
     if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
@@ -67,7 +67,7 @@ router.post(
       const { event_id, subject, body }: CreateEmailTemplateInput = req.body;
 
       // Verify the user is owner or accepted co-host
-      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id);
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id, req.user!.email);
       if (!hasAccess) {
         return res.status(403).json({ error: 'Not authorized' });
       }
@@ -121,7 +121,7 @@ router.post(
       const { event_id } = req.body;
 
       // Verify the user is owner or accepted co-host
-      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id);
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id, req.user!.email);
       if (!hasAccess) {
         return res.status(403).json({ error: 'Not authorized' });
       }
@@ -431,7 +431,7 @@ router.post(
       console.log(`[RESEND] Guest found: ${guest.email}, event: ${guest.title}`);
 
       // Verify the user is owner or accepted co-host
-      const hasAccess = await isOwnerOrCoHost(req.user!.id, guest.event_id);
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, guest.event_id, req.user!.email);
       if (!hasAccess) {
         console.log(`[RESEND] User ${req.user!.id} not authorized for event ${guest.event_id}`);
         return res.status(403).json({ error: 'Not authorized' });

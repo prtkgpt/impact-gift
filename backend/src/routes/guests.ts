@@ -45,7 +45,7 @@ router.get('/event/:eventId', authenticate, async (req: AuthRequest, res: Respon
     const { eventId } = req.params;
 
     // Verify the user is owner or accepted co-host
-    const hasAccess = await isOwnerOrCoHost(req.user!.id, parseInt(eventId));
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, parseInt(eventId), req.user!.email);
     if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
@@ -75,7 +75,7 @@ router.get('/event/:eventId/rsvp-summary', authenticate, async (req: AuthRequest
     const { eventId } = req.params;
 
     // Verify the user is owner or accepted co-host
-    const hasAccess = await isOwnerOrCoHost(req.user!.id, parseInt(eventId));
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, parseInt(eventId), req.user!.email);
     if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
@@ -140,7 +140,7 @@ router.post(
       const { event_id, email, name }: AddGuestInput = req.body;
 
       // Verify the user is owner or accepted co-host
-      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id);
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id, req.user!.email);
       if (!hasAccess) {
         return res.status(403).json({ error: 'Not authorized' });
       }
@@ -183,7 +183,7 @@ router.post(
       const { event_id, guests } = req.body;
 
       // Verify the user is owner or accepted co-host
-      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id);
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id, req.user!.email);
       if (!hasAccess) {
         return res.status(403).json({ error: 'Not authorized' });
       }
@@ -252,7 +252,7 @@ router.put(
 
       const guest = guestCheck.rows[0];
 
-      const hasAccess = await isOwnerOrCoHost(req.user!.id, guest.event_id);
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, guest.event_id, req.user!.email);
       if (!hasAccess) {
         return res.status(403).json({ error: 'Not authorized' });
       }
@@ -324,7 +324,7 @@ router.delete('/:guestId', authenticate, async (req: AuthRequest, res: Response)
       return res.status(404).json({ error: 'Guest not found' });
     }
 
-    const hasAccess = await isOwnerOrCoHost(req.user!.id, guestCheck.rows[0].event_id);
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, guestCheck.rows[0].event_id, req.user!.email);
     if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }

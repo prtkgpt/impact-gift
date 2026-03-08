@@ -34,7 +34,7 @@ router.post(
         return res.status(404).json({ error: 'Event not found' });
       }
 
-      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id);
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id, req.user!.email);
       if (!hasAccess) {
         return res.status(403).json({ error: 'Not authorized to post updates for this event' });
       }
@@ -90,7 +90,7 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Update not found' });
     }
 
-    const hasAccess = await isOwnerOrCoHost(req.user!.id, updateCheck.rows[0].event_id);
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, updateCheck.rows[0].event_id, req.user!.email);
     if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }

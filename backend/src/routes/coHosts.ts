@@ -19,7 +19,7 @@ router.get('/event/:eventId', authenticate, async (req: AuthRequest, res: Respon
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    const hasAccess = await isOwnerOrCoHost(userId, parseInt(eventId));
+    const hasAccess = await isOwnerOrCoHost(userId, parseInt(eventId), req.user!.email);
     if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
@@ -164,7 +164,7 @@ router.post('/:coHostId/resend', authenticate, async (req: AuthRequest, res: Res
     const data = result.rows[0];
 
     // Verify user is owner or accepted co-host
-    const hasAccess = await isOwnerOrCoHost(userId, data.event_id);
+    const hasAccess = await isOwnerOrCoHost(userId, data.event_id, req.user!.email);
     if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
@@ -249,10 +249,12 @@ router.post('/:coHostId/accept', async (req, res: Response) => {
     let updateParams: any[] = [coHostId];
 
     if (authenticatedUserId && authenticatedUserEmail &&
-        coHost.email.toLowerCase() === authenticatedUserEmail.toLowerCase()) {
+        coHost.email.toLowerCase().trim() === authenticatedUserEmail.toLowerCase().trim()) {
       updateQuery = `UPDATE co_hosts SET accepted_at = CURRENT_TIMESTAMP, user_id = $2`;
       updateParams = [coHostId, authenticatedUserId];
-      console.log(`[Accept Co-Host] Linking co-host to user ${authenticatedUserId}`);
+      console.log(`[Accept Co-Host] Linking co-host to user ${authenticatedUserId} (email: ${authenticatedUserEmail})`);
+    } else if (authenticatedUserId && authenticatedUserEmail) {
+      console.log(`[Accept Co-Host] Email mismatch - CoHost email: "${coHost.email}", User email: "${authenticatedUserEmail}"`);
     }
 
     updateQuery += ` WHERE id = $1 RETURNING *`;
@@ -289,7 +291,7 @@ router.delete('/:coHostId', authenticate, async (req: AuthRequest, res: Response
       return res.status(404).json({ error: 'Co-host not found' });
     }
 
-    const hasAccess = await isOwnerOrCoHost(userId, coHostCheck.rows[0].event_id);
+    const hasAccess = await isOwnerOrCoHost(userId, coHostCheck.rows[0].event_id, req.user!.email);
     if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }

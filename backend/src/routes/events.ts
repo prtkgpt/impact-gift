@@ -185,7 +185,7 @@ router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) =
        WHERE e.user_id = $1
           OR e.id IN (
             SELECT event_id FROM co_hosts
-            WHERE (user_id = $1 OR email = $2) AND accepted_at IS NOT NULL
+            WHERE (user_id = $1 OR LOWER(TRIM(email)) = LOWER(TRIM($2))) AND accepted_at IS NOT NULL
           )
        GROUP BY e.id
        ORDER BY e.event_date DESC`,
@@ -485,7 +485,7 @@ router.put('/:identifier', authenticate, async (req: AuthRequest, res: Response)
     const event = eventCheck.rows[0];
 
     // Verify the user is owner or accepted co-host
-    const hasAccess = await isOwnerOrCoHost(req.user!.id, event.id);
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, event.id, req.user!.email);
     if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
@@ -547,7 +547,7 @@ router.post('/:slug/notify-guests', authenticate, async (req: AuthRequest, res: 
     const event = eventResult.rows[0];
 
     // Verify the user is owner or accepted co-host
-    const hasAccess = await isOwnerOrCoHost(req.user!.id, event.id);
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, event.id, req.user!.email);
     if (!hasAccess) {
       return res.status(403).json({ error: 'Not authorized' });
     }
