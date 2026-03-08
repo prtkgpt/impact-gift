@@ -538,8 +538,30 @@ router.put('/:identifier', authenticate, async (req: AuthRequest, res: Response)
       }
     }
 
+    // Fetch the complete event with charities to return updated data
+    const eventWithCharities = await query(
+      `SELECT e.*,
+              COALESCE(
+                json_agg(
+                  json_build_object(
+                    'id', c.id,
+                    'name', c.name,
+                    'logo_url', c.logo_url,
+                    'custom_instructions', ec.custom_instructions
+                  )
+                ) FILTER (WHERE c.id IS NOT NULL),
+                '[]'
+              ) as charities
+       FROM events e
+       LEFT JOIN event_charities ec ON e.id = ec.event_id
+       LEFT JOIN charities c ON ec.charity_id = c.id
+       WHERE e.id = $1
+       GROUP BY e.id`,
+      [event.id]
+    );
+
     console.log(`Event ${event.id} updated successfully`);
-    res.json(result.rows[0]);
+    res.json(eventWithCharities.rows[0]);
   } catch (error) {
     console.error('Error updating event:', error);
     res.status(500).json({ error: 'Server error' });
