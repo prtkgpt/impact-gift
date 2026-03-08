@@ -23,6 +23,7 @@ import eventTemplatesRoutes from './routes/eventTemplates';
 import eventThemesRoutes from './routes/eventThemes';
 import emailTestRoutes from './routes/emailTest';
 import eventImagesRoutes from './routes/eventImages';
+import eventPhotosRoutes from './routes/eventPhotos';
 import calendarRoutes from './routes/calendar';
 import targetedEmailsRoutes from './routes/targetedEmails';
 
@@ -102,6 +103,7 @@ app.use('/api/event-templates', eventTemplatesRoutes);
 app.use('/api/event-themes', eventThemesRoutes);
 app.use('/api/email-test', emailTestRoutes);
 app.use('/api/event-images', eventImagesRoutes);
+app.use('/api/event-photos', eventPhotosRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/targeted-emails', targetedEmailsRoutes);
 

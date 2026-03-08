@@ -4,6 +4,7 @@ import api from '../utils/api';
 import { Charity, Event } from '../types';
 import toast from 'react-hot-toast';
 import RequestCharityModal from '../components/RequestCharityModal';
+import EventPhotosUploader, { EventPhoto } from '../components/EventPhotosUploader';
 
 const EditEvent = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -14,6 +15,8 @@ const EditEvent = () => {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showNotifyModal, setShowNotifyModal] = useState(false);
   const [sendingNotifications, setSendingNotifications] = useState(false);
+  const [eventId, setEventId] = useState<number | null>(null);
+  const [eventPhotos, setEventPhotos] = useState<EventPhoto[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -37,6 +40,7 @@ const EditEvent = () => {
       const response = await api.get<Event>(`/events/${slug}`);
       const event = response.data;
 
+      setEventId(event.id);
       setFormData({
         title: event.title,
         description: event.description || '',
@@ -50,6 +54,17 @@ const EditEvent = () => {
       });
 
       setSelectedCharityIds(event.charity_id ? [event.charity_id] : []);
+
+      // Fetch event photos
+      try {
+        const photosResponse = await api.get(`/event-photos/event/${event.id}`);
+        if (photosResponse.data.success) {
+          setEventPhotos(photosResponse.data.photos);
+        }
+      } catch (photoError) {
+        // Photos are optional, so don't show error
+        console.log('No photos found or error fetching photos');
+      }
     } catch (error: any) {
       toast.error('Failed to load event');
       navigate('/dashboard');
@@ -90,6 +105,37 @@ const EditEvent = () => {
       };
 
       await api.put(`/events/${slug}`, eventData);
+
+      // Save new photos (photos without an id)
+      const newPhotos = eventPhotos.filter(photo => !photo.id);
+      if (newPhotos.length > 0 && eventId) {
+        const photosToSave = newPhotos.map(photo => ({
+          imageUrl: photo.photo_url,
+          publicId: photo.photo_public_id,
+          category: photo.category || 'dress_code',
+          caption: photo.caption || ''
+        }));
+
+        try {
+          await api.post(`/event-photos/event/${eventId}`, { photos: photosToSave });
+        } catch (photoError) {
+          console.error('Error saving photos:', photoError);
+          toast.error('Event updated but some photos failed to save');
+        }
+      }
+
+      // Update captions for existing photos
+      const existingPhotos = eventPhotos.filter(photo => photo.id);
+      for (const photo of existingPhotos) {
+        if (photo.id) {
+          try {
+            await api.put(`/event-photos/${photo.id}/caption`, { caption: photo.caption || '' });
+          } catch (captionError) {
+            console.error('Error updating photo caption:', captionError);
+          }
+        }
+      }
+
       toast.success('Event updated successfully!');
 
       // Show notification modal
@@ -320,6 +366,19 @@ const EditEvent = () => {
             <p className="text-xs text-gray-500 mt-1">
               Set a fundraising goal to track progress (optional)
             </p>
+          </div>
+
+          {/* Event Photos */}
+          <div className="border-t border-gray-200 pt-6">
+            <EventPhotosUploader
+              eventId={eventId || undefined}
+              photos={eventPhotos}
+              onChange={setEventPhotos}
+              category="dress_code"
+              maxPhotos={6}
+              label="Event Photos (Optional)"
+              helpText="Add photos to help guests prepare - dress code examples, venue photos, theme inspiration, etc."
+            />
           </div>
 
           {/* Guest List Visibility */}

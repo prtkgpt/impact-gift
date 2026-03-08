@@ -12,6 +12,7 @@ import EventCountdown from '../components/EventCountdown';
 import RSVPSection from '../components/RSVPSection';
 import AttendingGuests from '../components/AttendingGuests';
 import PotluckItems from '../components/PotluckItems';
+import EventPhotosGallery, { EventPhoto } from '../components/EventPhotosGallery';
 import { useAuth } from '../contexts/AuthContext';
 
 const EventPage = () => {
@@ -20,6 +21,7 @@ const EventPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
+  const [eventPhotos, setEventPhotos] = useState<EventPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDonationForm, setShowDonationForm] = useState(false);
   const [guestEmail, setGuestEmail] = useState<string | null>(null);
@@ -52,6 +54,17 @@ const EventPage = () => {
       console.log('[EventPage] co_hosts:', response.data.co_hosts);
       console.log('[EventPage] accepted co_hosts:', response.data.co_hosts?.filter(ch => ch.accepted_at));
       setEvent(response.data);
+
+      // Fetch event photos
+      try {
+        const photosResponse = await api.get(`/event-photos/event/${response.data.id}`);
+        if (photosResponse.data.success) {
+          setEventPhotos(photosResponse.data.photos);
+        }
+      } catch (photoError) {
+        // Photos are optional, so don't show error
+        console.log('No photos found or error fetching photos');
+      }
     } catch (error) {
       toast.error('Event not found');
     } finally {
@@ -206,6 +219,17 @@ const EventPage = () => {
               <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
                 <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-5 text-gray-900">About This Event</h2>
                 <p className="text-gray-700 leading-relaxed text-base sm:text-lg whitespace-pre-wrap">{event.description}</p>
+              </div>
+            )}
+
+            {/* Event Photos */}
+            {eventPhotos.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
+                <EventPhotosGallery
+                  photos={eventPhotos}
+                  title="Event Photos"
+                  category="dress_code"
+                />
               </div>
             )}
 
