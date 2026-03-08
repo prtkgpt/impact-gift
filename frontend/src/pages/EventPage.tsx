@@ -21,7 +21,8 @@ const EventPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
-  const [eventPhotos, setEventPhotos] = useState<EventPhoto[]>([]);
+  const [attirePhotos, setAttirePhotos] = useState<EventPhoto[]>([]);
+  const [eventMemoriesPhotos, setEventMemoriesPhotos] = useState<EventPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDonationForm, setShowDonationForm] = useState(false);
   const [guestEmail, setGuestEmail] = useState<string | null>(null);
@@ -55,15 +56,24 @@ const EventPage = () => {
       console.log('[EventPage] accepted co_hosts:', response.data.co_hosts?.filter(ch => ch.accepted_at));
       setEvent(response.data);
 
-      // Fetch event photos
+      // Fetch attire photos
       try {
-        const photosResponse = await api.get(`/event-photos/event/${response.data.id}`);
-        if (photosResponse.data.success) {
-          setEventPhotos(photosResponse.data.photos);
+        const attireResponse = await api.get(`/event-photos/event/${response.data.id}?category=attire`);
+        if (attireResponse.data.success) {
+          setAttirePhotos(attireResponse.data.photos);
         }
       } catch (photoError) {
-        // Photos are optional, so don't show error
-        console.log('No photos found or error fetching photos');
+        console.log('No attire photos found');
+      }
+
+      // Fetch event memories photos
+      try {
+        const memoriesResponse = await api.get(`/event-photos/event/${response.data.id}?category=event_photos`);
+        if (memoriesResponse.data.success) {
+          setEventMemoriesPhotos(memoriesResponse.data.photos);
+        }
+      } catch (photoError) {
+        console.log('No event photos found');
       }
     } catch (error) {
       toast.error('Event not found');
@@ -222,13 +232,22 @@ const EventPage = () => {
               </div>
             )}
 
-            {/* Event Photos */}
-            {eventPhotos.length > 0 && (
+            {/* Dress Code / Attire Photos */}
+            {attirePhotos.length > 0 && (
               <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
                 <EventPhotosGallery
-                  photos={eventPhotos}
-                  title="Event Photos"
-                  category="dress_code"
+                  photos={attirePhotos}
+                  title="👗 What to Wear"
+                />
+              </div>
+            )}
+
+            {/* Event Memories Photos */}
+            {eventMemoriesPhotos.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
+                <EventPhotosGallery
+                  photos={eventMemoriesPhotos}
+                  title="📷 Event Memories"
                 />
               </div>
             )}
