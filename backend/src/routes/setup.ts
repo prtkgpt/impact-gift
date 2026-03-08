@@ -860,4 +860,34 @@ router.get('/migrate-phase5-event-details', async (req: Request, res: Response) 
   }
 });
 
+// Fix existing charity_requests table by adding missing created_charity_id column
+router.get('/fix-charity-requests-table', async (req: Request, res: Response) => {
+  try {
+    const changes = [];
+
+    // Add created_charity_id column if it doesn't exist
+    await query(`
+      ALTER TABLE charity_requests
+      ADD COLUMN IF NOT EXISTS created_charity_id INTEGER REFERENCES charities(id) ON DELETE SET NULL
+    `);
+    changes.push('Added created_charity_id column to charity_requests table');
+
+    // Add missing index if it doesn't exist
+    await query('CREATE INDEX IF NOT EXISTS idx_charity_requests_created_at ON charity_requests(created_at DESC)');
+    changes.push('Added index on created_at column');
+
+    res.json({
+      success: true,
+      message: 'Charity requests table fixed successfully!',
+      changes
+    });
+  } catch (error: any) {
+    console.error('Error fixing charity_requests table:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fix charity_requests table'
+    });
+  }
+});
+
 export default router;
