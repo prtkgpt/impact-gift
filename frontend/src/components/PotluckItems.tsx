@@ -11,18 +11,12 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
   const [items, setItems] = useState<PotluckItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showClaimModal, setShowClaimModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<PotluckItem | null>(null);
   const [formData, setFormData] = useState({
     item_name: '',
     guest_name: '',
     guest_email: '',
     quantity: 1,
     notes: ''
-  });
-  const [claimData, setClaimData] = useState({
-    guest_name: '',
-    guest_email: ''
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -82,29 +76,6 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
     }
   };
 
-  const handleClaimItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedItem) return;
-
-    setSubmitting(true);
-    try {
-      await api.post(`/potluck/items/${selectedItem.id}/claim`, claimData);
-      toast.success('Item claimed successfully!');
-      setShowClaimModal(false);
-      setClaimData({ guest_name: '', guest_email: '' });
-      setSelectedItem(null);
-      fetchItems();
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to claim item');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const openClaimModal = (item: PotluckItem) => {
-    setSelectedItem(item);
-    setShowClaimModal(true);
-  };
 
   if (loading) {
     return (
@@ -145,29 +116,21 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
                 key={item.id}
                 className="border-2 border-primary-200 bg-primary-50 rounded-lg p-4 hover:border-primary-400 transition-colors"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900">{item.item_name}</h3>
-                      {item.quantity > 1 && (
-                        <span className="text-sm text-gray-500">× {item.quantity}</span>
-                      )}
-                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-medium">
-                        Unclaimed
-                      </span>
-                    </div>
-                    {item.notes && (
-                      <p className="text-sm text-gray-600 mt-2 italic">
-                        {item.notes}
-                      </p>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-gray-900">{item.item_name}</h3>
+                    {item.quantity > 1 && (
+                      <span className="text-sm text-gray-500">× {item.quantity}</span>
                     )}
+                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-medium">
+                      Unclaimed
+                    </span>
                   </div>
-                  <button
-                    onClick={() => openClaimModal(item)}
-                    className="btn btn-primary text-sm"
-                  >
-                    Claim
-                  </button>
+                  {item.notes && (
+                    <p className="text-sm text-gray-600 mt-2 italic">
+                      {item.notes}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}
@@ -210,7 +173,7 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
                   </div>
                   {item.guest_email && (
                     <button
-                      onClick={() => handleRemoveItem(item.id, item.guest_email)}
+                      onClick={() => handleRemoveItem(item.id, item.guest_email!)}
                       className="text-red-600 hover:text-red-700 text-sm"
                       title="Remove item"
                     >
