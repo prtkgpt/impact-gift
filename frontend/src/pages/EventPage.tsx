@@ -305,6 +305,29 @@ const EventPage = () => {
                     </div>
                   )}
 
+                  {/* Co-Hosts */}
+                  {event.co_hosts && event.co_hosts.filter(ch => ch.accepted_at).length > 0 && (
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                        <span className="text-xl">👥</span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Co-Hosts</h3>
+                        <div className="space-y-1">
+                          {event.co_hosts
+                            .filter(ch => ch.accepted_at)
+                            .map((coHost) => (
+                              <p key={coHost.id} className="text-gray-700">
+                                {coHost.first_name && coHost.last_name
+                                  ? `${coHost.first_name} ${coHost.last_name}`
+                                  : coHost.name || coHost.email}
+                              </p>
+                            ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* RSVP Deadline */}
                   {event.rsvp_deadline && (
                     <div className="flex items-start space-x-3">
