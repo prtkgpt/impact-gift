@@ -30,6 +30,7 @@ const Dashboard = () => {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [invitationsLoading, setInvitationsLoading] = useState(true);
+  const [eventsError, setEventsError] = useState(false);
 
   useEffect(() => {
     // Load both events and invitations in parallel for better performance
@@ -38,10 +39,19 @@ const Dashboard = () => {
 
   const fetchEvents = async () => {
     try {
+      setEventsError(false);
       const response = await api.get<Event[]>('/events/my-events');
       setEvents(response.data);
-    } catch (error) {
-      toast.error('Failed to load events');
+    } catch (error: any) {
+      console.error('Failed to load events:', error);
+      setEventsError(true);
+      if (error.code === 'ECONNABORTED') {
+        toast.error('Request timed out. Please check your connection and try again.');
+      } else if (error.message?.includes('Network Error')) {
+        toast.error('Cannot connect to server. Please try again later.');
+      } else {
+        toast.error('Failed to load events. Please refresh the page.');
+      }
     } finally {
       setEventsLoading(false);
     }
@@ -115,6 +125,26 @@ const Dashboard = () => {
                   <div className="h-4 bg-gray-200 rounded w-1/2"></div>
                 </div>
               ))}
+            </div>
+          ) : eventsError ? (
+            <div className="card-highlight text-center py-16 animate-fade-in">
+              <div className="text-7xl mb-6">⚠️</div>
+              <h2 className="text-3xl font-bold mb-3 text-gray-900">Unable to load events</h2>
+              <p className="text-lg text-gray-600 mb-8 max-w-md mx-auto">
+                We couldn't connect to the server. Please check your internet connection and try again.
+              </p>
+              <button
+                onClick={() => {
+                  setEventsLoading(true);
+                  fetchEvents();
+                }}
+                className="btn btn-primary inline-flex"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Retry
+              </button>
             </div>
           ) : events.length === 0 ? (
             <div className="card-highlight text-center py-16 animate-fade-in">
