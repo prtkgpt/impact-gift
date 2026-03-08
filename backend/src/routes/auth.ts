@@ -16,10 +16,11 @@ const FROM_EMAIL = process.env.FROM_EMAIL || 'Impact Gift <noreply@giftwithimpac
 async function linkCoHostInvitations(userId: number, email: string): Promise<void> {
   try {
     // Link any accepted co-host invitations that match this user's email
+    // Only link invitations that have been accepted (accepted_at IS NOT NULL)
     await query(
       `UPDATE co_hosts
        SET user_id = $1
-       WHERE email = $2 AND user_id IS NULL`,
+       WHERE email = $2 AND user_id IS NULL AND accepted_at IS NOT NULL`,
       [userId, email]
     );
     console.log(`Linked co-host invitations for ${email} to user ${userId}`);

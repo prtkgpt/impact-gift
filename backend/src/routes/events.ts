@@ -230,8 +230,8 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
       const token = authHeader.substring(7);
       try {
         const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
-        authenticatedUserId = decoded.userId;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; email: string };
+        authenticatedUserId = decoded.id;
         console.log(`[GET /:slug] Authenticated user ID: ${authenticatedUserId}`);
       } catch (err) {
         console.log(`[GET /:slug] Invalid auth token`);
