@@ -4,33 +4,39 @@ import toast from 'react-hot-toast';
 import { Guest } from '../types';
 
 interface RSVPSectionProps {
-  guestEmail: string;
+  guestEmail?: string | null;
   eventId: number;
   onRSVPSubmit?: () => void;
 }
 
 const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) => {
   const [guest, setGuest] = useState<Guest | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [rsvpStatus, setRsvpStatus] = useState<'attending' | 'not_attending' | 'maybe'>('attending');
   const [rsvpComment, setRsvpComment] = useState('');
   const [additionalGuests, setAdditionalGuests] = useState(0);
   const [showForm, setShowForm] = useState(false);
 
+  // Guest mode fields (when not logged in / no email)
+  const [guestName, setGuestName] = useState('');
+  const [guestEmailInput, setGuestEmailInput] = useState('');
+
+  const isGuestMode = !guestEmail;
+
   useEffect(() => {
-    fetchGuestInfo();
+    if (guestEmail) {
+      fetchGuestInfo();
+    }
   }, [guestEmail, eventId]);
 
   const fetchGuestInfo = async () => {
+    if (!guestEmail) return;
     try {
       setLoading(true);
-      console.log('Fetching guest info:', { eventId, guestEmail });
-      // Find guest by email and event ID using public endpoint
       const response = await api.get(`/guests/find-by-email/${eventId}/${encodeURIComponent(guestEmail)}`);
       const matchedGuest = response.data as Guest;
 
-      console.log('Guest found:', matchedGuest);
       if (matchedGuest) {
         setGuest(matchedGuest);
         if (matchedGuest.rsvp_status !== 'no_response') {
@@ -40,11 +46,8 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
         }
       }
     } catch (error: any) {
-      console.error('Failed to load guest info:', error);
-      console.error('Error details:', {
-        status: error.response?.status,
-        message: error.response?.data?.error || error.message
-      });
+      // Guest not found is fine in guest mode - they'll create a new record
+      console.log('Guest lookup:', error.response?.status === 404 ? 'not found' : 'error');
     } finally {
       setLoading(false);
     }
@@ -52,19 +55,47 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
 
   const handleSubmitRSVP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!guest) return;
+
+    if (isGuestMode) {
+      // Validate guest fields
+      if (!guestName.trim()) {
+        toast.error('Please enter your name');
+        return;
+      }
+      if (!guestEmailInput.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmailInput)) {
+        toast.error('Please enter a valid email address');
+        return;
+      }
+    }
 
     setSubmitting(true);
     try {
-      await api.post(`/guests/${guest.id}/rsvp`, {
-        rsvp_status: rsvpStatus,
-        rsvp_comment: rsvpComment || undefined,
-        additional_guests: additionalGuests
-      });
+      if (isGuestMode || !guest) {
+        // Guest self-RSVP: create guest record + RSVP in one call
+        const response = await api.post('/guests/rsvp-guest', {
+          event_id: eventId,
+          name: guestName.trim(),
+          email: guestEmailInput.trim(),
+          rsvp_status: rsvpStatus,
+          rsvp_comment: rsvpComment || undefined,
+          additional_guests: additionalGuests
+        });
 
-      toast.success('RSVP submitted successfully!');
-      setShowForm(false);
-      fetchGuestInfo();
+        setGuest(response.data);
+        toast.success('RSVP submitted successfully!');
+        setShowForm(false);
+      } else {
+        // Existing guest RSVP update
+        await api.post(`/guests/${guest.id}/rsvp`, {
+          rsvp_status: rsvpStatus,
+          rsvp_comment: rsvpComment || undefined,
+          additional_guests: additionalGuests
+        });
+
+        toast.success('RSVP submitted successfully!');
+        setShowForm(false);
+        fetchGuestInfo();
+      }
       onRSVPSubmit?.();
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to submit RSVP');
@@ -81,11 +112,7 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
     );
   }
 
-  if (!guest) {
-    return null; // Guest not found or not invited
-  }
-
-  const hasRSVPd = guest.rsvp_status !== 'no_response';
+  const hasRSVPd = guest && guest.rsvp_status !== 'no_response';
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
@@ -128,6 +155,41 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
         </div>
       ) : (
         <form onSubmit={handleSubmitRSVP} className="space-y-4">
+          {/* Guest info fields - shown when visitor is not a known guest */}
+          {(isGuestMode && !hasRSVPd) && (
+            <div className="space-y-3 pb-4 border-b border-gray-200">
+              <p className="text-sm text-gray-600">Please provide your details to RSVP.</p>
+              <div>
+                <label htmlFor="guest_name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Your Name *
+                </label>
+                <input
+                  id="guest_name"
+                  type="text"
+                  className="input"
+                  placeholder="Enter your full name"
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="guest_email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Your Email *
+                </label>
+                <input
+                  id="guest_email"
+                  type="email"
+                  className="input"
+                  placeholder="Enter your email address"
+                  value={guestEmailInput}
+                  onChange={(e) => setGuestEmailInput(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Will you be attending?

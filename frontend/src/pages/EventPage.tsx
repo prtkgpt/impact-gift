@@ -389,7 +389,7 @@ const EventPage = () => {
               </div>
             )}
 
-            {guestEmail && event && (
+            {event && (
               <RSVPSection
                 guestEmail={guestEmail}
                 eventId={event.id}

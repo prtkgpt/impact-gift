@@ -417,6 +417,56 @@ router.post(
   }
 );
 
+// Guest self-RSVP (public endpoint - creates guest record if not exists and submits RSVP)
+router.post(
+  '/rsvp-guest',
+  [
+    body('event_id').isInt(),
+    body('name').trim().notEmpty().withMessage('Name is required'),
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('rsvp_status').isIn(['attending', 'not_attending', 'maybe']).withMessage('Invalid RSVP status'),
+    body('rsvp_comment').optional().trim(),
+    body('additional_guests').optional().isInt({ min: 0, max: 20 }).withMessage('Additional guests must be between 0 and 20')
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ error: 'Invalid data', details: errors.array() });
+      }
+
+      const { event_id, name, email, rsvp_status, rsvp_comment, additional_guests } = req.body;
+
+      // Verify event exists and is active
+      const eventCheck = await query('SELECT id FROM events WHERE id = $1 AND is_active = true', [event_id]);
+      if (eventCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+
+      // Upsert guest record and set RSVP in one query
+      const result = await query(
+        `INSERT INTO guests (event_id, email, name, rsvp_status, rsvp_comment, additional_guests, rsvp_at)
+         VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+         ON CONFLICT (event_id, email) DO UPDATE
+         SET name = COALESCE(EXCLUDED.name, guests.name),
+             rsvp_status = EXCLUDED.rsvp_status,
+             rsvp_comment = EXCLUDED.rsvp_comment,
+             additional_guests = EXCLUDED.additional_guests,
+             rsvp_at = CURRENT_TIMESTAMP,
+             updated_at = CURRENT_TIMESTAMP
+         RETURNING *`,
+        [event_id, email, name, rsvp_status, rsvp_comment || null, additional_guests || 0]
+      );
+
+      console.log(`✅ Guest self-RSVP: ${email} -> ${rsvp_status} for event ${event_id}`);
+      res.status(201).json(result.rows[0]);
+    } catch (error: any) {
+      console.error('Error in guest self-RSVP:', error);
+      res.status(500).json({ error: 'Failed to submit RSVP. Please try again.' });
+    }
+  }
+);
+
 // Find guest by email and event (public endpoint for RSVP)
 router.get('/find-by-email/:eventId/:email', async (req, res: Response) => {
   try {

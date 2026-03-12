@@ -3,7 +3,6 @@ import api from '../utils/api';
 
 interface AttendingGuest {
   name: string;
-  email: string;
   rsvp_comment?: string;
   rsvp_at: string;
   additional_guests: number;
@@ -56,11 +55,11 @@ const AttendingGuests = ({ eventSlug }: AttendingGuestsProps) => {
         {guests.map((guest, index) => (
           <div key={index} className="flex items-start p-4 bg-gray-50 rounded-lg">
             <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-semibold">
-              {guest.name ? guest.name.charAt(0).toUpperCase() : guest.email.charAt(0).toUpperCase()}
+              {(guest.name || 'G').charAt(0).toUpperCase()}
             </div>
             <div className="ml-3 flex-1">
               <div className="font-medium text-gray-900">
-                {guest.name || guest.email.split('@')[0]}
+                {guest.name || 'Guest'}
                 {guest.additional_guests > 0 && (
                   <span className="ml-2 text-sm text-gray-500 font-normal">
                     +{guest.additional_guests}
