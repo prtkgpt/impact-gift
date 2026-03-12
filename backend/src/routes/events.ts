@@ -466,7 +466,7 @@ router.get('/:slug/attending-guests', async (req, res: Response) => {
 
     // Fetch only attending guests with additional_guests count
     const guestsResult = await query(
-      `SELECT name, email, rsvp_comment, rsvp_at, additional_guests
+      `SELECT name, rsvp_comment, rsvp_at, additional_guests
        FROM guests
        WHERE event_id = $1 AND rsvp_status = 'attending'
        ORDER BY rsvp_at DESC`,
