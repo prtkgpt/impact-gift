@@ -7,7 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 8000 // 8 second timeout for better UX
+  timeout: 15000 // 15 second timeout to handle cold starts and slow mobile networks
 });
 
 api.interceptors.request.use((config) => {
