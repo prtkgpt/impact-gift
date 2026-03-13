@@ -84,8 +84,6 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
           }, { timeout: 15000 });
 
           setGuest(response.data);
-          toast.success('RSVP submitted successfully!');
-          setShowForm(false);
         } else {
           // Existing guest RSVP update
           await api.post(`/guests/${guest.id}/rsvp`, {
@@ -94,10 +92,10 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
             additional_guests: additionalGuests
           }, { timeout: 15000 });
 
-          toast.success('RSVP submitted successfully!');
-          setShowForm(false);
           fetchGuestInfo();
         }
+        toast.success('RSVP submitted successfully!');
+        setShowForm(false);
         onRSVPSubmit?.();
       } catch (error: any) {
         const isTimeout = error.code === 'ECONNABORTED';
