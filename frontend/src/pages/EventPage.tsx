@@ -47,13 +47,11 @@ const EventPage = () => {
     }
   }, [slug, searchParams]);
 
-  const fetchEvent = async () => {
+  const fetchEvent = async (retryCount = 0) => {
     try {
-      const response = await api.get<Event>(`/events/${slug}`);
-      console.log('[EventPage] Fetched event data:', response.data);
-      console.log('[EventPage] potluck_enabled:', response.data.potluck_enabled);
-      console.log('[EventPage] co_hosts:', response.data.co_hosts);
-      console.log('[EventPage] accepted co_hosts:', response.data.co_hosts?.filter(ch => ch.accepted_at));
+      const response = await api.get<Event>(`/events/${slug}`, {
+        timeout: retryCount === 0 ? 15000 : 20000,
+      });
       setEvent(response.data);
 
       // Fetch attire photos
@@ -75,8 +73,25 @@ const EventPage = () => {
       } catch (photoError) {
         console.log('No event photos found');
       }
-    } catch (error) {
-      toast.error('Event not found');
+    } catch (error: any) {
+      const is404 = error.response?.status === 404;
+      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+      const isNetworkError = !error.response && error.message === 'Network Error';
+
+      if (!is404 && retryCount < 2) {
+        // Retry on timeout or network errors (backend may be waking up from cold start)
+        const delay = (retryCount + 1) * 2000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchEvent(retryCount + 1);
+      }
+
+      if (is404) {
+        toast.error('Event not found');
+      } else if (isTimeout || isNetworkError) {
+        toast.error('Could not load event. Please check your connection and try again.');
+      } else {
+        toast.error('Something went wrong loading this event. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
