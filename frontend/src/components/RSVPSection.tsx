@@ -113,13 +113,8 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
         if (isNetworkError) {
           toast.error('Could not reach the server. Please check your connection and try again.');
         } else {
-          const status = error.response?.status;
-          const data = error.response?.data;
-          const serverMsg = typeof data === 'object' ? data?.error : undefined;
-          // Show status + detail for debugging
-          const debugInfo = `[${status}] ${serverMsg || (typeof data === 'string' ? data.substring(0, 80) : 'No details')}`;
-          console.error('RSVP error:', debugInfo, data);
-          toast.error(serverMsg || `Error ${status}: RSVP failed. ${typeof data === 'string' ? data.substring(0, 60) : 'Please try again.'}`);
+          const serverMsg = typeof error.response?.data === 'object' ? error.response.data.error : undefined;
+          toast.error(serverMsg || 'Failed to submit RSVP. Please try again.');
         }
       }
     };

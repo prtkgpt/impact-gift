@@ -429,30 +429,23 @@ router.post(
     body('additional_guests').optional().isInt({ min: 0, max: 20 }).withMessage('Additional guests must be between 0 and 20')
   ],
   async (req: Request, res: Response) => {
-    console.log('=== RSVP-GUEST endpoint hit ===', JSON.stringify(req.body));
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.error('RSVP validation errors:', JSON.stringify(errors.array()));
         return res.status(400).json({ error: 'Invalid data', details: errors.array() });
       }
 
       const { event_id, name, email, rsvp_status, rsvp_comment, additional_guests } = req.body;
 
-      console.log(`RSVP-GUEST: event_id=${event_id}, name=${name}, email=${email}, status=${rsvp_status}`);
-
-      // Verify event exists and is active
+      // Verify event exists
       const eventCheck = await query('SELECT id, is_active FROM events WHERE id = $1', [event_id]);
       if (eventCheck.rows.length === 0) {
-        console.error(`RSVP-GUEST: Event ${event_id} not found`);
-        return res.status(404).json({ error: `Event ${event_id} not found` });
+        return res.status(404).json({ error: 'Event not found' });
       }
       const eventRow = eventCheck.rows[0];
       if (eventRow.is_active === false) {
-        console.error(`RSVP-GUEST: Event ${event_id} is inactive`);
         return res.status(400).json({ error: 'This event is no longer accepting RSVPs' });
       }
-      console.log(`RSVP-GUEST: Event found, is_active=${eventRow.is_active}`);
 
       // Check if guest already exists for this event
       const existingGuest = await query(
