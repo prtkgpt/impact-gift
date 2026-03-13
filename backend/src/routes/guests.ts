@@ -440,25 +440,41 @@ router.post(
       // Verify event exists and is active
       const eventCheck = await query('SELECT id FROM events WHERE id = $1 AND is_active = true', [event_id]);
       if (eventCheck.rows.length === 0) {
-        return res.status(404).json({ error: 'Event not found' });
+        return res.status(404).json({ error: 'Event not found or inactive' });
       }
 
-      // Upsert guest record and set RSVP in one query
-      const result = await query(
-        `INSERT INTO guests (event_id, email, name, rsvp_status, rsvp_comment, additional_guests, rsvp_at)
-         VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
-         ON CONFLICT (event_id, email) DO UPDATE
-         SET name = COALESCE(EXCLUDED.name, guests.name),
-             rsvp_status = EXCLUDED.rsvp_status,
-             rsvp_comment = EXCLUDED.rsvp_comment,
-             additional_guests = EXCLUDED.additional_guests,
-             rsvp_at = CURRENT_TIMESTAMP,
-             updated_at = CURRENT_TIMESTAMP
-         RETURNING *`,
-        [event_id, email, name, rsvp_status, rsvp_comment || null, additional_guests || 0]
+      // Check if guest already exists for this event
+      const existingGuest = await query(
+        'SELECT id FROM guests WHERE event_id = $1 AND LOWER(email) = LOWER($2)',
+        [event_id, email]
       );
 
-      console.log(`✅ Guest self-RSVP: ${email} -> ${rsvp_status} for event ${event_id}`);
+      let result;
+      if (existingGuest.rows.length > 0) {
+        // Update existing guest
+        result = await query(
+          `UPDATE guests
+           SET name = COALESCE($1, name),
+               rsvp_status = $2,
+               rsvp_comment = $3,
+               additional_guests = $4,
+               rsvp_at = CURRENT_TIMESTAMP,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $5
+           RETURNING *`,
+          [name, rsvp_status, rsvp_comment || null, additional_guests || 0, existingGuest.rows[0].id]
+        );
+      } else {
+        // Insert new guest
+        result = await query(
+          `INSERT INTO guests (event_id, email, name, rsvp_status, rsvp_comment, additional_guests, rsvp_at)
+           VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+           RETURNING *`,
+          [event_id, email, name, rsvp_status, rsvp_comment || null, additional_guests || 0]
+        );
+      }
+
+      console.log(`Guest self-RSVP: ${email} -> ${rsvp_status} for event ${event_id}`);
       res.status(201).json(result.rows[0]);
     } catch (error: any) {
       console.error('Error in guest self-RSVP:', error);
