@@ -12,3 +12,6 @@ coverage/
 *.swp
 *.swo
 .cache/
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js
