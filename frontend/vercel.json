@@ -1,6 +1,17 @@
 {
   "rewrites": [
     {
+      "source": "/event/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawler|spider|whatsapp|facebookexternalhit|twitterbot|telegrambot|slackbot|discordbot|linkedinbot|pinterestbot|preview|embedly|quora|outbrain|vkshare|redditbot)"
+        }
+      ],
+      "destination": "/api/og/:slug"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
