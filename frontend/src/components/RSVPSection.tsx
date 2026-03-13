@@ -100,17 +100,24 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
         }
         onRSVPSubmit?.();
       } catch (error: any) {
-        const is404 = error.response?.status === 404;
         const isTimeout = error.code === 'ECONNABORTED';
-        const isNetworkError = !error.response && error.message === 'Network Error';
+        const isNetworkError = !error.response;
 
-        // Retry on timeout/network errors (backend may be slow)
-        if (!is404 && (isTimeout || isNetworkError) && retryCount < 1) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+        // Retry on timeout/network errors (backend may be cold-starting)
+        if ((isTimeout || isNetworkError) && retryCount < 2) {
+          console.log(`RSVP retry ${retryCount + 1}: ${isTimeout ? 'timeout' : 'network error'}`);
+          await new Promise(resolve => setTimeout(resolve, 3000 * (retryCount + 1)));
           return submitWithRetry(retryCount + 1);
         }
 
-        toast.error(error.response?.data?.error || 'Failed to submit RSVP. Please try again.');
+        if (isNetworkError) {
+          toast.error('Could not reach the server. Please check your connection and try again.');
+        } else {
+          const serverMsg = error.response?.data?.error;
+          const detail = error.response?.data?.detail;
+          console.error('RSVP server error:', error.response?.status, serverMsg, detail);
+          toast.error(serverMsg || 'Something went wrong. Please try again.');
+        }
       }
     };
 
