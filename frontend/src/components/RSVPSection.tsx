@@ -69,36 +69,53 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
     }
 
     setSubmitting(true);
-    try {
-      if (isGuestMode || !guest) {
-        // Guest self-RSVP: create guest record + RSVP in one call
-        const response = await api.post('/guests/rsvp-guest', {
-          event_id: eventId,
-          name: guestName.trim(),
-          email: guestEmailInput.trim(),
-          rsvp_status: rsvpStatus,
-          rsvp_comment: rsvpComment || undefined,
-          additional_guests: additionalGuests
-        });
 
-        setGuest(response.data);
-        toast.success('RSVP submitted successfully!');
-        setShowForm(false);
-      } else {
-        // Existing guest RSVP update
-        await api.post(`/guests/${guest.id}/rsvp`, {
-          rsvp_status: rsvpStatus,
-          rsvp_comment: rsvpComment || undefined,
-          additional_guests: additionalGuests
-        });
+    const submitWithRetry = async (retryCount = 0): Promise<void> => {
+      try {
+        if (isGuestMode || !guest) {
+          // Guest self-RSVP: create guest record + RSVP in one call
+          const response = await api.post('/guests/rsvp-guest', {
+            event_id: eventId,
+            name: guestName.trim(),
+            email: guestEmailInput.trim(),
+            rsvp_status: rsvpStatus,
+            rsvp_comment: rsvpComment || undefined,
+            additional_guests: additionalGuests
+          }, { timeout: 15000 });
 
-        toast.success('RSVP submitted successfully!');
-        setShowForm(false);
-        fetchGuestInfo();
+          setGuest(response.data);
+          toast.success('RSVP submitted successfully!');
+          setShowForm(false);
+        } else {
+          // Existing guest RSVP update
+          await api.post(`/guests/${guest.id}/rsvp`, {
+            rsvp_status: rsvpStatus,
+            rsvp_comment: rsvpComment || undefined,
+            additional_guests: additionalGuests
+          }, { timeout: 15000 });
+
+          toast.success('RSVP submitted successfully!');
+          setShowForm(false);
+          fetchGuestInfo();
+        }
+        onRSVPSubmit?.();
+      } catch (error: any) {
+        const is404 = error.response?.status === 404;
+        const isTimeout = error.code === 'ECONNABORTED';
+        const isNetworkError = !error.response && error.message === 'Network Error';
+
+        // Retry on timeout/network errors (backend may be slow)
+        if (!is404 && (isTimeout || isNetworkError) && retryCount < 1) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          return submitWithRetry(retryCount + 1);
+        }
+
+        toast.error(error.response?.data?.error || 'Failed to submit RSVP. Please try again.');
       }
-      onRSVPSubmit?.();
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to submit RSVP');
+    };
+
+    try {
+      await submitWithRetry();
     } finally {
       setSubmitting(false);
     }
