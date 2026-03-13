@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
-import { Guest } from '../types';
+import type { Guest } from '../types';
 
 interface RSVPSectionProps {
   guestEmail?: string | null;
