@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "rm -f tsconfig.tsbuildinfo tsconfig.node.tsbuildinfo && tsc --force && vite build",
+    "build": "rm -f tsconfig.tsbuildinfo tsconfig.node.tsbuildinfo && tsc -b --force && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
