@@ -70,6 +70,29 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
 
     setSubmitting(true);
 
+    const submitRSVP = async () => {
+      if (isGuestMode || !guest) {
+        // Guest self-RSVP: create guest record + RSVP in one call
+        const response = await api.post('/guests/rsvp-guest', {
+          event_id: eventId,
+          name: guestName.trim(),
+          email: guestEmailInput.trim(),
+          rsvp_status: rsvpStatus,
+          rsvp_comment: rsvpComment || undefined,
+          additional_guests: additionalGuests
+        });
+
+        setGuest(response.data);
+      } else {
+        // Existing guest RSVP update
+        await api.post(`/guests/${guest.id}/rsvp`, {
+          rsvp_status: rsvpStatus,
+          rsvp_comment: rsvpComment || undefined,
+          additional_guests: additionalGuests
+        });
+
+        fetchGuestInfo();
+
     const submitWithRetry = async (retryCount = 0): Promise<void> => {
       try {
         if (isGuestMode || !guest) {
@@ -125,6 +148,26 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
     };
 
     try {
+      await submitRSVP();
+      toast.success('RSVP submitted successfully!');
+      setShowForm(false);
+      onRSVPSubmit?.();
+    } catch (firstError: any) {
+      // Retry once on network/timeout errors (common with cold starts)
+      if (!firstError.response) {
+        try {
+          await submitRSVP();
+          toast.success('RSVP submitted successfully!');
+          setShowForm(false);
+          onRSVPSubmit?.();
+        } catch (retryError: any) {
+          const msg = retryError.response?.data?.error
+            || (retryError.code === 'ECONNABORTED' ? 'Request timed out. Please try again.' : 'Failed to submit RSVP. Please try again.');
+          toast.error(msg);
+        }
+      } else {
+        toast.error(firstError.response?.data?.error || 'Failed to submit RSVP. Please try again.');
+      }
       await submitWithRetry();
     } finally {
       setSubmitting(false);
