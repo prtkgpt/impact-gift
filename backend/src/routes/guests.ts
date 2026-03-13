@@ -477,8 +477,12 @@ router.post(
       console.log(`Guest self-RSVP: ${email} -> ${rsvp_status} for event ${event_id}`);
       res.status(201).json(result.rows[0]);
     } catch (error: any) {
-      console.error('Error in guest self-RSVP:', error);
-      res.status(500).json({ error: 'Failed to submit RSVP. Please try again.' });
+      console.error('Error in guest self-RSVP:', error.message, error.stack);
+      res.status(500).json({
+        error: 'Server error while submitting RSVP.',
+        code: error.code || 'UNKNOWN',
+        detail: error.detail || error.message
+      });
     }
   }
 );
