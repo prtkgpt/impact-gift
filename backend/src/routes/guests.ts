@@ -421,48 +421,79 @@ router.post(
 router.post(
   '/rsvp-guest',
   [
-    body('event_id').isInt(),
+    body('event_id').notEmpty().withMessage('Event ID is required'),
     body('name').trim().notEmpty().withMessage('Name is required'),
-    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('email').isEmail().withMessage('Valid email is required'),
     body('rsvp_status').isIn(['attending', 'not_attending', 'maybe']).withMessage('Invalid RSVP status'),
     body('rsvp_comment').optional().trim(),
     body('additional_guests').optional().isInt({ min: 0, max: 20 }).withMessage('Additional guests must be between 0 and 20')
   ],
   async (req: Request, res: Response) => {
+    console.log('=== RSVP-GUEST endpoint hit ===', JSON.stringify(req.body));
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.error('RSVP validation errors:', JSON.stringify(errors.array()));
         return res.status(400).json({ error: 'Invalid data', details: errors.array() });
       }
 
       const { event_id, name, email, rsvp_status, rsvp_comment, additional_guests } = req.body;
 
-      // Verify event exists and is active
-      const eventCheck = await query('SELECT id FROM events WHERE id = $1 AND is_active = true', [event_id]);
-      if (eventCheck.rows.length === 0) {
-        return res.status(404).json({ error: 'Event not found' });
-      }
+      console.log(`RSVP-GUEST: event_id=${event_id}, name=${name}, email=${email}, status=${rsvp_status}`);
 
-      // Upsert guest record and set RSVP in one query
-      const result = await query(
-        `INSERT INTO guests (event_id, email, name, rsvp_status, rsvp_comment, additional_guests, rsvp_at)
-         VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
-         ON CONFLICT (event_id, email) DO UPDATE
-         SET name = COALESCE(EXCLUDED.name, guests.name),
-             rsvp_status = EXCLUDED.rsvp_status,
-             rsvp_comment = EXCLUDED.rsvp_comment,
-             additional_guests = EXCLUDED.additional_guests,
-             rsvp_at = CURRENT_TIMESTAMP,
-             updated_at = CURRENT_TIMESTAMP
-         RETURNING *`,
-        [event_id, email, name, rsvp_status, rsvp_comment || null, additional_guests || 0]
+      // Verify event exists and is active
+      const eventCheck = await query('SELECT id, is_active FROM events WHERE id = $1', [event_id]);
+      if (eventCheck.rows.length === 0) {
+        console.error(`RSVP-GUEST: Event ${event_id} not found`);
+        return res.status(404).json({ error: `Event ${event_id} not found` });
+      }
+      const eventRow = eventCheck.rows[0];
+      if (eventRow.is_active === false) {
+        console.error(`RSVP-GUEST: Event ${event_id} is inactive`);
+        return res.status(400).json({ error: 'This event is no longer accepting RSVPs' });
+      }
+      console.log(`RSVP-GUEST: Event found, is_active=${eventRow.is_active}`);
+
+      // Check if guest already exists for this event
+      const existingGuest = await query(
+        'SELECT id FROM guests WHERE event_id = $1 AND LOWER(email) = LOWER($2)',
+        [event_id, email]
       );
 
-      console.log(`✅ Guest self-RSVP: ${email} -> ${rsvp_status} for event ${event_id}`);
+      let result;
+      if (existingGuest.rows.length > 0) {
+        // Update existing guest
+        result = await query(
+          `UPDATE guests
+           SET name = COALESCE($1, name),
+               rsvp_status = $2,
+               rsvp_comment = $3,
+               additional_guests = $4,
+               rsvp_at = CURRENT_TIMESTAMP,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $5
+           RETURNING *`,
+          [name, rsvp_status, rsvp_comment || null, additional_guests || 0, existingGuest.rows[0].id]
+        );
+      } else {
+        // Insert new guest
+        result = await query(
+          `INSERT INTO guests (event_id, email, name, rsvp_status, rsvp_comment, additional_guests, rsvp_at)
+           VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+           RETURNING *`,
+          [event_id, email, name, rsvp_status, rsvp_comment || null, additional_guests || 0]
+        );
+      }
+
+      console.log(`Guest self-RSVP: ${email} -> ${rsvp_status} for event ${event_id}`);
       res.status(201).json(result.rows[0]);
     } catch (error: any) {
-      console.error('Error in guest self-RSVP:', error);
-      res.status(500).json({ error: 'Failed to submit RSVP. Please try again.' });
+      console.error('Error in guest self-RSVP:', error.message, error.stack);
+      res.status(500).json({
+        error: 'Server error while submitting RSVP.',
+        code: error.code || 'UNKNOWN',
+        detail: error.detail || error.message
+      });
     }
   }
 );

@@ -34,6 +34,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false, // CSP not needed for an API server
 }));
 app.use(compression()); // Enable gzip compression for responses
 
