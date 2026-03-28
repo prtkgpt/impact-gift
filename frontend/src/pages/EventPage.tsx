@@ -26,6 +26,7 @@ const EventPage = () => {
   const [loading, setLoading] = useState(true);
   const [showDonationForm, setShowDonationForm] = useState(false);
   const [guestEmail, setGuestEmail] = useState<string | null>(null);
+  const [guestListRefreshTrigger, setGuestListRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (slug) {
@@ -409,13 +410,13 @@ const EventPage = () => {
                 guestEmail={guestEmail}
                 eventId={event.id}
                 onRSVPSubmit={() => {
-                  // RSVP submitted successfully
-                  toast.success('RSVP submitted!');
+                  // RSVP submitted successfully - refresh guest list
+                  setGuestListRefreshTrigger(prev => prev + 1);
                 }}
               />
             )}
 
-            {event.show_guest_list && <AttendingGuests eventSlug={event.slug} />}
+            {event.show_guest_list && <AttendingGuests eventSlug={event.slug} refreshTrigger={guestListRefreshTrigger} />}
 
             {event.potluck_enabled && <PotluckItems eventId={event.id} />}
             {event.potluck_enabled === undefined && (

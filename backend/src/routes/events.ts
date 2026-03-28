@@ -217,6 +217,71 @@ router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) =
   }
 });
 
+router.get('/:slug/donations', async (req: Request, res: Response) => {
+  try {
+    const { slug } = req.params;
+
+    const eventResult = await query('SELECT id, event_date, created_at as event_created_at FROM events WHERE slug = $1', [slug]);
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const event = eventResult.rows[0];
+
+    const result = await query(
+      `SELECT id, donor_name, donor_email, amount, message, created_at,
+              has_employer_match, employer_name, match_status, status
+       FROM donations
+       WHERE event_id = $1 AND status IN ('completed', 'committed')
+       ORDER BY amount DESC, created_at ASC`,
+      [event.id]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching donations:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get public attending guest list for an event (only if show_guest_list is enabled)
+router.get('/:slug/attending-guests', async (req, res: Response) => {
+  try {
+    const { slug } = req.params;
+
+    // Get event and check if guest list is public
+    const eventResult = await query(
+      'SELECT id, show_guest_list FROM events WHERE slug = $1',
+      [slug]
+    );
+
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const event = eventResult.rows[0];
+
+    if (!event.show_guest_list) {
+      return res.json([]); // Return empty array if guest list is private
+    }
+
+    // Fetch only attending guests with additional_guests count
+    const guestsResult = await query(
+      `SELECT name, rsvp_comment, rsvp_at, additional_guests
+       FROM guests
+       WHERE event_id = $1 AND rsvp_status = 'attending'
+       ORDER BY rsvp_at DESC`,
+      [event.id]
+    );
+
+    res.json(guestsResult.rows);
+  } catch (error) {
+    console.error('Error fetching attending guests:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get event by slug (must come AFTER specific routes like /:slug/donations and /:slug/attending-guests)
 router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
   try {
     const { slug } = req.params;
@@ -412,70 +477,6 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
     res.json(event);
   } catch (error) {
     console.error('[GET /:slug] ERROR:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-router.get('/:slug/donations', async (req: Request, res: Response) => {
-  try {
-    const { slug } = req.params;
-
-    const eventResult = await query('SELECT id, event_date, created_at as event_created_at FROM events WHERE slug = $1', [slug]);
-    if (eventResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
-    const event = eventResult.rows[0];
-
-    const result = await query(
-      `SELECT id, donor_name, donor_email, amount, message, created_at,
-              has_employer_match, employer_name, match_status, status
-       FROM donations
-       WHERE event_id = $1 AND status IN ('completed', 'committed')
-       ORDER BY amount DESC, created_at ASC`,
-      [event.id]
-    );
-
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error fetching donations:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Get public attending guest list for an event (only if show_guest_list is enabled)
-router.get('/:slug/attending-guests', async (req, res: Response) => {
-  try {
-    const { slug } = req.params;
-
-    // Get event and check if guest list is public
-    const eventResult = await query(
-      'SELECT id, show_guest_list FROM events WHERE slug = $1',
-      [slug]
-    );
-
-    if (eventResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
-    const event = eventResult.rows[0];
-
-    if (!event.show_guest_list) {
-      return res.json([]); // Return empty array if guest list is private
-    }
-
-    // Fetch only attending guests with additional_guests count
-    const guestsResult = await query(
-      `SELECT name, rsvp_comment, rsvp_at, additional_guests
-       FROM guests
-       WHERE event_id = $1 AND rsvp_status = 'attending'
-       ORDER BY rsvp_at DESC`,
-      [event.id]
-    );
-
-    res.json(guestsResult.rows);
-  } catch (error) {
-    console.error('Error fetching attending guests:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

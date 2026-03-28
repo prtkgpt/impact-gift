@@ -10,15 +10,16 @@ interface AttendingGuest {
 
 interface AttendingGuestsProps {
   eventSlug: string;
+  refreshTrigger?: number;
 }
 
-const AttendingGuests = ({ eventSlug }: AttendingGuestsProps) => {
+const AttendingGuests = ({ eventSlug, refreshTrigger }: AttendingGuestsProps) => {
   const [guests, setGuests] = useState<AttendingGuest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAttendingGuests();
-  }, [eventSlug]);
+  }, [eventSlug, refreshTrigger]);
 
   const fetchAttendingGuests = async () => {
     try {
