@@ -26,8 +26,10 @@ const RequestCharityModal = ({ onClose, onSuccess }: RequestCharityModalProps) =
   const [formData, setFormData] = useState({
     charity_name: '',
     website_url: '',
-    description: '',
+    donation_url: '',
+    payment_info: '',
     category: '',
+    description: '',
     contact_email: '',
     reason: ''
   });
@@ -108,7 +110,7 @@ const RequestCharityModal = ({ onClose, onSuccess }: RequestCharityModalProps) =
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Website URL *
+                Charity Website *
               </label>
               <input
                 type="url"
@@ -125,7 +127,40 @@ const RequestCharityModal = ({ onClose, onSuccess }: RequestCharityModalProps) =
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
+                Charity Donation Page *
+              </label>
+              <input
+                type="url"
+                required
+                className="input"
+                placeholder="https://www.example.org/donate"
+                value={formData.donation_url}
+                onChange={(e) => setFormData({ ...formData, donation_url: e.target.value })}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Direct link where the "Donate Now" button should take users
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Alternative Payment Link (Optional)
+              </label>
+              <input
+                type="text"
+                className="input"
+                placeholder="venmo.com/yourname or $cashapp"
+                value={formData.payment_info}
+                onChange={(e) => setFormData({ ...formData, payment_info: e.target.value })}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                For charities without online donations - your Venmo, CashApp, or other payment link
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category (Optional)
               </label>
               <select
                 className="input"
@@ -158,10 +193,11 @@ const RequestCharityModal = ({ onClose, onSuccess }: RequestCharityModalProps) =
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Your Email (Optional)
+                Your Email *
               </label>
               <input
                 type="email"
+                required
                 className="input"
                 placeholder="your@email.com"
                 value={formData.contact_email}

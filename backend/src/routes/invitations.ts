@@ -35,8 +35,8 @@ router.get('/template/:eventId', authenticate, async (req: AuthRequest, res: Res
     if (result.rows.length === 0) {
       return res.json({
         event_id: eventId,
-        subject: `You're invited to support my ${eventCheck.rows[0].title}!`,
-        body: `Dear Family and Friends,\n\nI'm so excited to celebrate my ${eventCheck.rows[0].title} with you!\n\nI would humbly request that you please don't bring any kind of gift (boxed or otherwise). Your presence and blessings would be the best gift.\n\nI know not everyone heeds such requests :) So if you must give a gift, may I request you please make a donation to the charities that I support.\n\nThank you so much. Look forward to celebrating with you!\n\nWith love,\n{{YOUR_NAME}}`,
+        subject: `You're invited to my ${eventCheck.rows[0].title}!`,
+        body: `Dear Family and Friends,\n\nI'm so excited to celebrate my ${eventCheck.rows[0].title} with you!\n\nYour presence and blessings would be the best gift.\n\nView the invitation for event details and to RSVP: {{EVENT_LINK}}\n\nLook forward to celebrating with you!\n\nWith love,\n{{YOUR_NAME}}`,
         is_default: true
       });
     }
@@ -160,8 +160,8 @@ router.post(
         bodyTemplate = templateResult.rows[0].body;
       } else {
         // Use default template
-        subject = `You're invited to support my ${event.title}!`;
-        bodyTemplate = `Dear Family and Friends,\n\nI'm so excited to celebrate my ${event.title} with you!\n\nI would humbly request that you please don't bring any kind of gift (boxed or otherwise). Your presence and blessings would be the best gift.\n\nI know not everyone heeds such requests :) So if you must give a gift, may I request you please make a donation to the charities that I support.\n\nThank you so much. Look forward to celebrating with you!\n\nWith love,\n{{YOUR_NAME}}`;
+        subject = `You're invited to my ${event.title}!`;
+        bodyTemplate = `Dear Family and Friends,\n\nI'm so excited to celebrate my ${event.title} with you!\n\nYour presence and blessings would be the best gift.\n\nView the invitation for event details and to RSVP: {{EVENT_LINK}}\n\nLook forward to celebrating with you!\n\nWith love,\n{{YOUR_NAME}}`;
       }
 
       // Get guests who haven't been sent an invitation yet
@@ -266,27 +266,12 @@ router.post(
             </td>
           </tr>
 
-          <!-- CTA Buttons -->
+          <!-- CTA Button -->
           <tr>
             <td style="padding: 20px 40px; text-align: center;">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td align="center">
-                    <a href="${eventUrl}" style="display: inline-block; padding: 16px 32px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin: 10px;">
-                      View Invitation
-                    </a>
-                  </td>
-                </tr>
-                ${hasCharities ? `
-                <tr>
-                  <td align="center" style="padding-top: 10px;">
-                    <a href="${eventUrl}" style="display: inline-block; padding: 12px 24px; background-color: white; color: #22c55e; text-decoration: none; border: 2px solid #22c55e; border-radius: 8px; font-size: 16px; font-weight: 600; margin: 10px;">
-                      RSVP Now
-                    </a>
-                  </td>
-                </tr>
-                ` : ''}
-              </table>
+              <a href="${eventUrl}" style="display: inline-block; padding: 16px 32px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin: 10px;">
+                View Invitation
+              </a>
             </td>
           </tr>
 
@@ -549,27 +534,12 @@ router.post(
             </td>
           </tr>
 
-          <!-- CTA Buttons -->
+          <!-- CTA Button -->
           <tr>
             <td style="padding: 20px 40px; text-align: center;">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td align="center">
-                    <a href="${eventUrl}" style="display: inline-block; padding: 16px 32px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin: 10px;">
-                      View Invitation
-                    </a>
-                  </td>
-                </tr>
-                ${hasCharities ? `
-                <tr>
-                  <td align="center" style="padding-top: 10px;">
-                    <a href="${eventUrl}" style="display: inline-block; padding: 12px 24px; background-color: white; color: #22c55e; text-decoration: none; border: 2px solid #22c55e; border-radius: 8px; font-size: 16px; font-weight: 600; margin: 10px;">
-                      RSVP Now
-                    </a>
-                  </td>
-                </tr>
-                ` : ''}
-              </table>
+              <a href="${eventUrl}" style="display: inline-block; padding: 16px 32px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin: 10px;">
+                View Invitation
+              </a>
             </td>
           </tr>
 

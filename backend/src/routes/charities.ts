@@ -91,6 +91,8 @@ router.post('/request', async (req: AuthRequest, res: Response) => {
     const {
       charity_name,
       website_url,
+      donation_url,
+      payment_info,
       description,
       category,
       contact_email,
@@ -98,9 +100,9 @@ router.post('/request', async (req: AuthRequest, res: Response) => {
     } = req.body;
 
     // Validate required fields
-    if (!charity_name || !website_url || !description) {
+    if (!charity_name || !website_url || !donation_url || !description || !contact_email) {
       return res.status(400).json({
-        error: 'Missing required fields: charity_name, website_url, and description are required'
+        error: 'Missing required fields: charity_name, website_url, donation_url, description, and contact_email are required'
       });
     }
 
@@ -112,14 +114,16 @@ router.post('/request', async (req: AuthRequest, res: Response) => {
         user_id,
         charity_name,
         website_url,
+        donation_url,
+        payment_info,
         description,
         category,
         contact_email,
         reason,
         status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending')
       RETURNING *`,
-      [user_id, charity_name, website_url, description, category, contact_email, reason]
+      [user_id, charity_name, website_url, donation_url, payment_info, description, category, contact_email, reason]
     );
 
     res.status(201).json({
