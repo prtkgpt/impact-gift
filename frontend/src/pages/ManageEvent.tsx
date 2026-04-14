@@ -387,7 +387,7 @@ const ManageEvent = () => {
     try {
       const eventData = {
         ...formData,
-        charity_ids: selectedCharityIds.length > 0 ? selectedCharityIds : undefined,
+        charity_ids: selectedCharityIds,
         start_date: formData.event_date,
         end_date: formData.event_date,
         potluck_enabled: formData.potluck_enabled
