@@ -151,8 +151,18 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess, showCloseButton = 
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Only show header if multiple charities */}
-      {charities.length > 1 && (
+      {/* Show header with appropriate message */}
+      {charities.length === 1 ? (
+        <div className="bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200 rounded-xl p-4 sm:p-5 shadow-sm">
+          <h3 className="text-sm sm:text-base font-bold text-primary-900 mb-2 flex items-center">
+            <span className="text-xl sm:text-2xl mr-2">💝</span>
+            Donate to My Favorite Charity
+          </h3>
+          <p className="text-xs sm:text-sm text-primary-800 leading-relaxed">
+            Enter your donation amount to donate directly on their website.
+          </p>
+        </div>
+      ) : charities.length > 1 ? (
         <div className="bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200 rounded-xl p-4 sm:p-5 shadow-sm">
           <h3 className="text-sm sm:text-base font-bold text-primary-900 mb-2 flex items-center">
             <span className="text-xl sm:text-2xl mr-2">💝</span>
@@ -162,7 +172,7 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess, showCloseButton = 
             Select a charity below and enter your donation amount to donate directly on their website.
           </p>
         </div>
-      )}
+      ) : null}
 
       <div className="space-y-3">
         {charities.length === 0 ? (
