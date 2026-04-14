@@ -453,15 +453,49 @@ const EventPage = () => {
                       <>
                         {!showDonationForm ? (
                           <div className="mt-4 pt-4 border-t border-gray-200">
-                            <p className="text-xs text-gray-500 mb-3 text-center">
-                              In lieu of gifts, consider a donation
+                            <p className="text-sm font-semibold text-gray-700 mb-3">
+                              My Favorite Charities
                             </p>
-                            <button
-                              onClick={() => setShowDonationForm(true)}
-                              className="w-full bg-white border-2 border-primary-500 text-primary-600 hover:bg-primary-50 font-semibold text-sm py-2.5 px-4 rounded-lg transition-colors"
-                            >
-                              💝 Make a Donation
-                            </button>
+                            <div className="space-y-2">
+                              {event.charities.map((charity) => (
+                                <button
+                                  key={charity.id}
+                                  onClick={() => setShowDonationForm(true)}
+                                  className="w-full bg-white border border-gray-200 hover:border-primary-400 hover:bg-primary-50 rounded-lg p-3 transition-all text-left group"
+                                >
+                                  <div className="flex items-start gap-3">
+                                    {charity.logo_url && (
+                                      <img
+                                        src={charity.logo_url}
+                                        alt={charity.name}
+                                        className="w-10 h-10 rounded object-contain flex-shrink-0 bg-white"
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = 'none';
+                                        }}
+                                      />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="text-sm font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
+                                        {charity.name}
+                                      </h4>
+                                      <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">
+                                        {charity.description}
+                                      </p>
+                                      {charity.custom_instructions && (
+                                        <p className="text-xs text-primary-600 mt-1 italic">
+                                          "{charity.custom_instructions}"
+                                        </p>
+                                      )}
+                                    </div>
+                                    <div className="text-primary-500 group-hover:text-primary-600 transition-colors flex-shrink-0">
+                                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         ) : (
                           <DonationMethodSelector
