@@ -23,9 +23,6 @@ const EditEvent = () => {
     description: '',
     event_type: 'birthday',
     event_date: '',
-    start_date: '',
-    end_date: '',
-    goal_amount: undefined as number | undefined,
     show_guest_list: false,
     potluck_enabled: false
   });
@@ -47,9 +44,6 @@ const EditEvent = () => {
         description: event.description || '',
         event_type: event.event_type,
         event_date: event.event_date.split('T')[0],
-        start_date: event.start_date ? event.start_date.split('T')[0] : '',
-        end_date: event.end_date ? event.end_date.split('T')[0] : '',
-        goal_amount: event.goal_amount ? Number(event.goal_amount) : undefined,
         show_guest_list: event.show_guest_list || false,
         potluck_enabled: event.potluck_enabled || false
       });
@@ -109,8 +103,8 @@ const EditEvent = () => {
       const eventData = {
         ...formData,
         charity_ids: selectedCharityIds.length > 0 ? selectedCharityIds : undefined,
-        start_date: formData.start_date || formData.event_date,
-        end_date: formData.end_date || formData.event_date,
+        start_date: formData.event_date,
+        end_date: formData.event_date,
         potluck_enabled: formData.potluck_enabled
       };
 
@@ -292,41 +286,6 @@ const EditEvent = () => {
             </div>
           </div>
 
-          {/* Start and End Dates */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-1">
-                Fundraising Start Date
-              </label>
-              <input
-                id="start_date"
-                type="date"
-                className="input"
-                value={formData.start_date}
-                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Defaults to event date if not specified
-              </p>
-            </div>
-
-            <div>
-              <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-1">
-                Fundraising End Date
-              </label>
-              <input
-                id="end_date"
-                type="date"
-                className="input"
-                value={formData.end_date}
-                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Event will auto-close after this date
-              </p>
-            </div>
-          </div>
-
           {/* Select Multiple Charities */}
           <div>
             <div className="flex items-center justify-between mb-3">
@@ -375,34 +334,6 @@ const EditEvent = () => {
             </div>
             <p className="text-sm text-gray-600 mt-2">
               {selectedCharityIds.length} {selectedCharityIds.length === 1 ? 'charity' : 'charities'} selected
-            </p>
-          </div>
-
-          {/* Goal Amount */}
-          <div>
-            <label htmlFor="goal_amount" className="block text-sm font-medium text-gray-700 mb-1">
-              Fundraising Goal (Optional)
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-500">$</span>
-              <input
-                id="goal_amount"
-                type="number"
-                min="0"
-                step="0.01"
-                className="input pl-7"
-                placeholder="500.00"
-                value={formData.goal_amount || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    goal_amount: e.target.value ? Number(e.target.value) : undefined
-                  })
-                }
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Set a fundraising goal to track progress (optional)
             </p>
           </div>
 

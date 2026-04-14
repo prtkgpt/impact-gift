@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { Charity, CreateEventInput, EventTemplate, EventTheme } from '../types';
+import { Charity, CreateEventInput } from '../types';
 import toast from 'react-hot-toast';
 import RequestCharityModal from '../components/RequestCharityModal';
-import TemplateSelector from '../components/TemplateSelector';
-import ThemeSelector from '../components/ThemeSelector';
 import ImageUpload from '../components/ImageUpload';
 
 const CreateEvent = () => {
@@ -13,8 +11,6 @@ const CreateEvent = () => {
   const [loading, setLoading] = useState(false);
   const [selectedCharityIds, setSelectedCharityIds] = useState<number[]>([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<EventTemplate | null>(null);
-  const [selectedTheme, setSelectedTheme] = useState<EventTheme | null>(null);
   const [eventImage, setEventImage] = useState<{ url: string; publicId: string }>({ url: '', publicId: '' });
   const [formData, setFormData] = useState({
     title: '',
@@ -29,9 +25,6 @@ const CreateEvent = () => {
     host_name: '',
     host_phone: '',
     rsvp_deadline: '',
-    start_date: '',
-    end_date: '',
-    goal_amount: undefined as number | undefined,
     potluck_enabled: false
   });
   const navigate = useNavigate();
@@ -57,29 +50,6 @@ const CreateEvent = () => {
     );
   };
 
-  const handleTemplateSelect = (template: EventTemplate | null) => {
-    setSelectedTemplate(template);
-    if (template) {
-      // Auto-fill title and description with template defaults
-      if (template.default_title_template && !formData.title) {
-        setFormData(prev => ({
-          ...prev,
-          title: template.default_title_template?.replace('{name}', 'Your') || ''
-        }));
-      }
-      if (template.default_description_template && !formData.description) {
-        setFormData(prev => ({
-          ...prev,
-          description: template.default_description_template || ''
-        }));
-      }
-    }
-  };
-
-  const handleThemeSelect = (theme: EventTheme | null) => {
-    setSelectedTheme(theme);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -89,11 +59,9 @@ const CreateEvent = () => {
       const eventData: CreateEventInput = {
         ...formData,
         charity_ids: selectedCharityIds.length > 0 ? selectedCharityIds : undefined,
-        start_date: formData.start_date || formData.event_date,
-        end_date: formData.end_date || formData.event_date,
-        potluck_enabled: formData.potluck_enabled,
-        template_id: selectedTemplate?.id,
-        theme_id: selectedTheme?.id
+        start_date: formData.event_date,
+        end_date: formData.event_date,
+        potluck_enabled: formData.potluck_enabled
       };
 
       const response = await api.post('/events', eventData);
@@ -215,11 +183,12 @@ const CreateEvent = () => {
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="start_time" className="block text-sm font-medium text-gray-700 mb-1">
-                Start Time (Optional)
+                Start Time *
               </label>
               <input
                 id="start_time"
                 type="time"
+                required
                 className="input"
                 value={formData.start_time}
                 onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
@@ -247,11 +216,12 @@ const CreateEvent = () => {
             <div className="space-y-4">
               <div>
                 <label htmlFor="venue_name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Venue Name (Optional)
+                  Venue Name *
                 </label>
                 <input
                   id="venue_name"
                   type="text"
+                  required
                   className="input"
                   placeholder="e.g., Golden Gate Park, The Smith Residence"
                   value={formData.venue_name}
@@ -299,11 +269,12 @@ const CreateEvent = () => {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="host_name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Host Name (Optional)
+                  Host Name *
                 </label>
                 <input
                   id="host_name"
                   type="text"
+                  required
                   className="input"
                   placeholder="Your name or organization"
                   value={formData.host_name}
@@ -313,11 +284,12 @@ const CreateEvent = () => {
 
               <div>
                 <label htmlFor="host_phone" className="block text-sm font-medium text-gray-700 mb-1">
-                  Host Phone (Optional)
+                  Host Phone *
                 </label>
                 <input
                   id="host_phone"
                   type="tel"
+                  required
                   className="input"
                   placeholder="(555) 123-4567"
                   value={formData.host_phone}
@@ -342,58 +314,6 @@ const CreateEvent = () => {
             <p className="text-xs text-gray-500 mt-1">
               Set a date by which guests should respond
             </p>
-          </div>
-
-          {/* Start and End Dates */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-1">
-                Fundraising Start Date
-              </label>
-              <input
-                id="start_date"
-                type="date"
-                className="input"
-                value={formData.start_date}
-                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Defaults to event date if not specified
-              </p>
-            </div>
-
-            <div>
-              <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-1">
-                Fundraising End Date
-              </label>
-              <input
-                id="end_date"
-                type="date"
-                className="input"
-                value={formData.end_date}
-                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Event will auto-close after this date
-              </p>
-            </div>
-          </div>
-
-          {/* Template Selector */}
-          <div className="border-t pt-6">
-            <TemplateSelector
-              eventType={formData.event_type}
-              selectedTemplateId={selectedTemplate?.id}
-              onSelectTemplate={handleTemplateSelect}
-            />
-          </div>
-
-          {/* Theme Selector */}
-          <div className="border-t pt-6">
-            <ThemeSelector
-              selectedThemeId={selectedTheme?.id}
-              onSelectTheme={handleThemeSelect}
-            />
           </div>
 
           {/* Select Multiple Charities */}
@@ -444,34 +364,6 @@ const CreateEvent = () => {
             </div>
             <p className="text-sm text-gray-600 mt-2">
               {selectedCharityIds.length} {selectedCharityIds.length === 1 ? 'charity' : 'charities'} selected
-            </p>
-          </div>
-
-          {/* Goal Amount */}
-          <div>
-            <label htmlFor="goal_amount" className="block text-sm font-medium text-gray-700 mb-1">
-              Fundraising Goal (Optional)
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-500">$</span>
-              <input
-                id="goal_amount"
-                type="number"
-                min="0"
-                step="0.01"
-                className="input pl-7"
-                placeholder="500.00"
-                value={formData.goal_amount || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    goal_amount: e.target.value ? Number(e.target.value) : undefined
-                  })
-                }
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Set a fundraising goal to track progress (optional)
             </p>
           </div>
 
