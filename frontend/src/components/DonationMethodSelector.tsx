@@ -7,9 +7,10 @@ interface DonationMethodSelectorProps {
   event: Event;
   onCancel: () => void;
   onSuccess?: () => void;
+  showCloseButton?: boolean;
 }
 
-const DonationMethodSelector = ({ event, onCancel, onSuccess }: DonationMethodSelectorProps) => {
+const DonationMethodSelector = ({ event, onCancel, onSuccess, showCloseButton = true }: DonationMethodSelectorProps) => {
   const charities = event.charities || [];
   const [amounts, setAmounts] = useState<Record<number, string>>({});
   const [donorInfo, setDonorInfo] = useState({ name: '', email: '' });
@@ -240,12 +241,14 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess }: DonationMethodSe
         )}
       </div>
 
-      <button
-        onClick={onCancel}
-        className="btn btn-secondary w-full py-3 font-semibold hover:bg-gray-200 active:bg-gray-300 transition-colors rounded-xl touch-manipulation active:scale-95"
-      >
-        Close
-      </button>
+      {showCloseButton && (
+        <button
+          onClick={onCancel}
+          className="btn btn-secondary w-full py-3 font-semibold hover:bg-gray-200 active:bg-gray-300 transition-colors rounded-xl touch-manipulation active:scale-95"
+        >
+          Close
+        </button>
+      )}
     </div>
   );
 };
