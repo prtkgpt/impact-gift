@@ -5,6 +5,7 @@ import { Charity, CreateEventInput } from '../types';
 import toast from 'react-hot-toast';
 import RequestCharityModal from '../components/RequestCharityModal';
 import EventImageSelector from '../components/EventImageSelector';
+import EventPhotosUploader, { EventPhoto } from '../components/EventPhotosUploader';
 
 const CreateEvent = () => {
   const [charities, setCharities] = useState<Charity[]>([]);
@@ -12,6 +13,7 @@ const CreateEvent = () => {
   const [selectedCharityIds, setSelectedCharityIds] = useState<number[]>([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [eventImage, setEventImage] = useState<{ url: string; publicId: string }>({ url: '', publicId: '' });
+  const [attirePhotos, setAttirePhotos] = useState<EventPhoto[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -77,6 +79,24 @@ const CreateEvent = () => {
           });
         } catch (imgError) {
           console.error('Failed to save event image:', imgError);
+          // Don't fail the entire operation, just log it
+        }
+      }
+
+      // Upload attire photos if any were selected
+      if (attirePhotos.length > 0) {
+        try {
+          for (const photo of attirePhotos) {
+            await api.post('/event-photos/save', {
+              event_id: eventId,
+              photo_url: photo.photo_url,
+              photo_public_id: photo.photo_public_id,
+              category: 'attire',
+              caption: photo.caption || null
+            });
+          }
+        } catch (photoError) {
+          console.error('Failed to save attire photos:', photoError);
           // Don't fail the entire operation, just log it
         }
       }
@@ -261,23 +281,40 @@ const CreateEvent = () => {
                 </p>
               </div>
 
-              <div>
-                <label htmlFor="dress_code" className="block text-sm font-medium text-gray-700 mb-1">
-                  Dress Code (Optional)
-                </label>
-                <input
-                  id="dress_code"
-                  type="text"
-                  className="input"
-                  placeholder="e.g., Western Casual, Indian Ethnic, Formal"
-                  value={formData.dress_code}
-                  onChange={(e) => setFormData({ ...formData, dress_code: e.target.value })}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Help guests dress appropriately for your event
-                </p>
-              </div>
             </div>
+          </div>
+
+          {/* Dress Code */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Dress Code (Optional)</h3>
+
+            {/* Dress Code Text */}
+            <div className="mb-6">
+              <label htmlFor="dress_code" className="block text-sm font-medium text-gray-700 mb-1">
+                Dress Code Description
+              </label>
+              <input
+                id="dress_code"
+                type="text"
+                className="input"
+                placeholder="e.g., Western Casual, Indian Ethnic, Formal"
+                value={formData.dress_code}
+                onChange={(e) => setFormData({ ...formData, dress_code: e.target.value })}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Help guests dress appropriately for your event
+              </p>
+            </div>
+
+            {/* Dress Code Example Photos */}
+            <EventPhotosUploader
+              photos={attirePhotos}
+              onChange={setAttirePhotos}
+              category="attire"
+              maxPhotos={6}
+              label="Dress Code Example Photos"
+              helpText="Upload outfit examples, color schemes, or theme inspiration photos to help guests visualize the dress code"
+            />
           </div>
 
           {/* Host Contact Info */}

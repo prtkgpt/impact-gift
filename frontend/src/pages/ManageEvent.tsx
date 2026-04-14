@@ -261,6 +261,34 @@ const ManageEvent = () => {
     }
   };
 
+  const sendEventUpdate = async () => {
+    if (!event) return;
+
+    const invitedGuests = guests.filter(g => g.invitation_sent);
+    if (invitedGuests.length === 0) {
+      toast.error('No guests have been invited yet');
+      return;
+    }
+
+    const message = prompt(
+      `Send event update to ${invitedGuests.length} invited guest(s)?\n\nEnter an optional message about the update (or leave blank):`
+    );
+
+    // User cancelled
+    if (message === null) return;
+
+    try {
+      const response = await api.post('/invitations/send-update', {
+        event_id: event.id,
+        update_message: message || undefined
+      });
+
+      toast.success(response.data.message);
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to send event update');
+    }
+  };
+
   const renderEmailPreview = () => {
     if (!event) return '';
 
@@ -348,6 +376,13 @@ const ManageEvent = () => {
               disabled={pendingInvites === 0}
             >
               📧 Send Invitation{pendingInvites !== 1 && pendingInvites > 0 ? 's' : ''} {pendingInvites > 0 && `(${pendingInvites})`}
+            </button>
+            <button
+              onClick={sendEventUpdate}
+              className="btn btn-secondary"
+              disabled={guests.filter(g => g.invitation_sent).length === 0}
+            >
+              🔔 Send Event Update
             </button>
           </div>
         </div>

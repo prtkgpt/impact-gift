@@ -631,4 +631,214 @@ router.post(
   }
 );
 
+// Send event update email to all invited guests
+router.post(
+  '/send-update',
+  authenticate,
+  [
+    body('event_id').isInt(),
+    body('update_message').optional().trim()
+  ],
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { event_id, update_message } = req.body;
+
+      // Verify the user is owner or accepted co-host
+      const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id, req.user!.email);
+      if (!hasAccess) {
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+
+      // Get event details
+      const eventResult = await query(
+        `SELECT e.*, u.first_name, u.last_name, u.email as user_email
+         FROM events e
+         JOIN users u ON e.user_id = u.id
+         WHERE e.id = $1`,
+        [event_id]
+      );
+
+      if (eventResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+
+      const event = eventResult.rows[0];
+
+      // Get all guests who have already been sent invitations
+      const guestsResult = await query(
+        `SELECT * FROM guests
+         WHERE event_id = $1 AND invitation_sent = true
+         ORDER BY created_at`,
+        [event_id]
+      );
+
+      const guests = guestsResult.rows;
+
+      if (guests.length === 0) {
+        return res.status(400).json({ error: 'No guests have been invited yet' });
+      }
+
+      const eventUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/event/${event.slug}`;
+      const senderName = `${event.first_name} ${event.last_name}`;
+
+      const defaultMessage = update_message || `We've made some updates to the event! Check out the latest details on the event page.`;
+
+      let sentCount = 0;
+      const errors_list: any[] = [];
+
+      // Send update email to each guest
+      for (const guest of guests) {
+        try {
+          const subject = `Event Update: ${event.title}`;
+
+          const htmlEmail = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+
+          <!-- Header with Event Update Badge -->
+          <tr>
+            <td style="padding: 40px 40px 30px 40px; text-align: center; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+              <div style="display: inline-block; background-color: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; margin-bottom: 16px;">
+                <p style="margin: 0; font-size: 12px; color: white; font-weight: 600; letter-spacing: 1px;">EVENT UPDATE</p>
+              </div>
+              <h1 style="margin: 0; font-size: 32px; color: white; font-weight: bold;">${event.title}</h1>
+            </td>
+          </tr>
+
+          <!-- Date & Location -->
+          <tr>
+            <td style="padding: 30px 40px; background-color: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+              ${event.event_date ? `
+              <div style="margin-bottom: 16px;">
+                <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280; font-weight: 600;">📅 DATE & TIME</p>
+                <p style="margin: 0; font-size: 16px; color: #1f2937;">${new Date(event.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                ${event.start_time ? `<p style="margin: 8px 0 0 0; font-size: 14px; color: #6b7280;">${event.start_time}${event.end_time ? ` - ${event.end_time}` : ''}</p>` : ''}
+              </div>
+              ` : ''}
+              ${event.venue_name ? `
+              <div>
+                <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280; font-weight: 600;">📍 VENUE</p>
+                <p style="margin: 0; font-size: 16px; color: #1f2937;">${event.venue_name}</p>
+                ${event.address ? `<p style="margin: 8px 0 0 0; font-size: 14px; color: #6b7280;">${event.address}</p>` : ''}
+              </div>
+              ` : ''}
+            </td>
+          </tr>
+
+          <!-- Update Message -->
+          <tr>
+            <td style="padding: 30px 40px;">
+              <p style="margin: 0 0 16px 0; font-size: 16px; color: #1f2937; line-height: 1.6;">
+                Hi there!
+              </p>
+              <div style="background-color: #dbeafe; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 4px; margin: 20px 0;">
+                <p style="margin: 0; font-size: 14px; color: #1e40af; line-height: 1.6;">
+                  ${defaultMessage.replace(/\n/g, '<br>')}
+                </p>
+              </div>
+              <p style="margin: 16px 0 0 0; font-size: 14px; color: #6b7280;">
+                ${senderName}
+              </p>
+            </td>
+          </tr>
+
+          <!-- CTA Button -->
+          <tr>
+            <td style="padding: 20px 40px; text-align: center;">
+              <a href="${eventUrl}" style="display: inline-block; padding: 16px 32px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin: 10px;">
+                View Event Details
+              </a>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px 40px; border-top: 1px solid #e5e7eb;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="50%" style="text-align: center; padding: 10px;">
+                    <a href="mailto:${event.user_email}" style="color: #6b7280; text-decoration: none; font-size: 14px;">
+                      <strong style="display: block; margin-bottom: 4px; color: #1f2937;">💬 Message Host</strong>
+                    </a>
+                  </td>
+                  <td width="50%" style="text-align: center; padding: 10px;">
+                    <a href="${eventUrl}" style="color: #6b7280; text-decoration: none; font-size: 14px;">
+                      <strong style="display: block; margin-bottom: 4px; color: #1f2937;">📅 View Full Details</strong>
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Branding -->
+          <tr>
+            <td style="padding: 20px; text-align: center; background-color: #f9fafb;">
+              <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+                Powered by <strong style="color: #22c55e;">Impact Gift</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+          `;
+
+          if (resend) {
+            await resend.emails.send({
+              from: 'Impact Gift <noreply@giftwithimpact.com>',
+              to: guest.email,
+              replyTo: event.user_email,
+              subject: subject,
+              text: `Event Update: ${event.title}\n\n${defaultMessage}\n\nView event: ${eventUrl}\n\n- ${senderName}`,
+              html: htmlEmail
+            });
+
+            console.log(`✅ Update email sent to ${guest.email}`);
+            sentCount++;
+          } else {
+            // Development mode - just count it
+            console.log(`[DEV MODE] Would send update email to ${guest.email}`);
+            sentCount++;
+          }
+        } catch (emailError: any) {
+          console.error(`❌ Failed to send update email to ${guest.email}:`, emailError);
+          errors_list.push({
+            email: guest.email,
+            error: emailError.message || 'Email delivery failed'
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        message: `Event update sent to ${sentCount} guest(s)`,
+        sent: sentCount,
+        total: guests.length,
+        errors: errors_list
+      });
+    } catch (error) {
+      console.error('Error sending event updates:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
 export default router;

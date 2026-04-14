@@ -317,24 +317,6 @@ const EditEvent = () => {
             </div>
           </div>
 
-          {/* Dress Code */}
-          <div>
-            <label htmlFor="dress_code" className="block text-sm font-medium text-gray-700 mb-1">
-              Dress Code (Optional)
-            </label>
-            <input
-              id="dress_code"
-              type="text"
-              className="input"
-              placeholder="e.g., Western Casual, Indian Ethnic, Formal"
-              value={formData.dress_code}
-              onChange={(e) => setFormData({ ...formData, dress_code: e.target.value })}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Help guests dress appropriately for your event
-            </p>
-          </div>
-
           {/* Select Multiple Charities */}
           <div>
             <div className="flex items-center justify-between mb-3">
@@ -386,16 +368,37 @@ const EditEvent = () => {
             </p>
           </div>
 
-          {/* Dress Code / Attire Photos */}
+          {/* Dress Code */}
           <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Dress Code (Optional)</h3>
+
+            {/* Dress Code Text */}
+            <div className="mb-6">
+              <label htmlFor="dress_code" className="block text-sm font-medium text-gray-700 mb-1">
+                Dress Code Description
+              </label>
+              <input
+                id="dress_code"
+                type="text"
+                className="input"
+                placeholder="e.g., Western Casual, Indian Ethnic, Formal"
+                value={formData.dress_code}
+                onChange={(e) => setFormData({ ...formData, dress_code: e.target.value })}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Help guests dress appropriately for your event
+              </p>
+            </div>
+
+            {/* Dress Code Example Photos */}
             <EventPhotosUploader
               eventId={eventId || undefined}
               photos={attirePhotos}
               onChange={setAttirePhotos}
               category="attire"
               maxPhotos={6}
-              label="Dress Code Examples (Optional)"
-              helpText="Help guests dress appropriately - upload outfit examples, color schemes, or theme inspiration photos"
+              label="Dress Code Example Photos"
+              helpText="Upload outfit examples, color schemes, or theme inspiration photos to help guests visualize the dress code"
             />
           </div>
 
