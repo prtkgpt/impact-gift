@@ -292,7 +292,7 @@ With love,
           <tr>
             <td style="padding: 20px 40px; text-align: center;">
               <a href="${eventUrl}" style="display: inline-block; padding: 16px 32px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin: 10px;">
-                View Event
+                View Invitation
               </a>
             </td>
           </tr>
@@ -571,7 +571,7 @@ With love,
           <tr>
             <td style="padding: 20px 40px; text-align: center;">
               <a href="${eventUrl}" style="display: inline-block; padding: 16px 32px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin: 10px;">
-                View Event
+                View Invitation
               </a>
             </td>
           </tr>
@@ -793,7 +793,7 @@ router.post(
           <tr>
             <td style="padding: 20px 40px; text-align: center;">
               <a href="${eventUrl}" style="display: inline-block; padding: 16px 32px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin: 10px;">
-                View Event Details
+                View Invitation
               </a>
             </td>
           </tr>

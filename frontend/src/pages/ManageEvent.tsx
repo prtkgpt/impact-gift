@@ -52,6 +52,10 @@ const ManageEvent = () => {
   const [editEmail, setEditEmail] = useState('');
   const [editName, setEditName] = useState('');
 
+  // Send event update modal state
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState('');
+
   // Event Details tab state
   const [formData, setFormData] = useState({
     title: '',
@@ -72,7 +76,6 @@ const ManageEvent = () => {
   });
   const [eventImage, setEventImage] = useState<{ url: string; publicId: string }>({ url: '', publicId: '' });
   const [attirePhotos, setAttirePhotos] = useState<EventPhoto[]>([]);
-  const [eventMemoriesPhotos, setEventMemoriesPhotos] = useState<EventPhoto[]>([]);
   const [saveLoading, setSaveLoading] = useState(false);
 
   // Charities tab state
@@ -183,16 +186,6 @@ const ManageEvent = () => {
         }
       } catch (photoError) {
         console.log('No attire photos found');
-      }
-
-      // Fetch event memories photos
-      try {
-        const memoriesResponse = await api.get(`/event-photos/event/${eventRes.data.id}?category=event_photos`);
-        if (memoriesResponse.data.success) {
-          setEventMemoriesPhotos(memoriesResponse.data.photos);
-        }
-      } catch (photoError) {
-        console.log('No event photos found');
       }
 
       // Fetch charities list
@@ -376,7 +369,7 @@ const ManageEvent = () => {
     }
   };
 
-  const sendEventUpdate = async () => {
+  const openUpdateModal = () => {
     if (!event) return;
 
     const invitedGuests = guests.filter(g => g.invitation_sent);
@@ -385,20 +378,21 @@ const ManageEvent = () => {
       return;
     }
 
-    const message = prompt(
-      `Send event update to ${invitedGuests.length} invited guest(s)?\n\nEnter an optional message about the update (or leave blank):`
-    );
+    setShowUpdateModal(true);
+  };
 
-    // User cancelled
-    if (message === null) return;
+  const sendEventUpdate = async () => {
+    if (!event) return;
 
     try {
       const response = await api.post('/invitations/send-update', {
         event_id: event.id,
-        update_message: message || undefined
+        update_message: updateMessage || undefined
       });
 
       toast.success(response.data.message);
+      setShowUpdateModal(false);
+      setUpdateMessage('');
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to send event update');
     }
@@ -459,37 +453,9 @@ const ManageEvent = () => {
         }
       }
 
-      // Save new event memories photos
-      const newMemoriesPhotos = eventMemoriesPhotos.filter(photo => !photo.id);
-      if (newMemoriesPhotos.length > 0) {
-        const photosToSave = newMemoriesPhotos.map(photo => ({
-          imageUrl: photo.photo_url,
-          publicId: photo.photo_public_id,
-          category: 'event_photos',
-          caption: photo.caption || ''
-        }));
-
-        try {
-          await api.post(`/event-photos/event/${event.id}`, { photos: photosToSave });
-        } catch (photoError) {
-          console.error('Error saving event photos:', photoError);
-        }
-      }
-
       // Update captions for existing photos
       const existingAttirePhotos = attirePhotos.filter(photo => photo.id);
       for (const photo of existingAttirePhotos) {
-        if (photo.id) {
-          try {
-            await api.put(`/event-photos/${photo.id}/caption`, { caption: photo.caption || '' });
-          } catch (captionError) {
-            console.error('Error updating photo caption:', captionError);
-          }
-        }
-      }
-
-      const existingMemoriesPhotos = eventMemoriesPhotos.filter(photo => photo.id);
-      for (const photo of existingMemoriesPhotos) {
         if (photo.id) {
           try {
             await api.put(`/event-photos/${photo.id}/caption`, { caption: photo.caption || '' });
@@ -593,7 +559,7 @@ const ManageEvent = () => {
               📧 Send Invitation{pendingInvites !== 1 && pendingInvites > 0 ? 's' : ''} {pendingInvites > 0 && `(${pendingInvites})`}
             </button>
             <button
-              onClick={sendEventUpdate}
+              onClick={openUpdateModal}
               className="btn btn-secondary"
               disabled={guests.filter(g => g.invitation_sent).length === 0}
             >
@@ -671,10 +637,10 @@ const ManageEvent = () => {
 
             {/* Event Image */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Event Image</label>
               <EventImageSelector
                 currentImageUrl={eventImage.url}
                 onImageUploaded={(url, publicId) => setEventImage({ url, publicId })}
+                label=""
               />
             </div>
 
@@ -903,19 +869,6 @@ const ManageEvent = () => {
                 maxPhotos={6}
                 label="Dress Code Example Photos"
                 helpText="Upload outfit examples, color schemes, or theme inspiration photos to help guests visualize the dress code"
-              />
-            </div>
-
-            {/* Event Memories Photos */}
-            <div className="border-t pt-6">
-              <EventPhotosUploader
-                eventId={event?.id}
-                photos={eventMemoriesPhotos}
-                onChange={setEventMemoriesPhotos}
-                category="event_photos"
-                maxPhotos={6}
-                label="Event Photos (Optional)"
-                helpText="Share photos from your event - upload memories, highlights, and special moments from the celebration"
               />
             </div>
 
@@ -1551,6 +1504,54 @@ const ManageEvent = () => {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Send Event Update Modal */}
+      {showUpdateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">Send Event Update</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Notify {guests.filter(g => g.invitation_sent).length} invited guest(s) about changes to your event
+              </p>
+            </div>
+
+            <div className="p-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Add a personal message (optional)
+              </label>
+              <textarea
+                value={updateMessage}
+                onChange={(e) => setUpdateMessage(e.target.value)}
+                placeholder="e.g., We've updated the event time. Looking forward to seeing you!"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+                rows={4}
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Guests will receive an email with the updated event details
+              </p>
+            </div>
+
+            <div className="p-6 bg-gray-50 rounded-b-2xl flex gap-3">
+              <button
+                onClick={() => {
+                  setShowUpdateModal(false);
+                  setUpdateMessage('');
+                }}
+                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={sendEventUpdate}
+                className="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                Send Update
+              </button>
+            </div>
           </div>
         </div>
       )}
