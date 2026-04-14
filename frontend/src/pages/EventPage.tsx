@@ -121,7 +121,6 @@ const EventPage = () => {
 
   const isOwner = user && event && user.id === event.user_id;
   const isCoHost = user && event && event.is_cohost === true;
-  const canManage = isOwner || isCoHost;
 
   const pageUrl = window.location.href;
   const shareTitle = `You're invited to ${event.title}`;
@@ -149,6 +148,35 @@ const EventPage = () => {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Top Navigation Bar */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span className="text-sm font-medium">Back</span>
+            </button>
+            {isOwner && (
+              <button
+                onClick={() => navigate(`/event/${event.slug}/manage`)}
+                className="flex items-center gap-2 px-3 py-2 text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="text-sm font-medium">Manage Event</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="relative bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 text-white py-12 sm:py-16 lg:py-20 overflow-hidden">
         {/* Decorative background elements */}
         <div className="absolute inset-0 opacity-10 overflow-hidden">
@@ -173,34 +201,11 @@ const EventPage = () => {
                   <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-2 sm:mb-3 tracking-tight leading-tight break-words">
                     {event.title}
                   </h1>
-                  {event.charity_id && event.charity_name && (
-                    <p className="text-base sm:text-lg lg:text-xl opacity-95 font-light">
-                      {event.first_name} {event.last_name}
-                      {event.co_hosts && event.co_hosts.filter(ch => ch.accepted_at).length > 0 && (
-                        <span> & Co-Hosts</span>
-                      )}
-                      {' '}
-                      {event.co_hosts && event.co_hosts.filter(ch => ch.accepted_at).length > 0 ? 'are' : 'is'} fundraising for{' '}
-                      <span className="font-semibold">{event.charity_name}</span>
-                    </p>
-                  )}
                 </div>
-                {canManage && (
-                  <div className="flex gap-2">
-                    {isCoHost && !isOwner && (
-                      <span className="flex-shrink-0 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white font-medium border border-white/30">
-                        👥 Co-Host
-                      </span>
-                    )}
-                    {isOwner && (
-                      <button
-                        onClick={() => navigate(`/event/${event.slug}/manage`)}
-                        className="flex-shrink-0 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white font-medium transition-all duration-200 border border-white/30 hover:border-white/50"
-                      >
-                        ⚙️ Manage Event
-                      </button>
-                    )}
-                  </div>
+                {isCoHost && !isOwner && (
+                  <span className="flex-shrink-0 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white font-medium border border-white/30">
+                    👥 Co-Host
+                  </span>
                 )}
               </div>
             </div>
@@ -210,11 +215,6 @@ const EventPage = () => {
               📅 {format(parseLocalDate(event.event_date), 'MMMM dd, yyyy')}
               {event.start_time && ` at ${event.start_time}`}
             </span>
-            {event.event_type && event.event_type.toLowerCase() !== 'other' && (
-              <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm capitalize">
-                🎉 {event.event_type}
-              </span>
-            )}
             {event.venue_name && (
               <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm">
                 📍 {event.venue_name}
@@ -223,19 +223,6 @@ const EventPage = () => {
           </div>
         </div>
       </div>
-
-      {/* Event Image - displayed below header, full image without cropping */}
-      {event.event_image_url && (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-10">
-          <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-            <img
-              src={event.event_image_url}
-              alt={event.title}
-              className="w-full h-auto object-contain"
-            />
-          </div>
-        </div>
-      )}
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
