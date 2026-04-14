@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
-import { Event, Guest, Donation, RSVPSummaryResponse } from '../types';
+import { Event, Guest, Donation, RSVPSummaryResponse, Charity } from '../types';
 import CoHostsManagement from '../components/CoHostsManagement';
 import PotluckManagement from '../components/PotluckManagement';
+import RequestCharityModal from '../components/RequestCharityModal';
+import EventPhotosUploader, { EventPhoto } from '../components/EventPhotosUploader';
+import EventImageSelector from '../components/EventImageSelector';
 
 const ManageEvent = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -15,8 +18,8 @@ const ManageEvent = () => {
   const [rsvpSummary, setRsvpSummary] = useState<RSVPSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  type TabType = 'guests' | 'email' | 'progress' | 'cohosts' | 'rsvp' | 'potluck';
-  const [activeTab, setActiveTab] = useState<TabType>('guests');
+  type TabType = 'details' | 'charities' | 'guests' | 'email' | 'progress' | 'cohosts' | 'rsvp' | 'potluck';
+  const [activeTab, setActiveTab] = useState<TabType>('details');
 
   // Guard against missing slug
   if (!slug) {
@@ -48,6 +51,34 @@ const ManageEvent = () => {
   const [editingGuestId, setEditingGuestId] = useState<number | null>(null);
   const [editEmail, setEditEmail] = useState('');
   const [editName, setEditName] = useState('');
+
+  // Event Details tab state
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    event_type: 'birthday',
+    event_date: '',
+    start_time: '',
+    end_time: '',
+    venue_name: '',
+    address: '',
+    virtual_link: '',
+    host_name: '',
+    host_phone: '',
+    rsvp_deadline: '',
+    dress_code: '',
+    show_guest_list: false,
+    potluck_enabled: false
+  });
+  const [eventImage, setEventImage] = useState<{ url: string; publicId: string }>({ url: '', publicId: '' });
+  const [attirePhotos, setAttirePhotos] = useState<EventPhoto[]>([]);
+  const [eventMemoriesPhotos, setEventMemoriesPhotos] = useState<EventPhoto[]>([]);
+  const [saveLoading, setSaveLoading] = useState(false);
+
+  // Charities tab state
+  const [charities, setCharities] = useState<Charity[]>([]);
+  const [selectedCharityIds, setSelectedCharityIds] = useState<number[]>([]);
+  const [showRequestModal, setShowRequestModal] = useState(false);
 
   useEffect(() => {
     if (!slug) {
@@ -113,6 +144,64 @@ const ManageEvent = () => {
       });
       setEmailSubject(templateRes.data.subject);
       setEmailBody(templateRes.data.body);
+
+      // Populate form data for Event Details tab
+      setFormData({
+        title: eventRes.data.title,
+        description: eventRes.data.description || '',
+        event_type: eventRes.data.event_type,
+        event_date: eventRes.data.event_date ? eventRes.data.event_date.split('T')[0] : '',
+        start_time: eventRes.data.start_time || '',
+        end_time: eventRes.data.end_time || '',
+        venue_name: eventRes.data.venue_name || '',
+        address: eventRes.data.address || '',
+        virtual_link: eventRes.data.virtual_link || '',
+        host_name: eventRes.data.host_name || '',
+        host_phone: eventRes.data.host_phone || '',
+        rsvp_deadline: eventRes.data.rsvp_deadline ? eventRes.data.rsvp_deadline.split('T')[0] : '',
+        dress_code: eventRes.data.dress_code || '',
+        show_guest_list: eventRes.data.show_guest_list || false,
+        potluck_enabled: eventRes.data.potluck_enabled || false
+      });
+
+      // Set selected charities
+      setSelectedCharityIds(eventRes.data.charity_id ? [eventRes.data.charity_id] : []);
+
+      // Fetch event image
+      if (eventRes.data.event_image_url) {
+        setEventImage({
+          url: eventRes.data.event_image_url,
+          publicId: eventRes.data.event_image_public_id || ''
+        });
+      }
+
+      // Fetch attire photos
+      try {
+        const attireResponse = await api.get(`/event-photos/event/${eventRes.data.id}?category=attire`);
+        if (attireResponse.data.success) {
+          setAttirePhotos(attireResponse.data.photos);
+        }
+      } catch (photoError) {
+        console.log('No attire photos found');
+      }
+
+      // Fetch event memories photos
+      try {
+        const memoriesResponse = await api.get(`/event-photos/event/${eventRes.data.id}?category=event_photos`);
+        if (memoriesResponse.data.success) {
+          setEventMemoriesPhotos(memoriesResponse.data.photos);
+        }
+      } catch (photoError) {
+        console.log('No event photos found');
+      }
+
+      // Fetch charities list
+      try {
+        const charitiesResponse = await api.get<{ charities: Charity[] }>('/charities');
+        setCharities(charitiesResponse.data.charities);
+      } catch (error) {
+        console.error('Failed to load charities');
+      }
     } catch (error: any) {
       console.error('ManageEvent: Error fetching event data:', error);
       console.error('ManageEvent: Error response:', error.response);
@@ -315,6 +404,112 @@ const ManageEvent = () => {
     }
   };
 
+  // Event Details tab handlers
+  const toggleCharity = (charityId: number) => {
+    setSelectedCharityIds((prev) =>
+      prev.includes(charityId)
+        ? prev.filter((id) => id !== charityId)
+        : [...prev, charityId]
+    );
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!event) return;
+
+    setSaveLoading(true);
+
+    try {
+      const eventData = {
+        ...formData,
+        charity_ids: selectedCharityIds.length > 0 ? selectedCharityIds : undefined,
+        start_date: formData.event_date,
+        end_date: formData.event_date,
+        potluck_enabled: formData.potluck_enabled
+      };
+
+      await api.put(`/events/${slug}`, eventData);
+
+      // Upload event image if changed
+      if (eventImage.url && eventImage.url !== event.event_image_url) {
+        try {
+          await api.put(`/event-images/event/${event.id}`, {
+            imageUrl: eventImage.url,
+            publicId: eventImage.publicId
+          });
+        } catch (imgError) {
+          console.error('Failed to save event image:', imgError);
+        }
+      }
+
+      // Save new attire photos
+      const newAttirePhotos = attirePhotos.filter(photo => !photo.id);
+      if (newAttirePhotos.length > 0) {
+        const photosToSave = newAttirePhotos.map(photo => ({
+          imageUrl: photo.photo_url,
+          publicId: photo.photo_public_id,
+          category: 'attire',
+          caption: photo.caption || ''
+        }));
+
+        try {
+          await api.post(`/event-photos/event/${event.id}`, { photos: photosToSave });
+        } catch (photoError) {
+          console.error('Error saving attire photos:', photoError);
+        }
+      }
+
+      // Save new event memories photos
+      const newMemoriesPhotos = eventMemoriesPhotos.filter(photo => !photo.id);
+      if (newMemoriesPhotos.length > 0) {
+        const photosToSave = newMemoriesPhotos.map(photo => ({
+          imageUrl: photo.photo_url,
+          publicId: photo.photo_public_id,
+          category: 'event_photos',
+          caption: photo.caption || ''
+        }));
+
+        try {
+          await api.post(`/event-photos/event/${event.id}`, { photos: photosToSave });
+        } catch (photoError) {
+          console.error('Error saving event photos:', photoError);
+        }
+      }
+
+      // Update captions for existing photos
+      const existingAttirePhotos = attirePhotos.filter(photo => photo.id);
+      for (const photo of existingAttirePhotos) {
+        if (photo.id) {
+          try {
+            await api.put(`/event-photos/${photo.id}/caption`, { caption: photo.caption || '' });
+          } catch (captionError) {
+            console.error('Error updating photo caption:', captionError);
+          }
+        }
+      }
+
+      const existingMemoriesPhotos = eventMemoriesPhotos.filter(photo => photo.id);
+      for (const photo of existingMemoriesPhotos) {
+        if (photo.id) {
+          try {
+            await api.put(`/event-photos/${photo.id}/caption`, { caption: photo.caption || '' });
+          } catch (captionError) {
+            console.error('Error updating photo caption:', captionError);
+          }
+        }
+      }
+
+      toast.success('Event updated successfully!');
+
+      // Refresh event data
+      await fetchEventData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to update event');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
   const renderEmailPreview = () => {
     if (!event) return '';
 
@@ -391,12 +586,6 @@ const ManageEvent = () => {
               👁️ View Event
             </button>
             <button
-              onClick={() => navigate(`/event/${event.slug}/edit`)}
-              className="btn btn-secondary"
-            >
-              ✏️ Edit Event
-            </button>
-            <button
               onClick={sendInvitations}
               className="btn btn-primary"
               disabled={pendingInvites === 0}
@@ -447,7 +636,7 @@ const ManageEvent = () => {
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
-          {(['guests', 'rsvp', 'email', 'cohosts', 'potluck', 'progress'] as const).map((tab) => (
+          {(['details', 'charities', 'guests', 'rsvp', 'email', 'cohosts', 'potluck', 'progress'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => {
@@ -461,6 +650,8 @@ const ManageEvent = () => {
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
+              {tab === 'details' && 'Event Details'}
+              {tab === 'charities' && 'Charities'}
               {tab === 'guests' && 'Guest List'}
               {tab === 'rsvp' && 'RSVP Summary'}
               {tab === 'email' && 'Email Invitations'}
@@ -471,6 +662,395 @@ const ManageEvent = () => {
           ))}
         </nav>
       </div>
+
+      {/* Event Details Tab */}
+      {activeTab === 'details' && (
+        <div className="card">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Edit Event Details</h3>
+
+            {/* Event Image */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Event Image</label>
+              <EventImageSelector
+                currentImageUrl={eventImage.url}
+                onImageUploaded={(url, publicId) => setEventImage({ url, publicId })}
+              />
+            </div>
+
+            {/* Basic Info */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                  Event Title *
+                </label>
+                <input
+                  id="title"
+                  type="text"
+                  required
+                  className="input"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="event_type" className="block text-sm font-medium text-gray-700 mb-1">
+                  Event Type *
+                </label>
+                <select
+                  id="event_type"
+                  required
+                  className="input"
+                  value={formData.event_type}
+                  onChange={(e) => setFormData({ ...formData, event_type: e.target.value })}
+                >
+                  <option value="birthday">Birthday</option>
+                  <option value="wedding">Wedding</option>
+                  <option value="anniversary">Anniversary</option>
+                  <option value="graduation">Graduation</option>
+                  <option value="baby_shower">Baby Shower</option>
+                  <option value="retirement">Retirement</option>
+                  <option value="memorial">Memorial</option>
+                  <option value="other">Other Celebration</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                About This Event
+              </label>
+              <textarea
+                id="description"
+                className="input"
+                rows={4}
+                placeholder="Tell your guests about your event..."
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+            </div>
+
+            {/* Date & Time */}
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="event_date" className="block text-sm font-medium text-gray-700 mb-1">
+                  Event Date *
+                </label>
+                <input
+                  id="event_date"
+                  type="date"
+                  required
+                  className="input"
+                  value={formData.event_date}
+                  onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="start_time" className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Time *
+                </label>
+                <input
+                  id="start_time"
+                  type="time"
+                  required
+                  className="input"
+                  value={formData.start_time}
+                  onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="end_time" className="block text-sm font-medium text-gray-700 mb-1">
+                  End Time (Optional)
+                </label>
+                <input
+                  id="end_time"
+                  type="time"
+                  className="input"
+                  value={formData.end_time}
+                  onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="venue_name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Venue Name *
+                </label>
+                <input
+                  id="venue_name"
+                  type="text"
+                  required
+                  className="input"
+                  placeholder="e.g., Our Home, Central Park"
+                  value={formData.venue_name}
+                  onChange={(e) => setFormData({ ...formData, venue_name: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                  Address (Optional)
+                </label>
+                <input
+                  id="address"
+                  type="text"
+                  className="input"
+                  placeholder="123 Main St, San Francisco, CA 94102"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="virtual_link" className="block text-sm font-medium text-gray-700 mb-1">
+                Virtual Event Link (Optional)
+              </label>
+              <input
+                id="virtual_link"
+                type="url"
+                className="input"
+                placeholder="https://zoom.us/j/123456789"
+                value={formData.virtual_link}
+                onChange={(e) => setFormData({ ...formData, virtual_link: e.target.value })}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                For virtual events, add your Zoom, Google Meet, or other video link
+              </p>
+            </div>
+
+            {/* Host Info */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Host Information</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="host_name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Host Name *
+                  </label>
+                  <input
+                    id="host_name"
+                    type="text"
+                    required
+                    className="input"
+                    placeholder="Your name"
+                    value={formData.host_name}
+                    onChange={(e) => setFormData({ ...formData, host_name: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="host_phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    Host Phone *
+                  </label>
+                  <input
+                    id="host_phone"
+                    type="tel"
+                    required
+                    className="input"
+                    placeholder="(555) 123-4567"
+                    value={formData.host_phone}
+                    onChange={(e) => setFormData({ ...formData, host_phone: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Details */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Details</h3>
+
+              <div className="mb-4">
+                <label htmlFor="rsvp_deadline" className="block text-sm font-medium text-gray-700 mb-1">
+                  RSVP Deadline (Optional)
+                </label>
+                <input
+                  id="rsvp_deadline"
+                  type="date"
+                  className="input"
+                  value={formData.rsvp_deadline}
+                  onChange={(e) => setFormData({ ...formData, rsvp_deadline: e.target.value })}
+                />
+              </div>
+
+              <div className="mb-6">
+                <label htmlFor="dress_code" className="block text-sm font-medium text-gray-700 mb-1">
+                  Dress Code Description
+                </label>
+                <input
+                  id="dress_code"
+                  type="text"
+                  className="input"
+                  placeholder="e.g., Western Casual, Indian Ethnic, Formal"
+                  value={formData.dress_code}
+                  onChange={(e) => setFormData({ ...formData, dress_code: e.target.value })}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Help guests dress appropriately for your event
+                </p>
+              </div>
+
+              {/* Dress Code Example Photos */}
+              <EventPhotosUploader
+                eventId={event?.id}
+                photos={attirePhotos}
+                onChange={setAttirePhotos}
+                category="attire"
+                maxPhotos={6}
+                label="Dress Code Example Photos"
+                helpText="Upload outfit examples, color schemes, or theme inspiration photos to help guests visualize the dress code"
+              />
+            </div>
+
+            {/* Event Memories Photos */}
+            <div className="border-t pt-6">
+              <EventPhotosUploader
+                eventId={event?.id}
+                photos={eventMemoriesPhotos}
+                onChange={setEventMemoriesPhotos}
+                category="event_photos"
+                maxPhotos={6}
+                label="Event Photos (Optional)"
+                helpText="Share photos from your event - upload memories, highlights, and special moments from the celebration"
+              />
+            </div>
+
+            {/* Settings */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Settings</h3>
+
+              <div className="space-y-4">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.show_guest_list}
+                    onChange={(e) => setFormData({ ...formData, show_guest_list: e.target.checked })}
+                    className="h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-3 text-sm font-medium text-gray-700">
+                    Show guest list publicly on event page
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500 ml-8">
+                  When enabled, guests who RSVP'd as "Attending" will be visible to everyone viewing your event page
+                </p>
+
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.potluck_enabled}
+                    onChange={(e) => setFormData({ ...formData, potluck_enabled: e.target.checked })}
+                    className="h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-3 text-sm font-medium text-gray-700">
+                    Enable potluck
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500 ml-8">
+                  Let guests sign up to bring food items
+                </p>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex gap-3 pt-4">
+              <button
+                type="submit"
+                disabled={saveLoading}
+                className="btn btn-primary"
+              >
+                {saveLoading ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Charities Tab */}
+      {activeTab === 'charities' && (
+        <div className="card">
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xl font-semibold text-gray-900">Select Charities</h3>
+              <button
+                type="button"
+                onClick={() => setShowRequestModal(true)}
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+              >
+                + Request a Charity
+              </button>
+            </div>
+            <p className="text-sm text-gray-600">
+              Choose one or more charities that you'd like guests to support. Selected charities will appear on your event page.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-3 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
+            {charities.map((charity) => (
+              <div
+                key={charity.id}
+                className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                  selectedCharityIds.includes(charity.id)
+                    ? 'border-primary-600 bg-primary-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+                onClick={() => toggleCharity(charity.id)}
+              >
+                <div className="flex items-start">
+                  <input
+                    type="checkbox"
+                    checked={selectedCharityIds.includes(charity.id)}
+                    onChange={() => toggleCharity(charity.id)}
+                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div className="ml-3 flex-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium text-gray-900">{charity.name}</h4>
+                      <span className="text-xs text-gray-500">{charity.category}</span>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                      {charity.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-sm text-gray-600 mt-4">
+            {selectedCharityIds.length} {selectedCharityIds.length === 1 ? 'charity' : 'charities'} selected
+          </p>
+
+          <div className="flex gap-3 pt-6">
+            <button
+              onClick={handleSubmit}
+              disabled={saveLoading}
+              className="btn btn-primary"
+            >
+              {saveLoading ? 'Saving...' : 'Save Charities'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Request Charity Modal */}
+      {showRequestModal && (
+        <RequestCharityModal
+          onClose={() => setShowRequestModal(false)}
+          onSuccess={() => {
+            setShowRequestModal(false);
+            // Refresh charities list
+            api.get<{ charities: Charity[] }>('/charities').then(response => {
+              setCharities(response.data.charities);
+            });
+          }}
+        />
+      )}
 
       {/* Guest List Tab */}
       {activeTab === 'guests' && (
@@ -913,10 +1493,10 @@ const ManageEvent = () => {
                   Enable the potluck feature to let guests sign up to bring food and drinks.
                 </p>
                 <button
-                  onClick={() => navigate(`/event/${event.slug}/edit`)}
+                  onClick={() => setActiveTab('details')}
                   className="btn btn-primary"
                 >
-                  Edit Event Settings
+                  Go to Event Details
                 </button>
               </div>
             </div>

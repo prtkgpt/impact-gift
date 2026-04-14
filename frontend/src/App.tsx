@@ -19,7 +19,6 @@ const Signup = lazy(() => import('./pages/Signup'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const CreateEvent = lazy(() => import('./pages/CreateEvent'));
-const EditEvent = lazy(() => import('./pages/EditEvent'));
 const Receipt = lazy(() => import('./pages/Receipt'));
 const Profile = lazy(() => import('./pages/Profile'));
 const AdminCharityRequests = lazy(() => import('./pages/AdminCharityRequests'));
@@ -104,14 +103,6 @@ function App() {
                 element={
                   <PrivateRoute>
                     <ManageEvent />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/event/:slug/edit"
-                element={
-                  <PrivateRoute>
-                    <EditEvent />
                   </PrivateRoute>
                 }
               />
