@@ -23,6 +23,7 @@ const EditEvent = () => {
     description: '',
     event_type: 'birthday',
     event_date: '',
+    dress_code: '',
     show_guest_list: false,
     potluck_enabled: false
   });
@@ -44,6 +45,7 @@ const EditEvent = () => {
         description: event.description || '',
         event_type: event.event_type,
         event_date: event.event_date.split('T')[0],
+        dress_code: event.dress_code || '',
         show_guest_list: event.show_guest_list || false,
         potluck_enabled: event.potluck_enabled || false
       });
@@ -284,6 +286,24 @@ const EditEvent = () => {
                 onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
               />
             </div>
+          </div>
+
+          {/* Dress Code */}
+          <div>
+            <label htmlFor="dress_code" className="block text-sm font-medium text-gray-700 mb-1">
+              Dress Code (Optional)
+            </label>
+            <input
+              id="dress_code"
+              type="text"
+              className="input"
+              placeholder="e.g., Western Casual, Indian Ethnic, Formal"
+              value={formData.dress_code}
+              onChange={(e) => setFormData({ ...formData, dress_code: e.target.value })}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Help guests dress appropriately for your event
+            </p>
           </div>
 
           {/* Select Multiple Charities */}

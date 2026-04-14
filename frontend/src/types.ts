@@ -41,6 +41,7 @@ export interface Event {
   host_name?: string; // Primary host display name
   host_phone?: string; // Host contact phone
   rsvp_deadline?: string; // RSVP cutoff date
+  dress_code?: string; // Dress code for the event
   charity_id?: number;
   charity_name?: string;
   charity_logo?: string;
@@ -110,6 +111,7 @@ export interface CreateEventInput {
   host_name?: string; // Primary host display name
   host_phone?: string; // Host contact phone
   rsvp_deadline?: string; // RSVP cutoff date
+  dress_code?: string; // Dress code for the event
   charity_id?: number;
   charity_ids?: number[];
   goal_amount?: number;

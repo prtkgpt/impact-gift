@@ -4,7 +4,7 @@ import api from '../utils/api';
 import { Charity, CreateEventInput } from '../types';
 import toast from 'react-hot-toast';
 import RequestCharityModal from '../components/RequestCharityModal';
-import ImageUpload from '../components/ImageUpload';
+import EventImageSelector from '../components/EventImageSelector';
 
 const CreateEvent = () => {
   const [charities, setCharities] = useState<Charity[]>([]);
@@ -25,6 +25,7 @@ const CreateEvent = () => {
     host_name: '',
     host_phone: '',
     rsvp_deadline: '',
+    dress_code: '',
     potluck_enabled: false
   });
   const navigate = useNavigate();
@@ -136,12 +137,12 @@ const CreateEvent = () => {
             />
           </div>
 
-          {/* Event Image Upload */}
-          <ImageUpload
+          {/* Event Image Selection */}
+          <EventImageSelector
             onImageUploaded={(url, publicId) => setEventImage({ url, publicId })}
             currentImageUrl={eventImage.url}
             label="Event Image (Optional)"
-            helpText="Upload a personal photo to make your event stand out! Perfect for baby photos, wedding pictures, or any meaningful image."
+            helpText="Choose from our library of beautiful event images or upload your own photo!"
           />
 
           {/* Event Type and Date */}
@@ -257,6 +258,23 @@ const CreateEvent = () => {
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   For virtual events, add your Zoom, Google Meet, or other video link
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="dress_code" className="block text-sm font-medium text-gray-700 mb-1">
+                  Dress Code (Optional)
+                </label>
+                <input
+                  id="dress_code"
+                  type="text"
+                  className="input"
+                  placeholder="e.g., Western Casual, Indian Ethnic, Formal"
+                  value={formData.dress_code}
+                  onChange={(e) => setFormData({ ...formData, dress_code: e.target.value })}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Help guests dress appropriately for your event
                 </p>
               </div>
             </div>

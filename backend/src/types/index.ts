@@ -105,6 +105,7 @@ export interface CreateEventInput {
   host_name?: string; // Primary host display name
   host_phone?: string; // Host contact phone
   rsvp_deadline?: string; // RSVP cutoff date (ISO format)
+  dress_code?: string; // Dress code for the event
   charity_id?: number; // Optional since we support multiple charities via charity_ids
   charity_ids?: number[]; // Array of charity IDs for multiple charities
   goal_amount?: number;

@@ -52,7 +52,7 @@ router.post(
       const {
         title, description, event_type, event_date, start_date, end_date,
         start_time, end_time, venue_name, address, virtual_link,
-        host_name, host_phone, rsvp_deadline,
+        host_name, host_phone, rsvp_deadline, dress_code,
         charity_id, charity_ids, goal_amount, potluck_enabled
       }: CreateEventInput = req.body;
       const slug = generateSlug(title);
@@ -76,10 +76,10 @@ router.post(
         `INSERT INTO events (
           user_id, title, description, event_type, event_date, start_date, end_date,
           start_time, end_time, venue_name, address, virtual_link,
-          host_name, host_phone, rsvp_deadline,
+          host_name, host_phone, rsvp_deadline, dress_code,
           charity_id, goal_amount, slug, potluck_enabled
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
          RETURNING *`,
         [
           req.user!.id,
@@ -97,6 +97,7 @@ router.post(
           host_name || null,
           host_phone || null,
           rsvp_deadline || null,
+          dress_code || null,
           charityList.length === 1 ? charityList[0] : null,
           goal_amount || null,
           slug,
@@ -494,6 +495,7 @@ router.put('/:identifier', authenticate, async (req: AuthRequest, res: Response)
       goal_amount,
       is_active,
       show_guest_list,
+      dress_code,
       charity_ids,
       potluck_enabled
     } = req.body;
@@ -528,11 +530,12 @@ router.put('/:identifier', authenticate, async (req: AuthRequest, res: Response)
            goal_amount = COALESCE($7, goal_amount),
            is_active = COALESCE($8, is_active),
            show_guest_list = COALESCE($9, show_guest_list),
-           potluck_enabled = COALESCE($10, potluck_enabled),
+           dress_code = COALESCE($10, dress_code),
+           potluck_enabled = COALESCE($11, potluck_enabled),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $11
+       WHERE id = $12
        RETURNING *`,
-      [title, description, event_date, event_type, start_date, end_date, goal_amount, is_active, show_guest_list, potluck_enabled, event.id]
+      [title, description, event_date, event_type, start_date, end_date, goal_amount, is_active, show_guest_list, dress_code, potluck_enabled, event.id]
     );
 
     // If charity_ids provided, update charity association
