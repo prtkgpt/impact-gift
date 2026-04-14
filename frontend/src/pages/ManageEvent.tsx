@@ -329,12 +329,27 @@ const ManageEvent = () => {
             <h1 className="text-3xl font-bold">Manage Event: {event.title}</h1>
             <p className="text-gray-600 mt-2">Event Page: <a href={`/event/${event.slug}`} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">/event/{event.slug}</a></p>
           </div>
-          <button
-            onClick={() => navigate(`/event/${event.slug}/edit`)}
-            className="btn btn-secondary"
-          >
-            ✏️ Edit Event
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => window.open(`/event/${event.slug}`, '_blank')}
+              className="btn btn-secondary"
+            >
+              👁️ View Event
+            </button>
+            <button
+              onClick={() => navigate(`/event/${event.slug}/edit`)}
+              className="btn btn-secondary"
+            >
+              ✏️ Edit Event
+            </button>
+            <button
+              onClick={sendInvitations}
+              className="btn btn-primary"
+              disabled={pendingInvites === 0}
+            >
+              📧 Send Invitation{pendingInvites !== 1 && pendingInvites > 0 ? 's' : ''} {pendingInvites > 0 && `(${pendingInvites})`}
+            </button>
+          </div>
         </div>
       </div>
 

@@ -30,14 +30,30 @@ const EditEvent = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!slug) {
+      console.error('EditEvent: No slug provided');
+      setInitialLoading(false);
+      return;
+    }
+    console.log('EditEvent: Loading event data for slug:', slug);
     fetchEventData();
     fetchCharities();
   }, [slug]);
 
-  const fetchEventData = async () => {
+  const fetchEventData = async (retryCount = 0) => {
+    if (!slug) {
+      console.error('EditEvent: Cannot fetch event data without slug');
+      setInitialLoading(false);
+      return;
+    }
+
     try {
-      const response = await api.get<Event>(`/events/${slug}`);
+      console.log(`EditEvent: Fetching event data (attempt ${retryCount + 1})...`);
+      const response = await api.get<Event>(`/events/${slug}`, {
+        timeout: retryCount === 0 ? 15000 : 20000,
+      });
       const event = response.data;
+      console.log('EditEvent: Event loaded successfully:', event);
 
       setEventId(event.id);
       setFormData({
@@ -72,6 +88,19 @@ const EditEvent = () => {
         console.log('No event photos found');
       }
     } catch (error: any) {
+      console.error('EditEvent: Error fetching event data:', error);
+
+      // Retry logic for network errors or timeouts
+      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+      const isNetworkError = error.message === 'Network Error' || !error.response;
+
+      if ((isTimeout || isNetworkError) && retryCount < 2) {
+        const delay = (retryCount + 1) * 2000; // 2s, 4s
+        console.log(`EditEvent: Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchEventData(retryCount + 1);
+      }
+
       toast.error('Failed to load event');
       navigate('/dashboard');
     } finally {
