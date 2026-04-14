@@ -162,32 +162,22 @@ router.post(
       );
       const hasCharities = parseInt(charitiesResult.rows[0].count) > 0;
 
-      // Get email template
-      const templateResult = await query(
-        'SELECT * FROM email_templates WHERE event_id = $1',
-        [event_id]
-      );
+      // Get email template - removed custom template support
+      // Always use simple event details format
+      const subject = `You're invited to ${event.title} by ${event.first_name} ${event.last_name}`;
 
-      let subject, bodyTemplate;
-      if (templateResult.rows.length > 0) {
-        subject = templateResult.rows[0].subject;
-        bodyTemplate = templateResult.rows[0].body;
-      } else {
-        // Use default template
-        subject = `You're invited to my ${event.title}!`;
-        bodyTemplate = `Dear Family and Friends,
+      // Simple plain text version with event details only
+      const plainTextBody = `You're invited!
 
-I'm so excited to celebrate my ${event.title} with you!
+${event.first_name} ${event.last_name} invited you to ${event.title}
 
-Your presence would mean the world to me.
+${event.event_date ? `Date: ${new Date(event.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}` : ''}
+${event.start_time ? `Time: ${event.start_time}` : ''}
+${event.venue_name ? `Venue: ${event.venue_name}` : ''}
+${event.address ? `Address: ${event.address}` : ''}
 
-Please view the invitation for all the event details: {{EVENT_LINK}}
+View your invitation: {{EVENT_LINK}}`;
 
-Can't wait to celebrate with you!
-
-With love,
-{{YOUR_NAME}}`;
-      }
 
       // Get guests who haven't been sent an invitation yet
       const guestsResult = await query(
@@ -211,22 +201,11 @@ With love,
       const errors_list: any[] = [];
 
       for (const guest of guests) {
-        // Create personalized event URL with guest email for RSVP tracking
+        // Create personalized event URL
         const eventUrl = `${baseEventUrl}?email=${encodeURIComponent(guest.email)}`;
 
-        // Replace template variables
-        let personalizedBody = bodyTemplate
-          .replace(/\{\{EVENT_LINK\}\}/g, eventUrl)
-          .replace(/\{\{YOUR_NAME\}\}/g, senderName)
-          .replace(/\{\{GUEST_NAME\}\}/g, guest.name || 'Friend');
-
-        // For non-charity events, remove lines containing the event link
-        if (!hasCharities) {
-          personalizedBody = personalizedBody
-            .split('\n')
-            .filter((line: string) => !line.includes(eventUrl))
-            .join('\n');
-        }
+        // Replace template variables in plain text
+        const personalizedBody = plainTextBody.replace(/\{\{EVENT_LINK\}\}/g, eventUrl);
 
         if (resend) {
           try {
@@ -383,7 +362,7 @@ With love,
         response.note = 'Email service not configured. Guests marked as invited but no emails were actually sent.';
         response.preview = {
           subject,
-          body: bodyTemplate.replace(/\{\{EVENT_LINK\}\}/g, baseEventUrl).replace(/\{\{YOUR_NAME\}\}/g, senderName)
+          body: plainTextBody.replace(/\{\{EVENT_LINK\}\}/g, baseEventUrl)
         };
       }
 
@@ -444,51 +423,28 @@ router.post(
       const hasCharities = parseInt(charitiesResult.rows[0].count) > 0;
       console.log(`[RESEND] Event has charities: ${hasCharities}`);
 
-      // Get email template
-      console.log(`[RESEND] Fetching email template for event ID: ${guest.event_id}`);
-      const templateResult = await query(
-        'SELECT * FROM email_templates WHERE event_id = $1',
-        [guest.event_id]
-      );
-
-      let subject, bodyTemplate;
-      if (templateResult.rows.length > 0) {
-        subject = templateResult.rows[0].subject;
-        bodyTemplate = templateResult.rows[0].body;
-        console.log(`[RESEND] Using custom template`);
-      } else {
-        subject = `You're invited to my ${guest.title}!`;
-        bodyTemplate = `Dear Family and Friends,
-
-I'm so excited to celebrate my ${guest.title} with you!
-
-Your presence would mean the world to me.
-
-Please view the invitation for all the event details: {{EVENT_LINK}}
-
-Can't wait to celebrate with you!
-
-With love,
-{{YOUR_NAME}}`;
-        console.log(`[RESEND] Using default template`);
-      }
-
-      // Create personalized event URL with guest email for RSVP tracking
-      const eventUrl = `${process.env.FRONTEND_URL}/event/${guest.slug}?email=${encodeURIComponent(guest.email)}`;
+      // Get email template - removed custom template support
+      // Always use simple event details format
+      console.log(`[RESEND] Using event details template`);
       const senderName = `${guest.first_name} ${guest.last_name}`;
+      const subject = `You're invited to ${guest.title} by ${senderName}`;
 
-      let personalizedBody = bodyTemplate
-        .replace(/\{\{EVENT_LINK\}\}/g, eventUrl)
-        .replace(/\{\{YOUR_NAME\}\}/g, senderName)
-        .replace(/\{\{GUEST_NAME\}\}/g, guest.name || 'Friend');
+      // Create personalized event URL
+      const eventUrl = `${process.env.FRONTEND_URL}/event/${guest.slug}?email=${encodeURIComponent(guest.email)}`;
 
-      // For non-charity events, remove lines containing the event link
-      if (!hasCharities) {
-        personalizedBody = personalizedBody
-          .split('\n')
-          .filter((line: string) => !line.includes(eventUrl))
-          .join('\n');
-      }
+      // Simple plain text version with event details only
+      const plainTextBody = `You're invited!
+
+${senderName} invited you to ${guest.title}
+
+${guest.event_date ? `Date: ${new Date(guest.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}` : ''}
+${guest.start_time ? `Time: ${guest.start_time}` : ''}
+${guest.venue_name ? `Venue: ${guest.venue_name}` : ''}
+${guest.address ? `Address: ${guest.address}` : ''}
+
+View your invitation: {{EVENT_LINK}}`;
+
+      const personalizedBody = plainTextBody.replace(/\{\{EVENT_LINK\}\}/g, eventUrl);
 
       console.log(`[RESEND] Email details - To: ${guest.email}, ReplyTo: ${guest.user_email}`);
       console.log(`[RESEND] Resend configured: ${!!resend}`);
