@@ -38,13 +38,18 @@ router.get('/template/:eventId', authenticate, async (req: AuthRequest, res: Res
       return res.json({
         event_id: eventId,
         subject: `You're invited to my ${eventCheck.rows[0].title}!`,
-        body: `You're invited to ${eventCheck.rows[0].title}!
+        body: `Dear Family and Friends,
 
-{{YOUR_NAME}} has invited you to celebrate.
+I'm so excited to celebrate my ${eventCheck.rows[0].title} with you!
 
-View your invitation for all the details: {{EVENT_LINK}}
+Your presence would mean the world to me.
 
-Looking forward to seeing you!`,
+Please view the invitation for all the event details: {{EVENT_LINK}}
+
+Can't wait to celebrate with you!
+
+With love,
+{{YOUR_NAME}}`,
         is_default: true
       });
     }
@@ -170,13 +175,18 @@ router.post(
       } else {
         // Use default template
         subject = `You're invited to my ${event.title}!`;
-        bodyTemplate = `You're invited to ${event.title}!
+        bodyTemplate = `Dear Family and Friends,
 
-{{YOUR_NAME}} has invited you to celebrate.
+I'm so excited to celebrate my ${event.title} with you!
 
-View your invitation for all the details: {{EVENT_LINK}}
+Your presence would mean the world to me.
 
-Looking forward to seeing you!`;
+Please view the invitation for all the event details: {{EVENT_LINK}}
+
+Can't wait to celebrate with you!
+
+With love,
+{{YOUR_NAME}}`;
       }
 
       // Get guests who haven't been sent an invitation yet
@@ -448,13 +458,18 @@ router.post(
         console.log(`[RESEND] Using custom template`);
       } else {
         subject = `You're invited to my ${guest.title}!`;
-        bodyTemplate = `You're invited to ${guest.title}!
+        bodyTemplate = `Dear Family and Friends,
 
-{{YOUR_NAME}} has invited you to celebrate.
+I'm so excited to celebrate my ${guest.title} with you!
 
-View your invitation for all the details: {{EVENT_LINK}}
+Your presence would mean the world to me.
 
-Looking forward to seeing you!`;
+Please view the invitation for all the event details: {{EVENT_LINK}}
+
+Can't wait to celebrate with you!
+
+With love,
+{{YOUR_NAME}}`;
         console.log(`[RESEND] Using default template`);
       }
 
