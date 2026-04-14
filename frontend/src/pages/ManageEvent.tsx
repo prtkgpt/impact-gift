@@ -154,8 +154,16 @@ const ManageEvent = () => {
         potluck_enabled: eventRes.data.potluck_enabled || false
       });
 
-      // Set selected charities
-      setSelectedCharityIds(eventRes.data.charity_id ? [eventRes.data.charity_id] : []);
+      // Set selected charities from the charities array
+      if (eventRes.data.charities && Array.isArray(eventRes.data.charities)) {
+        const charityIds = eventRes.data.charities
+          .filter((c: any) => c && c.id)
+          .map((c: any) => c.id);
+        setSelectedCharityIds(charityIds);
+      } else {
+        // Fallback to legacy charity_id field
+        setSelectedCharityIds(eventRes.data.charity_id ? [eventRes.data.charity_id] : []);
+      }
 
       // Fetch event image
       if (eventRes.data.event_image_url) {
