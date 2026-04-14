@@ -185,29 +185,18 @@ const EventPage = () => {
         </div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col sm:flex-row items-start sm:space-x-6 space-y-4 sm:space-y-0 mb-6">
-            {event.charity_logo && (
-              <div className="flex-shrink-0">
-                <img
-                  src={event.charity_logo}
-                  alt={event.charity_name}
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl shadow-xl bg-white p-2 ring-4 ring-white/20"
-                />
+          <div className="mb-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-2 sm:mb-3 tracking-tight leading-tight break-words">
+                  {event.title}
+                </h1>
               </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-2 sm:mb-3 tracking-tight leading-tight break-words">
-                    {event.title}
-                  </h1>
-                </div>
-                {isCoHost && !isOwner && (
-                  <span className="flex-shrink-0 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white font-medium border border-white/30">
-                    👥 Co-Host
-                  </span>
-                )}
-              </div>
+              {isCoHost && !isOwner && (
+                <span className="flex-shrink-0 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white font-medium border border-white/30">
+                  👥 Co-Host
+                </span>
+              )}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-white/90">
