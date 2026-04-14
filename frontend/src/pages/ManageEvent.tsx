@@ -18,7 +18,7 @@ const ManageEvent = () => {
   const [rsvpSummary, setRsvpSummary] = useState<RSVPSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  type TabType = 'details' | 'charities' | 'guests' | 'email' | 'progress' | 'cohosts' | 'rsvp' | 'potluck';
+  type TabType = 'details' | 'charities' | 'guests' | 'progress' | 'cohosts' | 'rsvp' | 'potluck';
   const [activeTab, setActiveTab] = useState<TabType>('details');
 
   // Guard against missing slug
@@ -41,11 +41,6 @@ const ManageEvent = () => {
   const [guestEmail, setGuestEmail] = useState('');
   const [guestName, setGuestName] = useState('');
   const [bulkEmails, setBulkEmails] = useState('');
-
-  // Email template form
-  const [emailSubject, setEmailSubject] = useState('');
-  const [emailBody, setEmailBody] = useState('');
-  const [showPreview, setShowPreview] = useState(false);
 
   // Edit guest state
   const [editingGuestId, setEditingGuestId] = useState<number | null>(null);
@@ -139,14 +134,6 @@ const ManageEvent = () => {
       console.log('Guests loaded:', guestsRes.data.length);
       console.log('Donations loaded:', donationsRes.data.length);
       console.log('RSVP Summary loaded:', rsvpSummaryRes.data);
-
-      // Fetch email template
-      const templateRes = await api.get(`/invitations/template/${eventRes.data.id}`).catch((err) => {
-        console.error('Error fetching email template:', err);
-        return { data: { subject: '', body: '' } };
-      });
-      setEmailSubject(templateRes.data.subject);
-      setEmailBody(templateRes.data.body);
 
       // Populate form data for Event Details tab
       setFormData({
@@ -330,22 +317,6 @@ const ManageEvent = () => {
     }
   };
 
-  const saveEmailTemplate = async () => {
-    if (!event) return;
-
-    try {
-      await api.post('/invitations/template', {
-        event_id: event.id,
-        subject: emailSubject,
-        body: emailBody
-      });
-
-      toast.success('Email template saved!');
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to save template');
-    }
-  };
-
   const sendInvitations = async () => {
     if (!event) return;
 
@@ -476,18 +447,6 @@ const ManageEvent = () => {
     }
   };
 
-  const renderEmailPreview = () => {
-    if (!event) return '';
-
-    const eventUrl = `${window.location.origin}/event/${event.slug}`;
-    const senderName = `${event.first_name} ${event.last_name}`;
-
-    return emailBody
-      .replace(/\{\{EVENT_LINK\}\}/g, eventUrl)
-      .replace(/\{\{YOUR_NAME\}\}/g, senderName)
-      .replace(/\{\{GUEST_NAME\}\}/g, 'Guest');
-  };
-
   console.log('ManageEvent: Rendering - loading:', loading, 'error:', error, 'event:', !!event);
 
   if (loading) {
@@ -542,7 +501,6 @@ const ManageEvent = () => {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold">Manage Event: {event.title}</h1>
-            <p className="text-gray-600 mt-2">Event Page: <a href={`/event/${event.slug}`} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">/event/{event.slug}</a></p>
           </div>
           <div className="flex gap-3">
             <button
@@ -602,7 +560,7 @@ const ManageEvent = () => {
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
-          {(['details', 'charities', 'guests', 'rsvp', 'email', 'cohosts', 'potluck', 'progress'] as const).map((tab) => (
+          {(['details', 'charities', 'guests', 'rsvp', 'cohosts', 'potluck', 'progress'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => {
@@ -620,7 +578,6 @@ const ManageEvent = () => {
               {tab === 'charities' && 'Charities'}
               {tab === 'guests' && 'Guest List'}
               {tab === 'rsvp' && 'RSVP Summary'}
-              {tab === 'email' && 'Email Invitations'}
               {tab === 'cohosts' && 'Co-Hosts'}
               {tab === 'potluck' && 'Potluck'}
               {tab === 'progress' && 'Progress & Donations'}
@@ -1362,66 +1319,6 @@ const ManageEvent = () => {
               </div>
             )}
           </div>
-        </div>
-      )}
-
-      {/* Email Tab */}
-      {activeTab === 'email' && (
-        <div className="space-y-6">
-          <div className="card">
-            <h3 className="text-lg font-semibold mb-4">Customize Email Invitation</h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Subject Line
-                </label>
-                <input
-                  type="text"
-                  className="input"
-                  value={emailSubject}
-                  onChange={(e) => setEmailSubject(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Body
-                </label>
-                <textarea
-                  className="input font-mono text-sm"
-                  rows={12}
-                  value={emailBody}
-                  onChange={(e) => setEmailBody(e.target.value)}
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  Available variables: <code>{'{{EVENT_LINK}}'}</code>, <code>{'{{YOUR_NAME}}'}</code>, <code>{'{{GUEST_NAME}}'}</code>
-                </p>
-              </div>
-
-              <div className="flex gap-4">
-                <button onClick={saveEmailTemplate} className="btn btn-primary">
-                  Save Template
-                </button>
-                <button onClick={() => setShowPreview(!showPreview)} className="btn btn-secondary">
-                  {showPreview ? 'Hide' : 'Show'} Preview
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {showPreview && (
-            <div className="card bg-gray-50">
-              <h3 className="text-lg font-semibold mb-4">Email Preview</h3>
-              <div className="bg-white p-6 rounded border">
-                <div className="mb-4 pb-4 border-b">
-                  <div className="text-sm text-gray-600">Subject:</div>
-                  <div className="font-medium">{emailSubject}</div>
-                </div>
-                <div className="whitespace-pre-wrap">{renderEmailPreview()}</div>
-              </div>
-            </div>
-          )}
         </div>
       )}
 

@@ -9,6 +9,8 @@ import { isOwnerOrCoHost } from '../utils/coHostHelpers';
 const router = Router();
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
+// REMOVED: Custom email templates feature - always use defaults now
+/*
 // Get email template for an event
 router.get('/template/:eventId', authenticate, async (req: AuthRequest, res: Response) => {
   try {
@@ -116,6 +118,7 @@ router.post(
     }
   }
 );
+*/
 
 // Send invitations to guests
 router.post(
