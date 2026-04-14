@@ -162,7 +162,7 @@ const CreateEvent = () => {
               id="description"
               rows={4}
               className="input"
-              placeholder="Tell your friends why this cause is important to you..."
+              placeholder="Share details about your event - what's the occasion, what to expect, and any other info for your guests..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
