@@ -280,17 +280,6 @@ With love,
             </td>
           </tr>
 
-          <!-- Message -->
-          <tr>
-            <td style="padding: 20px 40px;">
-              <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 4px; margin: 20px 0;">
-                <p style="margin: 0; font-size: 14px; color: #78350f; line-height: 1.6;">
-                  ${personalizedBody.replace(/\n/g, '<br>')}
-                </p>
-              </div>
-            </td>
-          </tr>
-
           <!-- CTA Button -->
           <tr>
             <td style="padding: 20px 40px; text-align: center;">
@@ -556,17 +545,6 @@ With love,
                 ${guest.address ? `<p style="margin: 8px 0 0 0; font-size: 14px; color: #6b7280;">${guest.address}</p>` : ''}
               </div>
               ` : ''}
-            </td>
-          </tr>
-
-          <!-- Message -->
-          <tr>
-            <td style="padding: 20px 40px;">
-              <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 4px; margin: 20px 0;">
-                <p style="margin: 0; font-size: 14px; color: #78350f; line-height: 1.6;">
-                  ${personalizedBody.replace(/\n/g, '<br>')}
-                </p>
-              </div>
             </td>
           </tr>
 
