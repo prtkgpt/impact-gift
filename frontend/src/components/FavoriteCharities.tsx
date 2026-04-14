@@ -21,22 +21,42 @@ const FavoriteCharities = () => {
     Promise.all([fetchFavorites(), fetchCharities()]);
   }, []);
 
-  const fetchFavorites = async () => {
+  const fetchFavorites = async (retryCount = 0) => {
     try {
-      const response = await api.get('/favorite-charities');
+      const response = await api.get('/favorite-charities', {
+        timeout: retryCount === 0 ? 15000 : 20000,
+      });
       setFavorites(response.data);
-    } catch (error) {
+    } catch (error: any) {
+      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+      const isNetworkError = !error.response && error.message === 'Network Error';
+
+      if ((isTimeout || isNetworkError) && retryCount < 2) {
+        await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
+        return fetchFavorites(retryCount + 1);
+      }
+
       console.error('Failed to load favorite charities:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchCharities = async () => {
+  const fetchCharities = async (retryCount = 0) => {
     try {
-      const response = await api.get<{ charities: any[] }>('/charities');
+      const response = await api.get<{ charities: any[] }>('/charities', {
+        timeout: retryCount === 0 ? 15000 : 20000,
+      });
       setCharities(response.data.charities);
-    } catch (error) {
+    } catch (error: any) {
+      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+      const isNetworkError = !error.response && error.message === 'Network Error';
+
+      if ((isTimeout || isNetworkError) && retryCount < 2) {
+        await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
+        return fetchCharities(retryCount + 1);
+      }
+
       console.error('Failed to load charities:', error);
     }
   };

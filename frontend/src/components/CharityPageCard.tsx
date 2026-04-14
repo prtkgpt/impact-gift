@@ -19,11 +19,21 @@ const CharityPageCard = () => {
     fetchStats();
   }, []);
 
-  const fetchStats = async () => {
+  const fetchStats = async (retryCount = 0) => {
     try {
-      const response = await api.get('/charity-commitments/my-page/stats');
+      const response = await api.get('/charity-commitments/my-page/stats', {
+        timeout: retryCount === 0 ? 15000 : 20000,
+      });
       setStats(response.data);
-    } catch (error) {
+    } catch (error: any) {
+      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+      const isNetworkError = !error.response && error.message === 'Network Error';
+
+      if ((isTimeout || isNetworkError) && retryCount < 2) {
+        await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
+        return fetchStats(retryCount + 1);
+      }
+
       console.error('Failed to load charity page stats:', error);
     } finally {
       setLoading(false);

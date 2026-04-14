@@ -5,6 +5,7 @@ import api from '../utils/api';
 import { parseLocalDate } from '../utils/dateUtils';
 import { Event } from '../types';
 import toast from 'react-hot-toast';
+import { useAuth } from '../contexts/AuthContext';
 import CharityPageCard from '../components/CharityPageCard';
 import FavoriteCharities from '../components/FavoriteCharities';
 
@@ -26,6 +27,7 @@ interface Invitation {
 }
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
@@ -33,23 +35,36 @@ const Dashboard = () => {
   const [eventsError, setEventsError] = useState(false);
 
   useEffect(() => {
-    // Load both events and invitations in parallel for better performance
+    if (!user) return;
+    // Load both events and invitations in parallel
     Promise.all([fetchEvents(), fetchInvitations()]);
-  }, []);
+  }, [user?.id]);
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (retryCount = 0) => {
     try {
       setEventsError(false);
-      const response = await api.get<Event[]>('/events/my-events');
+      const response = await api.get<Event[]>('/events/my-events', {
+        timeout: retryCount === 0 ? 15000 : 20000,
+      });
       setEvents(response.data);
     } catch (error: any) {
+      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+      const isNetworkError = !error.response && error.message === 'Network Error';
+
+      // Retry on timeout or network errors (backend may be waking up from cold start)
+      if ((isTimeout || isNetworkError) && retryCount < 2) {
+        console.log(`Dashboard fetchEvents retry ${retryCount + 1}`);
+        await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
+        return fetchEvents(retryCount + 1);
+      }
+
       console.error('Failed to load events:', error);
       setEventsError(true);
-      if (error.code === 'ECONNABORTED') {
+      if (isTimeout) {
         toast.error('Request timed out. Please check your connection and try again.');
-      } else if (error.message?.includes('Network Error')) {
+      } else if (isNetworkError) {
         toast.error('Cannot connect to server. Please try again later.');
-      } else {
+      } else if (error.response?.status !== 401) {
         toast.error('Failed to load events. Please refresh the page.');
       }
     } finally {
@@ -57,11 +72,22 @@ const Dashboard = () => {
     }
   };
 
-  const fetchInvitations = async () => {
+  const fetchInvitations = async (retryCount = 0) => {
     try {
-      const response = await api.get<Invitation[]>('/guests/my-invitations');
+      const response = await api.get<Invitation[]>('/guests/my-invitations', {
+        timeout: retryCount === 0 ? 15000 : 20000,
+      });
       setInvitations(response.data);
-    } catch (error) {
+    } catch (error: any) {
+      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+      const isNetworkError = !error.response && error.message === 'Network Error';
+
+      if ((isTimeout || isNetworkError) && retryCount < 2) {
+        console.log(`Dashboard fetchInvitations retry ${retryCount + 1}`);
+        await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
+        return fetchInvitations(retryCount + 1);
+      }
+
       console.error('Failed to load invitations:', error);
     } finally {
       setInvitationsLoading(false);
