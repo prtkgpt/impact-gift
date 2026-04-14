@@ -194,10 +194,10 @@ const EventPage = () => {
                     )}
                     {isOwner && (
                       <button
-                        onClick={() => navigate(`/event/${event.slug}/edit`)}
+                        onClick={() => navigate(`/event/${event.slug}/manage`)}
                         className="flex-shrink-0 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white font-medium transition-all duration-200 border border-white/30 hover:border-white/50"
                       >
-                        ✏️ Edit Event
+                        ⚙️ Manage Event
                       </button>
                     )}
                   </div>
