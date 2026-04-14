@@ -50,6 +50,12 @@ const ManageEvent = () => {
   const [editName, setEditName] = useState('');
 
   useEffect(() => {
+    if (!slug) {
+      console.error('ManageEvent: No slug provided');
+      setLoading(false);
+      return;
+    }
+    console.log('ManageEvent: Loading event data for slug:', slug);
     fetchEventData();
   }, [slug]);
 
@@ -58,14 +64,22 @@ const ManageEvent = () => {
     console.log('Current state:', { guests: guests.length, donations: donations.length });
   }, [activeTab, guests, donations]);
 
-  const fetchEventData = async () => {
-    console.log('ManageEvent: fetchEventData called for slug:', slug);
+  const fetchEventData = async (retryCount = 0) => {
+    if (!slug) {
+      console.error('ManageEvent: Cannot fetch event data without slug');
+      setLoading(false);
+      return;
+    }
+
+    console.log(`ManageEvent: fetchEventData called for slug: ${slug} (attempt ${retryCount + 1})`);
     try {
       setLoading(true);
       setError(null);
       console.log('ManageEvent: Fetching event data...');
       // First get the event to get the event ID
-      const eventRes = await api.get(`/events/${slug}`);
+      const eventRes = await api.get(`/events/${slug}`, {
+        timeout: retryCount === 0 ? 15000 : 20000,
+      });
       setEvent(eventRes.data);
       console.log('ManageEvent: Event loaded successfully:', eventRes.data);
 
@@ -103,6 +117,18 @@ const ManageEvent = () => {
       console.error('ManageEvent: Error fetching event data:', error);
       console.error('ManageEvent: Error response:', error.response);
       console.error('ManageEvent: Error status:', error.response?.status);
+
+      // Retry logic for network errors or timeouts
+      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+      const isNetworkError = error.message === 'Network Error' || !error.response;
+
+      if ((isTimeout || isNetworkError) && retryCount < 2) {
+        const delay = (retryCount + 1) * 2000; // 2s, 4s
+        console.log(`ManageEvent: Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchEventData(retryCount + 1);
+      }
+
       const errorMessage = error.response?.data?.error || error.message || 'Failed to load event';
       console.log('ManageEvent: Setting error message:', errorMessage);
       setError(errorMessage);
@@ -324,7 +350,7 @@ const ManageEvent = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Failed to Load Event</h2>
           <p className="text-gray-600 mb-6">{error || 'Event not found'}</p>
           <div className="space-x-4">
-            <button onClick={fetchEventData} className="btn btn-primary">
+            <button onClick={() => fetchEventData()} className="btn btn-primary">
               Try Again
             </button>
             <button onClick={() => navigate('/dashboard')} className="btn btn-secondary">
