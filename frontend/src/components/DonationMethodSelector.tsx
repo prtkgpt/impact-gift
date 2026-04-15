@@ -55,7 +55,20 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess, showCloseButton = 
       });
 
       // Open charity donation page in new tab
-      const donationUrl = charity?.donation_url || charity?.website_url;
+      // Priority: donation_url > payment_instructions (if URL) > website_url
+      let donationUrl = charity?.donation_url;
+
+      if (!donationUrl && charity?.payment_instructions) {
+        const paymentUrl = charity.payment_instructions.trim();
+        if (paymentUrl.startsWith('http://') || paymentUrl.startsWith('https://')) {
+          donationUrl = paymentUrl;
+        }
+      }
+
+      if (!donationUrl) {
+        donationUrl = charity?.website_url;
+      }
+
       if (donationUrl) {
         window.open(donationUrl, '_blank', 'noopener,noreferrer');
       }

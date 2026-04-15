@@ -203,6 +203,8 @@ export interface FavoriteCharity {
   logo?: string;
   description?: string;
   website?: string;
+  donation_url?: string;
+  payment_instructions?: string;
   category?: string;
 }
 

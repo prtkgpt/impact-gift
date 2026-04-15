@@ -117,8 +117,27 @@ const FavoriteCharities = () => {
     setEditingId(null);
   };
 
-  const openDonationPage = (website: string) => {
-    window.open(website, '_blank', 'noopener,noreferrer');
+  const getDonationUrl = (favorite: FavoriteCharity): string => {
+    // Priority: donation_url > payment_instructions (if URL) > website
+    if (favorite.donation_url) {
+      return favorite.donation_url;
+    }
+
+    // Check if payment_instructions contains a URL
+    if (favorite.payment_instructions) {
+      const paymentUrl = favorite.payment_instructions.trim();
+      if (paymentUrl.startsWith('http://') || paymentUrl.startsWith('https://')) {
+        return paymentUrl;
+      }
+    }
+
+    // Fall back to website
+    return favorite.website || '#';
+  };
+
+  const openDonationPage = (url: string) => {
+    if (url === '#') return;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleImageError = (favoriteId: number) => {
@@ -357,7 +376,7 @@ const FavoriteCharities = () => {
 
                 <div className="flex flex-col gap-2">
                   <button
-                    onClick={() => openDonationPage(favorite.website || '#')}
+                    onClick={() => openDonationPage(getDonationUrl(favorite))}
                     className="btn btn-primary text-sm w-full"
                   >
                     💝 Donate Now
