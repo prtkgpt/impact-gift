@@ -90,8 +90,7 @@ const FavoriteCharities = () => {
 
     try {
       await api.post('/favorite-charities', {
-        charity_id: selectedCharity,
-        notes
+        charity_id: selectedCharity
       });
 
       toast.success('Favorite charity added!');
@@ -444,18 +443,20 @@ const FavoriteCharities = () => {
                   </>
                 )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {editingId ? 'Your Notes (Optional)' : 'Notes (Optional)'}
-                  </label>
-                  <textarea
-                    className="input"
-                    rows={3}
-                    placeholder="Why is this charity important to you?"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  />
-                </div>
+                {editingId && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Your Notes (Optional)
+                    </label>
+                    <textarea
+                      className="input"
+                      rows={3}
+                      placeholder="Why is this charity important to you?"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 <div className="flex gap-3 pt-4">
                   <button type="submit" className="btn btn-primary flex-1">
