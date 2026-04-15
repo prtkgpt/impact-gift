@@ -10,7 +10,6 @@ const FavoriteCharities = () => {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedCharity, setSelectedCharity] = useState<number | null>(null);
-  const [commitmentAmount, setCommitmentAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
@@ -68,7 +67,6 @@ const FavoriteCharities = () => {
     try {
       await api.post('/favorite-charities', {
         charity_id: selectedCharity,
-        commitment_amount: commitmentAmount ? parseFloat(commitmentAmount) : 0,
         notes
       });
 
@@ -83,11 +81,10 @@ const FavoriteCharities = () => {
   const handleUpdateFavorite = async (id: number) => {
     try {
       await api.put(`/favorite-charities/${id}`, {
-        commitment_amount: commitmentAmount ? parseFloat(commitmentAmount) : 0,
         notes
       });
 
-      toast.success('Commitment updated!');
+      toast.success('Notes updated!');
       fetchFavorites();
       setEditingId(null);
       resetForm();
@@ -110,14 +107,12 @@ const FavoriteCharities = () => {
 
   const startEdit = (favorite: FavoriteCharity) => {
     setEditingId(favorite.id);
-    setCommitmentAmount(favorite.commitment_amount.toString());
     setNotes(favorite.notes || '');
   };
 
   const resetForm = () => {
     setShowAddModal(false);
     setSelectedCharity(null);
-    setCommitmentAmount('');
     setNotes('');
     setEditingId(null);
   };
@@ -238,7 +233,7 @@ const FavoriteCharities = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold mb-4">
-              {editingId ? 'Update Commitment' : 'Add Favorite Charity'}
+              {editingId ? 'Update Notes' : 'Add Favorite Charity'}
             </h3>
             <form onSubmit={editingId ? (e) => { e.preventDefault(); handleUpdateFavorite(editingId); } : handleAddFavorite} className="space-y-4">
               {!editingId && (
@@ -274,27 +269,6 @@ const FavoriteCharities = () => {
                   </p>
                 </div>
               )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Commitment Amount (optional)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="input pl-8"
-                    placeholder="0.00"
-                    value={commitmentAmount}
-                    onChange={(e) => setCommitmentAmount(e.target.value)}
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Set a personal goal for how much you'd like to donate
-                </p>
-              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -374,15 +348,6 @@ const FavoriteCharities = () => {
 
               <div className="p-4">
                 <h3 className="font-bold text-lg mb-2">{favorite.name}</h3>
-
-                {favorite.commitment_amount > 0 && (
-                  <div className="mb-3 p-3 bg-primary-50 rounded-lg">
-                    <p className="text-xs text-primary-600 font-medium">MY COMMITMENT</p>
-                    <p className="text-2xl font-bold text-primary-700">
-                      ${Number(favorite.commitment_amount).toFixed(2)}
-                    </p>
-                  </div>
-                )}
 
                 {favorite.notes && (
                   <p className="text-sm text-gray-600 mb-3 italic">
