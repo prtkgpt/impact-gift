@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../database/db';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest, authenticate } from '../middleware/auth';
 
 const router = Router();
 
@@ -256,6 +256,61 @@ router.patch('/requests/:id/reject', async (req: AuthRequest, res: Response) => 
   } catch (error: any) {
     console.error('Error rejecting charity request:', error);
     res.status(500).json({ error: 'Failed to reject charity request' });
+  }
+});
+
+// Update charity details
+router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const {
+      name,
+      website_url,
+      donation_url,
+      payment_instructions,
+      category,
+      description
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !website_url || !description) {
+      return res.status(400).json({
+        error: 'Missing required fields: name, website_url, and description are required'
+      });
+    }
+
+    // Check if charity exists
+    const charityCheck = await query(
+      'SELECT id FROM charities WHERE id = $1',
+      [id]
+    );
+
+    if (charityCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Charity not found' });
+    }
+
+    // Update the charity
+    const result = await query(
+      `UPDATE charities
+       SET name = $1,
+           website_url = $2,
+           donation_url = $3,
+           payment_instructions = $4,
+           category = $5,
+           description = $6
+       WHERE id = $7
+       RETURNING *`,
+      [name, website_url, donation_url || null, payment_instructions || null, category || 'Other', description, id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Charity updated successfully',
+      charity: result.rows[0]
+    });
+  } catch (error: any) {
+    console.error('Error updating charity:', error);
+    res.status(500).json({ error: 'Failed to update charity' });
   }
 });
 

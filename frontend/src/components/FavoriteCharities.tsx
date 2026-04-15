@@ -4,6 +4,21 @@ import toast from 'react-hot-toast';
 import { FavoriteCharity, Charity } from '../types';
 import RequestCharityModal from './RequestCharityModal';
 
+const CHARITY_CATEGORIES = [
+  'Disaster Relief',
+  'Healthcare',
+  'Water & Sanitation',
+  'Hunger Relief',
+  'Environment',
+  'Education',
+  'Poverty Alleviation',
+  'Animals',
+  'Housing',
+  'Human Rights',
+  'Arts & Culture',
+  'Other'
+];
+
 const FavoriteCharities = () => {
   const [favorites, setFavorites] = useState<FavoriteCharity[]>([]);
   const [charities, setCharities] = useState<Charity[]>([]);
@@ -12,8 +27,17 @@ const FavoriteCharities = () => {
   const [selectedCharity, setSelectedCharity] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingCharityId, setEditingCharityId] = useState<number | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const [showRequestModal, setShowRequestModal] = useState(false);
+
+  // Charity edit form fields
+  const [charityName, setCharityName] = useState('');
+  const [charityWebsite, setCharityWebsite] = useState('');
+  const [charityDonationUrl, setCharityDonationUrl] = useState('');
+  const [charityPaymentInfo, setCharityPaymentInfo] = useState('');
+  const [charityCategory, setCharityCategory] = useState('');
+  const [charityDescription, setCharityDescription] = useState('');
 
   useEffect(() => {
     // Load favorites and charities in parallel for better performance
@@ -78,18 +102,34 @@ const FavoriteCharities = () => {
     }
   };
 
-  const handleUpdateFavorite = async (id: number) => {
+  const handleUpdateFavorite = async () => {
+    if (!editingCharityId) return;
+
     try {
-      await api.put(`/favorite-charities/${id}`, {
-        notes
+      // Update the charity details
+      await api.put(`/charities/${editingCharityId}`, {
+        name: charityName,
+        website_url: charityWebsite,
+        donation_url: charityDonationUrl || undefined,
+        payment_instructions: charityPaymentInfo || undefined,
+        category: charityCategory || 'Other',
+        description: charityDescription
       });
 
-      toast.success('Notes updated!');
+      // Update the notes if editing a favorite
+      if (editingId) {
+        await api.put(`/favorite-charities/${editingId}`, {
+          notes
+        });
+      }
+
+      toast.success('Charity updated successfully!');
       fetchFavorites();
       setEditingId(null);
+      setEditingCharityId(null);
       resetForm();
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to update');
+      toast.error(error.response?.data?.error || 'Failed to update charity');
     }
   };
 
@@ -107,7 +147,14 @@ const FavoriteCharities = () => {
 
   const startEdit = (favorite: FavoriteCharity) => {
     setEditingId(favorite.id);
+    setEditingCharityId(favorite.charity_id);
     setNotes(favorite.notes || '');
+    setCharityName(favorite.name);
+    setCharityWebsite(favorite.website || '');
+    setCharityDonationUrl(favorite.donation_url || '');
+    setCharityPaymentInfo(favorite.payment_instructions || '');
+    setCharityCategory(favorite.category || '');
+    setCharityDescription(favorite.description || '');
   };
 
   const resetForm = () => {
@@ -115,6 +162,13 @@ const FavoriteCharities = () => {
     setSelectedCharity(null);
     setNotes('');
     setEditingId(null);
+    setEditingCharityId(null);
+    setCharityName('');
+    setCharityWebsite('');
+    setCharityDonationUrl('');
+    setCharityPaymentInfo('');
+    setCharityCategory('');
+    setCharityDescription('');
   };
 
   const getDonationUrl = (favorite: FavoriteCharity): string => {
@@ -249,72 +303,174 @@ const FavoriteCharities = () => {
 
       {/* Add/Edit Modal */}
       {(showAddModal || editingId) && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">
-              {editingId ? 'Update Notes' : 'Add Favorite Charity'}
-            </h3>
-            <form onSubmit={editingId ? (e) => { e.preventDefault(); handleUpdateFavorite(editingId); } : handleAddFavorite} className="space-y-4">
-              {!editingId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-2xl w-full my-8">
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">
+                {editingId ? 'Edit Charity Details' : 'Add Favorite Charity'}
+              </h3>
+              <form onSubmit={(e) => { e.preventDefault(); editingId ? handleUpdateFavorite() : handleAddFavorite(e); }} className="space-y-4">
+                {!editingId && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Select Charity
+                    </label>
+                    <select
+                      className="input"
+                      value={selectedCharity || ''}
+                      onChange={(e) => setSelectedCharity(Number(e.target.value))}
+                      required
+                    >
+                      <option value="">Choose a charity...</option>
+                      {availableCharities.map(charity => (
+                        <option key={charity.id} value={charity.id}>
+                          {charity.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Can't find your charity?{' '}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetForm();
+                          setShowRequestModal(true);
+                        }}
+                        className="text-primary-600 hover:text-primary-700 font-medium underline"
+                      >
+                        Request it here
+                      </button>
+                    </p>
+                  </div>
+                )}
+
+                {editingId && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Charity Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="input"
+                        placeholder="e.g., Save the Children"
+                        value={charityName}
+                        onChange={(e) => setCharityName(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Charity Website *
+                      </label>
+                      <input
+                        type="url"
+                        required
+                        className="input"
+                        placeholder="https://www.example.org"
+                        value={charityWebsite}
+                        onChange={(e) => setCharityWebsite(e.target.value)}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        The official website of the charity
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Charity Donation Page
+                      </label>
+                      <input
+                        type="url"
+                        className="input"
+                        placeholder="https://www.example.org/donate"
+                        value={charityDonationUrl}
+                        onChange={(e) => setCharityDonationUrl(e.target.value)}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Direct link where the "Donate Now" button should take users
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Alternative Payment Link (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        className="input"
+                        placeholder="venmo.com/yourname or $cashapp"
+                        value={charityPaymentInfo}
+                        onChange={(e) => setCharityPaymentInfo(e.target.value)}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        For charities without online donations - Venmo, CashApp, or other payment link
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Category (Optional)
+                      </label>
+                      <select
+                        className="input"
+                        value={charityCategory}
+                        onChange={(e) => setCharityCategory(e.target.value)}
+                      >
+                        <option value="">Select a category...</option>
+                        {CHARITY_CATEGORIES.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description *
+                      </label>
+                      <textarea
+                        required
+                        className="input"
+                        rows={3}
+                        placeholder="Briefly describe what this charity does..."
+                        value={charityDescription}
+                        onChange={(e) => setCharityDescription(e.target.value)}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        A brief description of the charity's mission and work
+                      </p>
+                    </div>
+                  </>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Select Charity
+                    {editingId ? 'Your Notes (Optional)' : 'Notes (Optional)'}
                   </label>
-                  <select
+                  <textarea
                     className="input"
-                    value={selectedCharity || ''}
-                    onChange={(e) => setSelectedCharity(Number(e.target.value))}
-                    required
-                  >
-                    <option value="">Choose a charity...</option>
-                    {availableCharities.map(charity => (
-                      <option key={charity.id} value={charity.id}>
-                        {charity.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Can't find your charity?{' '}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetForm();
-                        setShowRequestModal(true);
-                      }}
-                      className="text-primary-600 hover:text-primary-700 font-medium underline"
-                    >
-                      Request it here
-                    </button>
-                  </p>
+                    rows={3}
+                    placeholder="Why is this charity important to you?"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
                 </div>
-              )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notes (optional)
-                </label>
-                <textarea
-                  className="input"
-                  rows={3}
-                  placeholder="Why is this charity important to you?"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <button type="submit" className="btn btn-primary flex-1">
-                  {editingId ? 'Update' : 'Add'}
-                </button>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="btn btn-secondary"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+                <div className="flex gap-3 pt-4">
+                  <button type="submit" className="btn btn-primary flex-1">
+                    {editingId ? 'Update Charity' : 'Add'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="btn btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
