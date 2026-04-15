@@ -27,7 +27,7 @@ interface Invitation {
 }
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
@@ -35,10 +35,13 @@ const Dashboard = () => {
   const [eventsError, setEventsError] = useState(false);
 
   useEffect(() => {
+    // Wait for auth to finish loading before fetching data
+    if (authLoading) return;
     if (!user) return;
+
     // Load both events and invitations in parallel
     Promise.all([fetchEvents(), fetchInvitations()]);
-  }, [user?.id]);
+  }, [authLoading, user]);
 
   const fetchEvents = async (retryCount = 0) => {
     try {
