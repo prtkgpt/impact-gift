@@ -5,6 +5,7 @@ import { query } from '../database/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { CreateEmailTemplateInput } from '../types';
 import { isOwnerOrCoHost } from '../utils/coHostHelpers';
+import { buildGuestFilterClause, GuestFilter } from '../utils/guestFiltering';
 
 const router = Router();
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -453,13 +454,17 @@ View your invitation: {{EVENT_LINK}}`;
   }
 );
 
-// Send event update email to all invited guests
+// Send event update email to invited guests (with optional RSVP filtering)
 router.post(
   '/send-update',
   authenticate,
   [
     body('event_id').isInt(),
-    body('update_message').optional().trim()
+    body('update_message').optional().trim(),
+    body('target_filter')
+      .optional()
+      .isIn(['all', 'attending', 'not_attending', 'maybe', 'no_response', 'no_rsvp'])
+      .withMessage('Invalid target_filter value')
   ],
   async (req: AuthRequest, res: Response) => {
     try {
@@ -468,7 +473,7 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { event_id, update_message } = req.body;
+      const { event_id, update_message, target_filter = 'all' } = req.body;
 
       // Verify the user is owner or accepted co-host
       const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id, req.user!.email);
@@ -491,10 +496,14 @@ router.post(
 
       const event = eventResult.rows[0];
 
-      // Get all guests who have already been sent invitations
+      // Build filter clause for RSVP status
+      const filterClause = buildGuestFilterClause(target_filter as GuestFilter);
+
+      // Get guests based on filter
       const guestsResult = await query(
         `SELECT * FROM guests
          WHERE event_id = $1 AND invitation_sent = true
+         ${filterClause}
          ORDER BY created_at`,
         [event_id]
       );
@@ -502,7 +511,10 @@ router.post(
       const guests = guestsResult.rows;
 
       if (guests.length === 0) {
-        return res.status(400).json({ error: 'No guests have been invited yet' });
+        const filterMessage = target_filter === 'all'
+          ? 'No guests have been invited yet'
+          : `No guests match the selected filter (${target_filter})`;
+        return res.status(400).json({ error: filterMessage });
       }
 
       const eventUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/event/${event.slug}`;

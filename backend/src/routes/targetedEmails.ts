@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator';
 import { query } from '../database/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { sendEmail } from '../services/emailService';
+import { buildGuestFilterClause, GuestFilter, getGuestCountsByFilter } from '../utils/guestFiltering';
 
 const router = Router();
 
@@ -37,40 +38,16 @@ router.post(
 
       const event = eventCheck.rows[0];
 
-      // Build query based on filter
-      let guestsQuery = `
+      // Build query with RSVP filter using shared utility
+      const filterClause = buildGuestFilterClause(target_filter as GuestFilter);
+      const guestsQuery = `
         SELECT g.email, g.name, g.rsvp_status
         FROM guests g
         WHERE g.event_id = $1
+        ${filterClause}
       `;
 
-      const queryParams: any[] = [event_id];
-
-      switch (target_filter) {
-        case 'no_response':
-          guestsQuery += ` AND g.rsvp_status = 'no_response'`;
-          break;
-        case 'attending':
-          guestsQuery += ` AND g.rsvp_status = 'attending'`;
-          break;
-        case 'not_attending':
-          guestsQuery += ` AND g.rsvp_status = 'not_attending'`;
-          break;
-        case 'maybe':
-          guestsQuery += ` AND g.rsvp_status = 'maybe'`;
-          break;
-        case 'no_rsvp':
-          // No RSVP means either 'no_response' or invitation not sent yet
-          guestsQuery += ` AND (g.rsvp_status = 'no_response' OR g.invitation_sent = false)`;
-          break;
-        case 'all':
-          // No additional filter - send to all guests
-          break;
-        default:
-          return res.status(400).json({ error: 'Invalid target filter' });
-      }
-
-      const guestsResult = await query(guestsQuery, queryParams);
+      const guestsResult = await query(guestsQuery, [event_id]);
 
       if (guestsResult.rows.length === 0) {
         return res.status(400).json({
@@ -202,21 +179,10 @@ router.get(
         return res.status(403).json({ error: 'Unauthorized' });
       }
 
-      // Get counts for each filter
-      const countsResult = await query(
-        `SELECT
-          COUNT(*) as total,
-          COUNT(CASE WHEN rsvp_status = 'no_response' THEN 1 END) as no_response,
-          COUNT(CASE WHEN rsvp_status = 'attending' THEN 1 END) as attending,
-          COUNT(CASE WHEN rsvp_status = 'not_attending' THEN 1 END) as not_attending,
-          COUNT(CASE WHEN rsvp_status = 'maybe' THEN 1 END) as maybe,
-          COUNT(CASE WHEN rsvp_status = 'no_response' OR invitation_sent = false THEN 1 END) as no_rsvp
-        FROM guests
-        WHERE event_id = $1`,
-        [eventId]
-      );
+      // Get counts for each filter using shared utility
+      const counts = await getGuestCountsByFilter(parseInt(eventId));
 
-      res.json(countsResult.rows[0]);
+      res.json(counts);
     } catch (error) {
       console.error('Error fetching email preview counts:', error);
       res.status(500).json({ error: 'Failed to fetch counts' });

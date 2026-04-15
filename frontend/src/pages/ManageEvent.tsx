@@ -50,6 +50,8 @@ const ManageEvent = () => {
   // Send event update modal state
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updateMessage, setUpdateMessage] = useState('');
+  const [updateFilter, setUpdateFilter] = useState<string>('all');
+  const [filterCounts, setFilterCounts] = useState<any>(null);
 
   // Event Details tab state
   const [formData, setFormData] = useState({
@@ -348,13 +350,22 @@ const ManageEvent = () => {
     }
   };
 
-  const openUpdateModal = () => {
+  const openUpdateModal = async () => {
     if (!event) return;
 
     const invitedGuests = guests.filter(g => g.invitation_sent);
     if (invitedGuests.length === 0) {
       toast.error('No guests have been invited yet');
       return;
+    }
+
+    // Fetch filter counts for RSVP filtering
+    try {
+      const response = await api.get(`/targeted-emails/preview/${event.id}`);
+      setFilterCounts(response.data);
+    } catch (error) {
+      console.error('Failed to fetch filter counts:', error);
+      // Continue showing modal even if counts fail
     }
 
     setShowUpdateModal(true);
@@ -366,12 +377,15 @@ const ManageEvent = () => {
     try {
       const response = await api.post('/invitations/send-update', {
         event_id: event.id,
-        update_message: updateMessage || undefined
+        update_message: updateMessage || undefined,
+        target_filter: updateFilter
       });
 
       toast.success(response.data.message);
       setShowUpdateModal(false);
       setUpdateMessage('');
+      setUpdateFilter('all'); // Reset filter
+      setFilterCounts(null); // Clear counts
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to send event update');
     }
@@ -1426,6 +1440,40 @@ const ManageEvent = () => {
 
             <div className="p-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Who should receive this update? *
+              </label>
+              <select
+                value={updateFilter}
+                onChange={(e) => setUpdateFilter(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 mb-1"
+              >
+                <option value="all">
+                  All Invited Guests {filterCounts && `(${filterCounts.total})`}
+                </option>
+                <option value="attending">
+                  ✅ Attending {filterCounts && `(${filterCounts.attending})`}
+                </option>
+                <option value="not_attending">
+                  ❌ Not Attending {filterCounts && `(${filterCounts.not_attending})`}
+                </option>
+                <option value="maybe">
+                  🤔 Maybe {filterCounts && `(${filterCounts.maybe})`}
+                </option>
+                <option value="no_response">
+                  No Response Yet {filterCounts && `(${filterCounts.no_response})`}
+                </option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1 mb-4">
+                {updateFilter === 'all' && 'Send to everyone who has been invited'}
+                {updateFilter === 'attending' && 'Send only to guests who confirmed attendance'}
+                {updateFilter === 'not_attending' && 'Send only to guests who declined'}
+                {updateFilter === 'maybe' && 'Send only to guests who are unsure'}
+                {updateFilter === 'no_response' && 'Send only to guests who haven\'t responded'}
+              </p>
+            </div>
+
+            <div className="p-6 pt-0">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Add a personal message (optional)
               </label>
               <textarea
@@ -1436,7 +1484,7 @@ const ManageEvent = () => {
                 rows={4}
               />
               <p className="text-xs text-gray-500 mt-2">
-                Guests will receive an email with the updated event details
+                Selected guests will receive an email with the updated event details
               </p>
             </div>
 
@@ -1445,6 +1493,8 @@ const ManageEvent = () => {
                 onClick={() => {
                   setShowUpdateModal(false);
                   setUpdateMessage('');
+                  setUpdateFilter('all'); // Reset filter
+                  setFilterCounts(null); // Clear counts
                 }}
                 className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
               >
