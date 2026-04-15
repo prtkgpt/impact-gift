@@ -9,58 +9,253 @@ interface EventImageSelectorProps {
   helpText?: string;
 }
 
-// Pre-created event images
-const PRE_CREATED_IMAGES = [
+interface ImageCategory {
+  name: string;
+  images: Array<{
+    url: string;
+    publicId: string;
+    name: string;
+  }>;
+}
+
+// Pre-created event images organized by category
+const IMAGE_CATEGORIES: ImageCategory[] = [
   {
-    url: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800',
-    publicId: 'preset_birthday_balloons',
-    name: 'Birthday Balloons'
+    name: 'Birthday',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800',
+        publicId: 'preset_birthday_balloons',
+        name: 'Birthday Balloons'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800',
+        publicId: 'preset_birthday_cake',
+        name: 'Birthday Cake'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1558636508-e0db3814bd1d?w=800',
+        publicId: 'preset_birthday_cupcakes',
+        name: 'Birthday Cupcakes'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=800',
+        publicId: 'preset_birthday_candles',
+        name: 'Birthday Candles'
+      }
+    ]
   },
   {
-    url: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800',
-    publicId: 'preset_birthday_cake',
-    name: 'Birthday Cake'
+    name: 'Wedding',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800',
+        publicId: 'preset_wedding_rings',
+        name: 'Wedding Rings'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1606800052052-a08af7148866?w=800',
+        publicId: 'preset_wedding_flowers',
+        name: 'Wedding Flowers'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=800',
+        publicId: 'preset_wedding_bouquet',
+        name: 'Wedding Bouquet'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800',
+        publicId: 'preset_wedding_celebration',
+        name: 'Wedding Celebration'
+      }
+    ]
   },
   {
-    url: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800',
-    publicId: 'preset_wedding_rings',
-    name: 'Wedding Celebration'
+    name: 'Anniversary',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1522673607212-f2f15e0a71d7?w=800',
+        publicId: 'preset_anniversary_roses',
+        name: 'Anniversary Roses'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=800',
+        publicId: 'preset_anniversary_champagne',
+        name: 'Anniversary Champagne'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1514glazed-champagne',
+        publicId: 'preset_anniversary_romantic',
+        name: 'Romantic Celebration'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1470072768013-bf9532177525?w=800',
+        publicId: 'preset_anniversary_hearts',
+        name: 'Hearts & Love'
+      }
+    ]
   },
   {
-    url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800',
-    publicId: 'preset_celebration_confetti',
-    name: 'Celebration Confetti'
+    name: 'Graduation',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1523438097201-512ae7d59c44?w=800',
+        publicId: 'preset_graduation_cap',
+        name: 'Graduation Cap'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1627556704283-54b35dc57b7a?w=800',
+        publicId: 'preset_graduation_celebration',
+        name: 'Graduation Celebration'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800',
+        publicId: 'preset_graduation_diploma',
+        name: 'Graduation Diploma'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800',
+        publicId: 'preset_graduation_success',
+        name: 'Academic Success'
+      }
+    ]
   },
   {
-    url: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800',
-    publicId: 'preset_party_lights',
-    name: 'Party Lights'
+    name: 'Baby Shower',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800',
+        publicId: 'preset_baby_shower',
+        name: 'Baby Shower'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800',
+        publicId: 'preset_baby_pink_blue',
+        name: 'Baby Celebration'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=800',
+        publicId: 'preset_baby_toys',
+        name: 'Baby Toys'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800',
+        publicId: 'preset_baby_party',
+        name: 'Baby Party'
+      }
+    ]
   },
   {
-    url: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800',
-    publicId: 'preset_anniversary',
-    name: 'Anniversary'
+    name: 'Diwali & Festivals',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1605126430142-c88550084c1a?w=800',
+        publicId: 'preset_diwali_lights',
+        name: 'Diwali Lights'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1636011318902-625127536870?w=800',
+        publicId: 'preset_diwali_diyas',
+        name: 'Diwali Diyas'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1609157843894-d8f07f3cc5f9?w=800',
+        publicId: 'preset_diwali_rangoli',
+        name: 'Diwali Rangoli'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1577563682339-f369ebb25771?w=800',
+        publicId: 'preset_festival_celebration',
+        name: 'Festival Celebration'
+      }
+    ]
   },
   {
-    url: 'https://images.unsplash.com/photo-1523438097201-512ae7d59c44?w=800',
-    publicId: 'preset_graduation',
-    name: 'Graduation'
+    name: 'Retirement',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1504805572947-34fad45aed93?w=800',
+        publicId: 'preset_retirement_celebration',
+        name: 'Retirement Celebration'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1533134486753-c833f0ed4866?w=800',
+        publicId: 'preset_retirement_cheers',
+        name: 'Cheers to Retirement'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800',
+        publicId: 'preset_retirement_journey',
+        name: 'New Journey'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=800',
+        publicId: 'preset_retirement_relaxation',
+        name: 'Relaxation Time'
+      }
+    ]
   },
   {
-    url: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800',
-    publicId: 'preset_baby_shower',
-    name: 'Baby Shower'
+    name: 'Fundraiser & Charity',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800',
+        publicId: 'preset_charity_hands',
+        name: 'Helping Hands'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800',
+        publicId: 'preset_charity_community',
+        name: 'Community Support'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800',
+        publicId: 'preset_charity_giving',
+        name: 'Gift of Giving'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800',
+        publicId: 'preset_charity_heart',
+        name: 'Heart of Charity'
+      }
+    ]
+  },
+  {
+    name: 'General Celebration',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800',
+        publicId: 'preset_party_lights',
+        name: 'Party Lights'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800',
+        publicId: 'preset_celebration_confetti',
+        name: 'Celebration Confetti'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800',
+        publicId: 'preset_party_balloons',
+        name: 'Party Balloons'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1514glazed-fireworks',
+        publicId: 'preset_celebration_fireworks',
+        name: 'Celebration Fireworks'
+      }
+    ]
   }
 ];
 
 const EventImageSelector = ({ onImageUploaded, currentImageUrl, label, helpText }: EventImageSelectorProps) => {
   const [activeTab, setActiveTab] = useState<'library' | 'upload'>('library');
+  const [selectedCategory, setSelectedCategory] = useState<string>(IMAGE_CATEGORIES[0].name);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePresetSelect = (image: typeof PRE_CREATED_IMAGES[0]) => {
+  const handlePresetSelect = (image: { url: string; publicId: string; name: string }) => {
     setPreview(image.url);
     setSelectedPresetId(image.publicId);
     onImageUploaded(image.url, image.publicId);
@@ -158,35 +353,56 @@ const EventImageSelector = ({ onImageUploaded, currentImageUrl, label, helpText 
 
       {/* Library Tab */}
       {activeTab === 'library' && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {PRE_CREATED_IMAGES.map((image) => (
-            <button
-              key={image.publicId}
-              type="button"
-              onClick={() => handlePresetSelect(image)}
-              className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
-                selectedPresetId === image.publicId
-                  ? 'border-primary-600 ring-2 ring-primary-200'
-                  : 'border-gray-200 hover:border-primary-300'
-              }`}
-            >
-              <img
-                src={image.url}
-                alt={image.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                <p className="text-white text-xs font-medium truncate">{image.name}</p>
-              </div>
-              {selectedPresetId === image.publicId && (
-                <div className="absolute top-2 right-2 bg-primary-600 text-white rounded-full p-1">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
+        <div>
+          {/* Category Pills */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {IMAGE_CATEGORIES.map((category) => (
+              <button
+                key={category.name}
+                type="button"
+                onClick={() => setSelectedCategory(category.name)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedCategory === category.name
+                    ? 'bg-primary-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Images Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {IMAGE_CATEGORIES.find(cat => cat.name === selectedCategory)?.images.map((image) => (
+              <button
+                key={image.publicId}
+                type="button"
+                onClick={() => handlePresetSelect(image)}
+                className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
+                  selectedPresetId === image.publicId
+                    ? 'border-primary-600 ring-2 ring-primary-200'
+                    : 'border-gray-200 hover:border-primary-300'
+                }`}
+              >
+                <img
+                  src={image.url}
+                  alt={image.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                  <p className="text-white text-xs font-medium truncate">{image.name}</p>
                 </div>
-              )}
-            </button>
-          ))}
+                {selectedPresetId === image.publicId && (
+                  <div className="absolute top-2 right-2 bg-primary-600 text-white rounded-full p-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
