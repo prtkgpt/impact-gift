@@ -256,8 +256,8 @@ const MyCommitments = () => {
         {/* Commitments to My Charity Page Section */}
         <div className="mb-12">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Commitments to My Charity Page</h2>
-            <p className="text-base text-gray-600">Donations others have pledged through my charity page</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Commitments Made by Others</h2>
+            <p className="text-base text-gray-600">Donations others have pledged to my events and charity page</p>
           </div>
 
         {/* Commitments Table */}

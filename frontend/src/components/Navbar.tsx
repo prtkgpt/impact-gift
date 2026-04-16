@@ -26,6 +26,9 @@ const Navbar = () => {
                 <Link to="/dashboard" className="text-gray-700 hover:text-primary-600">
                   Dashboard
                 </Link>
+                <Link to="/commitments" className="text-gray-700 hover:text-primary-600">
+                  Commitments
+                </Link>
                 <Link to="/profile" className="text-gray-700 hover:text-primary-600">
                   Profile
                 </Link>
