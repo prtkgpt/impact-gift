@@ -81,25 +81,49 @@ router.get('/made-by-me', authenticate, async (req: AuthRequest, res: Response) 
 
     const userEmail = userResult.rows[0].email;
 
-    // Get all commitments made by this user (as donor)
-    const result = await query(
-      `SELECT cc.*, c.name as charity_name, c.logo_url as charity_logo,
-              e.title as event_title, u.name as charity_owner_name
+    // Get commitments from charity pages
+    const charityCommitments = await query(
+      `SELECT cc.id, cc.donor_name, cc.donor_email, cc.commitment_amount,
+              cc.clicked_through, cc.created_at,
+              c.name as charity_name, c.logo_url as charity_logo,
+              e.title as event_title, u.name as charity_owner_name,
+              'charity_page' as source
        FROM charity_commitments cc
        JOIN charities c ON cc.charity_id = c.id
        LEFT JOIN events e ON cc.event_id = e.id
        LEFT JOIN users u ON cc.charity_page_owner_id = u.id
-       WHERE cc.donor_email = $1
-       ORDER BY cc.created_at DESC`,
+       WHERE cc.donor_email = $1`,
       [userEmail]
     );
 
-    const commitments = result.rows;
-    const total_commitments = commitments.length;
-    const total_amount = commitments.reduce((sum, c) => sum + parseFloat(c.commitment_amount), 0);
+    // Get donations from events (pledges made through events)
+    const eventDonations = await query(
+      `SELECT d.id, d.donor_name, d.donor_email, d.amount as commitment_amount,
+              CASE WHEN d.status = 'completed' THEN true ELSE false END as clicked_through,
+              d.created_at,
+              c.name as charity_name, c.logo_url as charity_logo,
+              e.title as event_title, u.name as charity_owner_name,
+              'event' as source
+       FROM donations d
+       JOIN events e ON d.event_id = e.id
+       JOIN users u ON e.user_id = u.id
+       LEFT JOIN event_charities ec ON ec.event_id = e.id
+       LEFT JOIN charities c ON ec.charity_id = c.id
+       WHERE d.donor_email = $1`,
+      [userEmail]
+    );
+
+    // Combine both sources
+    const allCommitments = [...charityCommitments.rows, ...eventDonations.rows];
+
+    // Sort by created_at descending
+    allCommitments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    const total_commitments = allCommitments.length;
+    const total_amount = allCommitments.reduce((sum, c) => sum + parseFloat(c.commitment_amount), 0);
 
     res.json({
-      commitments,
+      commitments: allCommitments,
       total_commitments,
       total_amount
     });
@@ -109,7 +133,7 @@ router.get('/made-by-me', authenticate, async (req: AuthRequest, res: Response) 
   }
 });
 
-// Get commitments for the authenticated user's charity page
+// Get commitments for the authenticated user's charity page AND events
 router.get('/my-page', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
@@ -120,35 +144,49 @@ router.get('/my-page', authenticate, async (req: AuthRequest, res: Response) => 
       [userId]
     );
 
-    if (userResult.rows.length === 0 || !userResult.rows[0].charity_page_slug) {
-      return res.json({
-        commitments: [],
-        total_commitments: 0,
-        total_amount: 0,
-        charity_page_slug: null
-      });
-    }
+    const charity_page_slug = userResult.rows.length > 0 ? userResult.rows[0].charity_page_slug : null;
 
-    const charity_page_slug = userResult.rows[0].charity_page_slug;
-
-    // Get all commitments for this user's charity page
-    const result = await query(
-      `SELECT cc.*, c.name as charity_name, c.logo_url as charity_logo,
-              e.title as event_title
+    // Get commitments from charity page
+    const charityPageCommitments = await query(
+      `SELECT cc.id, cc.donor_name, cc.donor_email, cc.commitment_amount,
+              cc.clicked_through, cc.created_at,
+              c.name as charity_name, c.logo_url as charity_logo,
+              e.title as event_title,
+              'charity_page' as source
        FROM charity_commitments cc
        JOIN charities c ON cc.charity_id = c.id
        LEFT JOIN events e ON cc.event_id = e.id
-       WHERE cc.charity_page_owner_id = $1
-       ORDER BY cc.created_at DESC`,
+       WHERE cc.charity_page_owner_id = $1`,
       [userId]
     );
 
-    const commitments = result.rows;
-    const total_commitments = commitments.length;
-    const total_amount = commitments.reduce((sum, c) => sum + parseFloat(c.commitment_amount), 0);
+    // Get donations from user's events
+    const eventDonations = await query(
+      `SELECT d.id, d.donor_name, d.donor_email, d.amount as commitment_amount,
+              CASE WHEN d.status = 'completed' THEN true ELSE false END as clicked_through,
+              d.created_at,
+              c.name as charity_name, c.logo_url as charity_logo,
+              e.title as event_title,
+              'event' as source
+       FROM donations d
+       JOIN events e ON d.event_id = e.id
+       LEFT JOIN event_charities ec ON ec.event_id = e.id
+       LEFT JOIN charities c ON ec.charity_id = c.id
+       WHERE e.user_id = $1`,
+      [userId]
+    );
+
+    // Combine both sources
+    const allCommitments = [...charityPageCommitments.rows, ...eventDonations.rows];
+
+    // Sort by created_at descending
+    allCommitments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    const total_commitments = allCommitments.length;
+    const total_amount = allCommitments.reduce((sum, c) => sum + parseFloat(c.commitment_amount), 0);
 
     res.json({
-      commitments,
+      commitments: allCommitments,
       total_commitments,
       total_amount,
       charity_page_slug
