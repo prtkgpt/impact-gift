@@ -84,7 +84,7 @@ const IMAGE_CATEGORIES: ImageCategory[] = [
         name: 'Anniversary Champagne'
       },
       {
-        url: 'https://images.unsplash.com/photo-1514glazed-champagne',
+        url: 'https://images.unsplash.com/photo-1529634806980-85c3dd6d34ac?w=800',
         publicId: 'preset_anniversary_romantic',
         name: 'Romantic Celebration'
       },
@@ -149,22 +149,22 @@ const IMAGE_CATEGORIES: ImageCategory[] = [
     name: 'Diwali & Festivals',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1605126430142-c88550084c1a?w=800',
+        url: 'https://images.unsplash.com/photo-1605792657660-596af9009e82?w=800',
         publicId: 'preset_diwali_lights',
         name: 'Diwali Lights'
       },
       {
-        url: 'https://images.unsplash.com/photo-1636011318902-625127536870?w=800',
+        url: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?w=800',
         publicId: 'preset_diwali_diyas',
         name: 'Diwali Diyas'
       },
       {
-        url: 'https://images.unsplash.com/photo-1609157843894-d8f07f3cc5f9?w=800',
+        url: 'https://images.unsplash.com/photo-1540575861501-7cf05a4b125a?w=800',
         publicId: 'preset_diwali_rangoli',
         name: 'Diwali Rangoli'
       },
       {
-        url: 'https://images.unsplash.com/photo-1577563682339-f369ebb25771?w=800',
+        url: 'https://images.unsplash.com/photo-1482575832494-771f74bf6857?w=800',
         publicId: 'preset_festival_celebration',
         name: 'Festival Celebration'
       }
@@ -239,7 +239,7 @@ const IMAGE_CATEGORIES: ImageCategory[] = [
         name: 'Party Balloons'
       },
       {
-        url: 'https://images.unsplash.com/photo-1514glazed-fireworks',
+        url: 'https://images.unsplash.com/photo-1486711681588-8936ddb2071c?w=800',
         publicId: 'preset_celebration_fireworks',
         name: 'Celebration Fireworks'
       }
