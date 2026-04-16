@@ -592,42 +592,18 @@ const ManageEvent = () => {
             </div>
 
             {/* Basic Info */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                  Event Title *
-                </label>
-                <input
-                  id="title"
-                  type="text"
-                  required
-                  className="input"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="event_type" className="block text-sm font-medium text-gray-700 mb-1">
-                  Event Type *
-                </label>
-                <select
-                  id="event_type"
-                  required
-                  className="input"
-                  value={formData.event_type}
-                  onChange={(e) => setFormData({ ...formData, event_type: e.target.value })}
-                >
-                  <option value="birthday">Birthday</option>
-                  <option value="wedding">Wedding</option>
-                  <option value="anniversary">Anniversary</option>
-                  <option value="graduation">Graduation</option>
-                  <option value="baby_shower">Baby Shower</option>
-                  <option value="retirement">Retirement</option>
-                  <option value="memorial">Memorial</option>
-                  <option value="other">Other Celebration</option>
-                </select>
-              </div>
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                Event Title *
+              </label>
+              <input
+                id="title"
+                type="text"
+                required
+                className="input"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              />
             </div>
 
             <div>
