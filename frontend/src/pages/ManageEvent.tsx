@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { Event, Guest, Donation, RSVPSummaryResponse, Charity } from '../types';
@@ -12,6 +12,7 @@ import EventImageSelector from '../components/EventImageSelector';
 const ManageEvent = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [event, setEvent] = useState<Event | null>(null);
   const [guests, setGuests] = useState<Guest[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
@@ -19,7 +20,9 @@ const ManageEvent = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   type TabType = 'details' | 'charities' | 'guests' | 'progress' | 'cohosts' | 'rsvp' | 'potluck' | 'communication';
-  const [activeTab, setActiveTab] = useState<TabType>('details');
+  // Set initial tab from location state or default to 'details'
+  const initialTab = (location.state as { tab?: TabType })?.tab || 'details';
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
 
   // Guard against missing slug
   if (!slug) {

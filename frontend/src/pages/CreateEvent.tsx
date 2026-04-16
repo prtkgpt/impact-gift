@@ -103,8 +103,8 @@ const CreateEvent = () => {
 
       toast.success('Event created successfully!');
 
-      // Navigate to manage event page
-      navigate(`/event/${response.data.slug}/manage`);
+      // Navigate to manage event page with Guest List tab active
+      navigate(`/event/${response.data.slug}/manage`, { state: { tab: 'guests' } });
     } catch (error: any) {
       console.error('Event creation error:', error);
       console.error('Error response:', error.response);
