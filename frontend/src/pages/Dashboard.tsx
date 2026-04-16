@@ -33,14 +33,17 @@ const Dashboard = () => {
   const [eventsLoading, setEventsLoading] = useState(true);
   const [invitationsLoading, setInvitationsLoading] = useState(true);
   const [eventsError, setEventsError] = useState(false);
+  const [commitmentsMade, setCommitmentsMade] = useState({ count: 0, amount: 0 });
+  const [commitmentsReceived, setCommitmentsReceived] = useState({ count: 0, amount: 0 });
+  const [commitmentsLoading, setCommitmentsLoading] = useState(true);
 
   useEffect(() => {
     // Wait for auth to finish loading before fetching data
     if (authLoading) return;
     if (!user) return;
 
-    // Load both events and invitations in parallel
-    Promise.all([fetchEvents(), fetchInvitations()]);
+    // Load events, invitations, and commitments in parallel
+    Promise.all([fetchEvents(), fetchInvitations(), fetchCommitmentsSummary()]);
   }, [authLoading, user]);
 
   const fetchEvents = async (retryCount = 0) => {
@@ -97,12 +100,107 @@ const Dashboard = () => {
     }
   };
 
+  const fetchCommitmentsSummary = async () => {
+    try {
+      const [madeResponse, receivedResponse] = await Promise.all([
+        api.get('/charity-commitments/made-by-me'),
+        api.get('/charity-commitments/my-page')
+      ]);
+
+      setCommitmentsMade({
+        count: madeResponse.data.total_commitments || 0,
+        amount: madeResponse.data.total_amount || 0
+      });
+
+      setCommitmentsReceived({
+        count: receivedResponse.data.total_commitments || 0,
+        amount: receivedResponse.data.total_amount || 0
+      });
+    } catch (error: any) {
+      console.error('Failed to load commitments summary:', error);
+    } finally {
+      setCommitmentsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Charity Page Card */}
         <div className="mb-12 animate-fade-in">
           <CharityPageCard />
+        </div>
+
+        {/* Commitments Summary */}
+        <div className="mb-12 animate-fade-in" style={{ animationDelay: '50ms' }}>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">💝 My Commitments</h2>
+              <p className="text-sm text-gray-600">Summary of all your donation pledges</p>
+            </div>
+            <Link to="/commitments" className="text-primary-600 hover:text-primary-700 font-medium text-sm">
+              View Details →
+            </Link>
+          </div>
+
+          {commitmentsLoading ? (
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 animate-pulse">
+                <div className="h-24 bg-gray-200 rounded"></div>
+              </div>
+              <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 animate-pulse">
+                <div className="h-24 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Commitments Made */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-6 border border-blue-200 hover:shadow-xl transition-shadow">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="bg-blue-100 p-3 rounded-xl">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Commitments I've Made</h3>
+                <p className="text-sm text-gray-600 mb-4">To events and charity pages</p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Total Pledges</span>
+                    <span className="text-2xl font-bold text-gray-900">{commitmentsMade.count}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Total Amount</span>
+                    <span className="text-2xl font-bold text-blue-600">${commitmentsMade.amount.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Commitments Received */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-lg p-6 border border-green-200 hover:shadow-xl transition-shadow">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="bg-green-100 p-3 rounded-xl">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Commitments I've Received</h3>
+                <p className="text-sm text-gray-600 mb-4">From my events and charity page</p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Total Pledges</span>
+                    <span className="text-2xl font-bold text-gray-900">{commitmentsReceived.count}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Total Amount</span>
+                    <span className="text-2xl font-bold text-green-600">${commitmentsReceived.amount.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Admin Section - TODO: Add proper admin role check */}
