@@ -123,15 +123,24 @@ const ManageEvent = () => {
       setLoading(true);
       setError(null);
       console.log('ManageEvent: Fetching event data...');
-      // First get the event to get the event ID
-      const eventRes = await api.get(`/events/${slug}`, {
-        timeout: retryCount === 0 ? 15000 : 20000,
-      });
+
+      // Fetch event and charities list in parallel (charities doesn't depend on event ID)
+      const [eventRes, charitiesResult] = await Promise.all([
+        api.get(`/events/${slug}`, {
+          timeout: retryCount === 0 ? 15000 : 20000,
+        }),
+        api.get<{ charities: Charity[] }>('/charities').catch((err) => {
+          console.error('Error fetching charities:', err);
+          return { data: { charities: [] } };
+        })
+      ]);
+
       setEvent(eventRes.data);
+      setCharities(charitiesResult.data.charities);
       console.log('ManageEvent: Event loaded successfully:', eventRes.data);
 
-      // Then fetch guests, donations, and RSVP summary using event ID
-      const [guestsRes, donationsRes, rsvpSummaryRes] = await Promise.all([
+      // Now fetch all event-specific data in parallel using event ID
+      const [guestsRes, donationsRes, rsvpSummaryRes, attireResult] = await Promise.all([
         api.get(`/guests/event/${eventRes.data.id}`).catch((err) => {
           console.error('Error fetching guests:', err);
           return { data: [] };
@@ -143,12 +152,22 @@ const ManageEvent = () => {
         api.get(`/guests/event/${eventRes.data.id}/rsvp-summary`).catch((err) => {
           console.error('Error fetching RSVP summary:', err);
           return { data: null };
+        }),
+        api.get(`/event-photos/event/${eventRes.data.id}?category=attire`).catch((err) => {
+          console.error('Error fetching attire photos:', err);
+          return { data: { success: false, photos: [] } };
         })
       ]);
 
       setGuests(guestsRes.data);
       setDonations(donationsRes.data);
       setRsvpSummary(rsvpSummaryRes.data);
+
+      // Process attire photos result
+      if (attireResult.data.success) {
+        setAttirePhotos(attireResult.data.photos);
+      }
+
       console.log('Guests loaded:', guestsRes.data.length);
       console.log('Donations loaded:', donationsRes.data.length);
       console.log('RSVP Summary loaded:', rsvpSummaryRes.data);
@@ -189,22 +208,6 @@ const ManageEvent = () => {
           url: eventRes.data.event_image_url,
           publicId: eventRes.data.event_image_public_id || ''
         });
-      }
-
-      // Fetch attire photos and charities list in parallel
-      const [attireResult, charitiesResult] = await Promise.allSettled([
-        api.get(`/event-photos/event/${eventRes.data.id}?category=attire`),
-        api.get<{ charities: Charity[] }>('/charities')
-      ]);
-
-      // Process attire photos result
-      if (attireResult.status === 'fulfilled' && attireResult.value.data.success) {
-        setAttirePhotos(attireResult.value.data.photos);
-      }
-
-      // Process charities result
-      if (charitiesResult.status === 'fulfilled') {
-        setCharities(charitiesResult.value.data.charities);
       }
     } catch (error: any) {
       console.error('ManageEvent: Error fetching event data:', error);
