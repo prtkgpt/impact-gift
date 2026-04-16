@@ -18,7 +18,7 @@ const ManageEvent = () => {
   const [rsvpSummary, setRsvpSummary] = useState<RSVPSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  type TabType = 'details' | 'charities' | 'guests' | 'progress' | 'cohosts' | 'rsvp' | 'potluck';
+  type TabType = 'details' | 'charities' | 'guests' | 'progress' | 'cohosts' | 'rsvp' | 'potluck' | 'communication';
   const [activeTab, setActiveTab] = useState<TabType>('details');
 
   // Guard against missing slug
@@ -94,6 +94,22 @@ const ManageEvent = () => {
     console.log('Active tab changed to:', activeTab);
     console.log('Current state:', { guests: guests.length, donations: donations.length });
   }, [activeTab, guests, donations]);
+
+  // Fetch filter counts when communication tab is active
+  useEffect(() => {
+    const fetchFilterCounts = async () => {
+      if (activeTab === 'communication' && event?.id) {
+        try {
+          const response = await api.get(`/targeted-emails/preview/${event.id}`);
+          setFilterCounts(response.data);
+        } catch (error) {
+          console.error('Failed to fetch filter counts:', error);
+        }
+      }
+    };
+
+    fetchFilterCounts();
+  }, [activeTab, event?.id]);
 
   const fetchEventData = async (retryCount = 0) => {
     if (!slug) {
@@ -582,7 +598,7 @@ const ManageEvent = () => {
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
-          {(['details', 'charities', 'guests', 'rsvp', 'cohosts', 'potluck', 'progress'] as const).map((tab) => (
+          {(['details', 'charities', 'guests', 'rsvp', 'communication', 'cohosts', 'potluck', 'progress'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => {
@@ -600,6 +616,7 @@ const ManageEvent = () => {
               {tab === 'charities' && 'Charities'}
               {tab === 'guests' && 'Guest List'}
               {tab === 'rsvp' && 'RSVP Summary'}
+              {tab === 'communication' && 'Message Guests'}
               {tab === 'cohosts' && 'Co-Hosts'}
               {tab === 'potluck' && 'Potluck'}
               {tab === 'progress' && 'Progress & Donations'}
@@ -1340,6 +1357,121 @@ const ManageEvent = () => {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Communication Tab */}
+      {activeTab === 'communication' && (
+        <div className="space-y-6">
+          <div className="card">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6">Message Guests</h3>
+
+            {/* Message Form */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Who should receive this message? *
+                </label>
+                <select
+                  value={updateFilter}
+                  onChange={(e) => setUpdateFilter(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 mb-1"
+                >
+                  <option value="all">
+                    All Invited Guests {filterCounts && `(${filterCounts.total})`}
+                  </option>
+                  <option value="attending">
+                    ✅ Attending {filterCounts && `(${filterCounts.attending})`}
+                  </option>
+                  <option value="not_attending">
+                    ❌ Not Attending {filterCounts && `(${filterCounts.not_attending})`}
+                  </option>
+                  <option value="maybe">
+                    🤔 Maybe {filterCounts && `(${filterCounts.maybe})`}
+                  </option>
+                  <option value="no_response">
+                    No Response Yet {filterCounts && `(${filterCounts.no_response})`}
+                  </option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {updateFilter === 'all' && 'Send to everyone who has been invited'}
+                  {updateFilter === 'attending' && 'Send only to guests who confirmed attendance'}
+                  {updateFilter === 'not_attending' && 'Send only to guests who declined'}
+                  {updateFilter === 'maybe' && 'Send only to guests who are unsure'}
+                  {updateFilter === 'no_response' && 'Send only to guests who haven\'t responded'}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Your Message *
+                </label>
+                <textarea
+                  value={updateMessage}
+                  onChange={(e) => setUpdateMessage(e.target.value)}
+                  placeholder="e.g., We've updated the event time. Looking forward to seeing you!"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+                  rows={6}
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  This message will be sent via email to the selected guests
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                <div className="text-sm text-gray-600">
+                  {filterCounts && (
+                    <span>
+                      {updateFilter === 'all' && `${filterCounts.total} guests will receive this message`}
+                      {updateFilter === 'attending' && `${filterCounts.attending} guests will receive this message`}
+                      {updateFilter === 'not_attending' && `${filterCounts.not_attending} guests will receive this message`}
+                      {updateFilter === 'maybe' && `${filterCounts.maybe} guests will receive this message`}
+                      {updateFilter === 'no_response' && `${filterCounts.no_response} guests will receive this message`}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!event || !updateMessage.trim()) {
+                      toast.error('Please enter a message');
+                      return;
+                    }
+
+                    try {
+                      const response = await api.post('/invitations/send-update', {
+                        event_id: event.id,
+                        update_message: updateMessage,
+                        target_filter: updateFilter
+                      });
+
+                      toast.success(response.data.message);
+                      setUpdateMessage('');
+                      setUpdateFilter('all');
+                    } catch (error: any) {
+                      toast.error(error.response?.data?.error || 'Failed to send message');
+                    }
+                  }}
+                  className="btn btn-primary"
+                  disabled={!updateMessage.trim()}
+                >
+                  📧 Send Message
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Tips Card */}
+          <div className="card bg-blue-50 border border-blue-200">
+            <h4 className="text-sm font-semibold text-blue-900 mb-2">💡 Messaging Tips</h4>
+            <ul className="text-sm text-blue-800 space-y-1">
+              <li>• Use filters to send targeted messages to specific groups</li>
+              <li>• Send reminders to guests who haven't responded yet</li>
+              <li>• Update "Attending" guests about venue or time changes</li>
+              <li>• Thank guests who confirmed for their participation</li>
+            </ul>
           </div>
         </div>
       )}
