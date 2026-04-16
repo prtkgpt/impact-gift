@@ -60,6 +60,55 @@ router.post(
   }
 );
 
+// Get commitments made BY the authenticated user (as a donor)
+router.get('/made-by-me', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.id;
+
+    // Get user's email
+    const userResult = await query(
+      'SELECT email FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.json({
+        commitments: [],
+        total_commitments: 0,
+        total_amount: 0
+      });
+    }
+
+    const userEmail = userResult.rows[0].email;
+
+    // Get all commitments made by this user (as donor)
+    const result = await query(
+      `SELECT cc.*, c.name as charity_name, c.logo_url as charity_logo,
+              e.title as event_title, u.name as charity_owner_name
+       FROM charity_commitments cc
+       JOIN charities c ON cc.charity_id = c.id
+       LEFT JOIN events e ON cc.event_id = e.id
+       LEFT JOIN users u ON cc.charity_page_owner_id = u.id
+       WHERE cc.donor_email = $1
+       ORDER BY cc.created_at DESC`,
+      [userEmail]
+    );
+
+    const commitments = result.rows;
+    const total_commitments = commitments.length;
+    const total_amount = commitments.reduce((sum, c) => sum + parseFloat(c.commitment_amount), 0);
+
+    res.json({
+      commitments,
+      total_commitments,
+      total_amount
+    });
+  } catch (error) {
+    console.error('Error fetching my commitments:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Get commitments for the authenticated user's charity page
 router.get('/my-page', authenticate, async (req: AuthRequest, res: Response) => {
   try {

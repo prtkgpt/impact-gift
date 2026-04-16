@@ -26,12 +26,29 @@ interface Invitation {
   additional_guests?: number;
 }
 
+interface Commitment {
+  id: number;
+  donor_name: string;
+  donor_email: string;
+  commitment_amount: number | string;
+  charity_name: string;
+  charity_logo: string;
+  event_title?: string;
+  charity_owner_name?: string;
+  created_at: string;
+  clicked_through: boolean;
+}
+
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [commitmentsByMe, setCommitmentsByMe] = useState<Commitment[]>([]);
+  const [commitmentsToMe, setCommitmentsToMe] = useState<Commitment[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [invitationsLoading, setInvitationsLoading] = useState(true);
+  const [commitmentsByMeLoading, setCommitmentsByMeLoading] = useState(true);
+  const [commitmentsToMeLoading, setCommitmentsToMeLoading] = useState(true);
   const [eventsError, setEventsError] = useState(false);
 
   useEffect(() => {
@@ -39,8 +56,13 @@ const Dashboard = () => {
     if (authLoading) return;
     if (!user) return;
 
-    // Load both events and invitations in parallel
-    Promise.all([fetchEvents(), fetchInvitations()]);
+    // Load all data in parallel
+    Promise.all([
+      fetchEvents(),
+      fetchInvitations(),
+      fetchCommitmentsByMe(),
+      fetchCommitmentsToMe()
+    ]);
   }, [authLoading, user]);
 
   const fetchEvents = async (retryCount = 0) => {
@@ -94,6 +116,28 @@ const Dashboard = () => {
       console.error('Failed to load invitations:', error);
     } finally {
       setInvitationsLoading(false);
+    }
+  };
+
+  const fetchCommitmentsByMe = async () => {
+    try {
+      const response = await api.get('/charity-commitments/made-by-me');
+      setCommitmentsByMe(response.data.commitments || []);
+    } catch (error) {
+      console.error('Failed to load commitments by me:', error);
+    } finally {
+      setCommitmentsByMeLoading(false);
+    }
+  };
+
+  const fetchCommitmentsToMe = async () => {
+    try {
+      const response = await api.get('/charity-commitments/my-page');
+      setCommitmentsToMe(response.data.commitments || []);
+    } catch (error) {
+      console.error('Failed to load commitments to me:', error);
+    } finally {
+      setCommitmentsToMeLoading(false);
     }
   };
 
@@ -417,6 +461,159 @@ const Dashboard = () => {
                   </Link>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Commitments Made By Me Section */}
+        <div className="mb-16">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">My Charity Commitments</h2>
+            <p className="text-lg text-gray-600">Donations I've pledged to make</p>
+          </div>
+
+          {commitmentsByMeLoading ? (
+            <div className="card animate-pulse">
+              <div className="h-32 bg-gray-200 rounded-xl"></div>
+            </div>
+          ) : commitmentsByMe.length === 0 ? (
+            <div className="card-highlight text-center py-12 animate-fade-in">
+              <div className="text-5xl mb-4">💝</div>
+              <h3 className="text-xl font-bold mb-2 text-gray-900">No commitments yet</h3>
+              <p className="text-gray-600">When you pledge to donate to charities, they'll appear here</p>
+            </div>
+          ) : (
+            <div className="card">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Charity</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Event/Owner</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {commitmentsByMe.map((commitment) => (
+                      <tr key={commitment.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            {commitment.charity_logo && (
+                              <img
+                                src={commitment.charity_logo}
+                                alt={commitment.charity_name}
+                                className="w-8 h-8 rounded mr-3 object-contain"
+                              />
+                            )}
+                            <span className="text-sm font-medium text-gray-900">{commitment.charity_name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {commitment.event_title || commitment.charity_owner_name || '—'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-accent-600">
+                          ${Number(commitment.commitment_amount).toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {commitment.clicked_through ? (
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
+                              Completed
+                            </span>
+                          ) : (
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold text-yellow-700 bg-yellow-100 rounded-full">
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {format(new Date(commitment.created_at), 'MMM dd, yyyy')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Commitments Made To My Charity Section */}
+        <div className="mb-16">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Commitments to My Charity Page</h2>
+            <p className="text-lg text-gray-600">Donations others have pledged through my charity page</p>
+          </div>
+
+          {commitmentsToMeLoading ? (
+            <div className="card animate-pulse">
+              <div className="h-32 bg-gray-200 rounded-xl"></div>
+            </div>
+          ) : commitmentsToMe.length === 0 ? (
+            <div className="card-highlight text-center py-12 animate-fade-in">
+              <div className="text-5xl mb-4">🎁</div>
+              <h3 className="text-xl font-bold mb-2 text-gray-900">No commitments yet</h3>
+              <p className="text-gray-600">When people pledge to donate through your charity page, they'll appear here</p>
+            </div>
+          ) : (
+            <div className="card">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Guest</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Charity</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Event</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {commitmentsToMe.map((commitment) => (
+                      <tr key={commitment.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{commitment.donor_name}</div>
+                          <div className="text-sm text-gray-500">{commitment.donor_email}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            {commitment.charity_logo && (
+                              <img
+                                src={commitment.charity_logo}
+                                alt={commitment.charity_name}
+                                className="w-8 h-8 rounded mr-3 object-contain"
+                              />
+                            )}
+                            <span className="text-sm font-medium text-gray-900">{commitment.charity_name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {commitment.event_title || '—'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-accent-600">
+                          ${Number(commitment.commitment_amount).toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {commitment.clicked_through ? (
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
+                              Committed
+                            </span>
+                          ) : (
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-100 rounded-full">
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {format(new Date(commitment.created_at), 'MMM dd, yyyy')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
