@@ -128,6 +128,9 @@ router.post(
                       'id', c.id,
                       'name', c.name,
                       'logo_url', c.logo_url,
+                      'website_url', c.website_url,
+                      'donation_url', c.donation_url,
+                      'payment_instructions', c.payment_instructions,
                       'custom_instructions', ec.custom_instructions
                     )
                   ) FILTER (WHERE c.id IS NOT NULL),
@@ -169,7 +172,10 @@ router.get('/my-events', authenticate, async (req: AuthRequest, res: Response) =
                   SELECT json_agg(jsonb_build_object(
                     'id', c2.id,
                     'name', c2.name,
-                    'logo_url', c2.logo_url
+                    'logo_url', c2.logo_url,
+                    'website_url', c2.website_url,
+                    'donation_url', c2.donation_url,
+                    'payment_instructions', c2.payment_instructions
                   ))
                   FROM event_charities ec2
                   JOIN charities c2 ON ec2.charity_id = c2.id
@@ -333,7 +339,7 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
     // Try to get charities from junction table (newer schema)
     try {
       const charitiesResult = await query(
-        `SELECT c.id, c.name, c.description, c.logo_url, c.website_url, c.payment_instructions,
+        `SELECT c.id, c.name, c.description, c.logo_url, c.website_url, c.donation_url, c.payment_instructions,
                 ec.custom_instructions
          FROM event_charities ec
          JOIN charities c ON ec.charity_id = c.id
@@ -356,7 +362,7 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
         console.log(`[GET /:slug] Junction table empty, falling back to legacy charity_id: ${event.charity_id}`);
         try {
           const charityResult = await query(
-            `SELECT id, name, description, logo_url, website_url, payment_instructions
+            `SELECT id, name, description, logo_url, website_url, donation_url, payment_instructions
              FROM charities WHERE id = $1`,
             [event.charity_id]
           );
@@ -385,7 +391,7 @@ router.get('/:slug', async (req: Request | AuthRequest, res: Response) => {
       if (event.charity_id) {
         try {
           const charityResult = await query(
-            `SELECT id, name, description, logo_url, website_url, payment_instructions
+            `SELECT id, name, description, logo_url, website_url, donation_url, payment_instructions
              FROM charities WHERE id = $1`,
             [event.charity_id]
           );
