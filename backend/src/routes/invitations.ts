@@ -473,7 +473,12 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { event_id, update_message, target_filter = 'all' } = req.body;
+      const { event_id, update_message, target_filter = 'all', target_filters } = req.body;
+
+      // Support both single filter (backward compatibility) and multiple filters
+      const filters: GuestFilter[] = target_filters && Array.isArray(target_filters) && target_filters.length > 0
+        ? target_filters
+        : [target_filter];
 
       // Verify the user is owner or accepted co-host
       const hasAccess = await isOwnerOrCoHost(req.user!.id, event_id, req.user!.email);
@@ -496,8 +501,22 @@ router.post(
 
       const event = eventResult.rows[0];
 
-      // Build filter clause for RSVP status
-      const filterClause = buildGuestFilterClause(target_filter as GuestFilter);
+      // Build filter clauses for multiple RSVP statuses
+      let filterClause = '';
+      if (filters.length === 1 && filters[0] === 'all') {
+        filterClause = ''; // No additional filter
+      } else {
+        // Build OR conditions for multiple filters
+        const conditions = filters.map(filter => {
+          const clause = buildGuestFilterClause(filter as GuestFilter);
+          // Remove the "AND" prefix since we'll combine with OR
+          return clause.replace(/^AND\s+/, '');
+        }).filter(clause => clause.length > 0);
+
+        if (conditions.length > 0) {
+          filterClause = `AND (${conditions.join(' OR ')})`;
+        }
+      }
 
       // Get guests based on filter
       const guestsResult = await query(
@@ -511,9 +530,9 @@ router.post(
       const guests = guestsResult.rows;
 
       if (guests.length === 0) {
-        const filterMessage = target_filter === 'all'
+        const filterMessage = filters.length === 1 && filters[0] === 'all'
           ? 'No guests have been invited yet'
-          : `No guests match the selected filter (${target_filter})`;
+          : `No guests match the selected filter(s)`;
         return res.status(400).json({ error: filterMessage });
       }
 
