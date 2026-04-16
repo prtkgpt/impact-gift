@@ -165,26 +165,8 @@ const CreateEvent = () => {
             helpText="Choose from our library of beautiful event images or upload your own photo!"
           />
 
-          {/* Event Type and Date */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="event_type" className="block text-sm font-medium text-gray-700 mb-1">
-                Event Type
-              </label>
-              <select
-                id="event_type"
-                className="input"
-                value={formData.event_type}
-                onChange={(e) => setFormData({ ...formData, event_type: e.target.value })}
-              >
-                <option value="birthday">Birthday</option>
-                <option value="wedding">Wedding</option>
-                <option value="anniversary">Anniversary</option>
-                <option value="graduation">Graduation</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-
+          {/* Event Date and Time */}
+          <div className="grid md:grid-cols-3 gap-4">
             <div>
               <label htmlFor="event_date" className="block text-sm font-medium text-gray-700 mb-1">
                 Event Date *
@@ -198,10 +180,7 @@ const CreateEvent = () => {
                 onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
               />
             </div>
-          </div>
 
-          {/* Event Time */}
-          <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="start_time" className="block text-sm font-medium text-gray-700 mb-1">
                 Start Time *
