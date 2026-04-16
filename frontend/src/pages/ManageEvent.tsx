@@ -191,22 +191,20 @@ const ManageEvent = () => {
         });
       }
 
-      // Fetch attire photos
-      try {
-        const attireResponse = await api.get(`/event-photos/event/${eventRes.data.id}?category=attire`);
-        if (attireResponse.data.success) {
-          setAttirePhotos(attireResponse.data.photos);
-        }
-      } catch (photoError) {
-        console.log('No attire photos found');
+      // Fetch attire photos and charities list in parallel
+      const [attireResult, charitiesResult] = await Promise.allSettled([
+        api.get(`/event-photos/event/${eventRes.data.id}?category=attire`),
+        api.get<{ charities: Charity[] }>('/charities')
+      ]);
+
+      // Process attire photos result
+      if (attireResult.status === 'fulfilled' && attireResult.value.data.success) {
+        setAttirePhotos(attireResult.value.data.photos);
       }
 
-      // Fetch charities list
-      try {
-        const charitiesResponse = await api.get<{ charities: Charity[] }>('/charities');
-        setCharities(charitiesResponse.data.charities);
-      } catch (error) {
-        console.error('Failed to load charities');
+      // Process charities result
+      if (charitiesResult.status === 'fulfilled') {
+        setCharities(charitiesResult.value.data.charities);
       }
     } catch (error: any) {
       console.error('ManageEvent: Error fetching event data:', error);

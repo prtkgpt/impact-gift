@@ -54,24 +54,20 @@ const EventPage = () => {
       });
       setEvent(response.data);
 
-      // Fetch attire photos
-      try {
-        const attireResponse = await api.get(`/event-photos/event/${response.data.id}?category=attire`);
-        if (attireResponse.data.success) {
-          setAttirePhotos(attireResponse.data.photos);
-        }
-      } catch (photoError) {
-        console.log('No attire photos found');
+      // Fetch attire and event photos in parallel
+      const [attireResult, memoriesResult] = await Promise.allSettled([
+        api.get(`/event-photos/event/${response.data.id}?category=attire`),
+        api.get(`/event-photos/event/${response.data.id}?category=event_photos`)
+      ]);
+
+      // Process attire photos result
+      if (attireResult.status === 'fulfilled' && attireResult.value.data.success) {
+        setAttirePhotos(attireResult.value.data.photos);
       }
 
-      // Fetch event memories photos
-      try {
-        const memoriesResponse = await api.get(`/event-photos/event/${response.data.id}?category=event_photos`);
-        if (memoriesResponse.data.success) {
-          setEventMemoriesPhotos(memoriesResponse.data.photos);
-        }
-      } catch (photoError) {
-        console.log('No event photos found');
+      // Process event memories photos result
+      if (memoriesResult.status === 'fulfilled' && memoriesResult.value.data.success) {
+        setEventMemoriesPhotos(memoriesResult.value.data.photos);
       }
     } catch (error: any) {
       const is404 = error.response?.status === 404;
