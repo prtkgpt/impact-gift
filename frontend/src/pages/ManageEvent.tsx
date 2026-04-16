@@ -47,8 +47,7 @@ const ManageEvent = () => {
   const [editEmail, setEditEmail] = useState('');
   const [editName, setEditName] = useState('');
 
-  // Send event update modal state
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  // Communication tab state
   const [updateMessage, setUpdateMessage] = useState('');
   const [updateFilters, setUpdateFilters] = useState<string[]>(['all']);
   const [filterCounts, setFilterCounts] = useState<any>(null);
@@ -366,48 +365,6 @@ const ManageEvent = () => {
       toast.error(error.response?.data?.error || 'Failed to send invitations');
     }
   };
-
-  const openUpdateModal = async () => {
-    if (!event) return;
-
-    const invitedGuests = guests.filter(g => g.invitation_sent);
-    if (invitedGuests.length === 0) {
-      toast.error('No guests have been invited yet');
-      return;
-    }
-
-    // Fetch filter counts for RSVP filtering
-    try {
-      const response = await api.get(`/targeted-emails/preview/${event.id}`);
-      setFilterCounts(response.data);
-    } catch (error) {
-      console.error('Failed to fetch filter counts:', error);
-      // Continue showing modal even if counts fail
-    }
-
-    setShowUpdateModal(true);
-  };
-
-  const sendEventUpdate = async () => {
-    if (!event) return;
-
-    try {
-      const response = await api.post('/invitations/send-update', {
-        event_id: event.id,
-        update_message: updateMessage || undefined,
-        target_filter: updateFilter
-      });
-
-      toast.success(response.data.message);
-      setShowUpdateModal(false);
-      setUpdateMessage('');
-      setUpdateFilter('all'); // Reset filter
-      setFilterCounts(null); // Clear counts
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to send event update');
-    }
-  };
-
   // Event Details tab handlers
   const toggleCharity = (charityId: number) => {
     setSelectedCharityIds((prev) =>
@@ -554,13 +511,6 @@ const ManageEvent = () => {
               disabled={pendingInvites === 0}
             >
               📧 Send Invitation{pendingInvites !== 1 && pendingInvites > 0 ? 's' : ''} {pendingInvites > 0 && `(${pendingInvites})`}
-            </button>
-            <button
-              onClick={openUpdateModal}
-              className="btn btn-secondary"
-              disabled={guests.filter(g => g.invitation_sent).length === 0}
-            >
-              🔔 Send Event Update
             </button>
           </div>
         </div>
@@ -1652,89 +1602,6 @@ const ManageEvent = () => {
         </div>
       )}
 
-      {/* Send Event Update Modal */}
-      {showUpdateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900">Send Event Update</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                Notify {guests.filter(g => g.invitation_sent).length} invited guest(s) about changes to your event
-              </p>
-            </div>
-
-            <div className="p-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Who should receive this update? *
-              </label>
-              <select
-                value={updateFilter}
-                onChange={(e) => setUpdateFilter(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 mb-1"
-              >
-                <option value="all">
-                  All Invited Guests {filterCounts && `(${filterCounts.total})`}
-                </option>
-                <option value="attending">
-                  ✅ Attending {filterCounts && `(${filterCounts.attending})`}
-                </option>
-                <option value="not_attending">
-                  ❌ Not Attending {filterCounts && `(${filterCounts.not_attending})`}
-                </option>
-                <option value="maybe">
-                  🤔 Maybe {filterCounts && `(${filterCounts.maybe})`}
-                </option>
-                <option value="no_response">
-                  No Response Yet {filterCounts && `(${filterCounts.no_response})`}
-                </option>
-              </select>
-              <p className="text-xs text-gray-500 mt-1 mb-4">
-                {updateFilter === 'all' && 'Send to everyone who has been invited'}
-                {updateFilter === 'attending' && 'Send only to guests who confirmed attendance'}
-                {updateFilter === 'not_attending' && 'Send only to guests who declined'}
-                {updateFilter === 'maybe' && 'Send only to guests who are unsure'}
-                {updateFilter === 'no_response' && 'Send only to guests who haven\'t responded'}
-              </p>
-            </div>
-
-            <div className="p-6 pt-0">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Add a personal message (optional)
-              </label>
-              <textarea
-                value={updateMessage}
-                onChange={(e) => setUpdateMessage(e.target.value)}
-                placeholder="e.g., We've updated the event time. Looking forward to seeing you!"
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
-                rows={4}
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                Selected guests will receive an email with the updated event details
-              </p>
-            </div>
-
-            <div className="p-6 bg-gray-50 rounded-b-2xl flex gap-3">
-              <button
-                onClick={() => {
-                  setShowUpdateModal(false);
-                  setUpdateMessage('');
-                  setUpdateFilter('all'); // Reset filter
-                  setFilterCounts(null); // Clear counts
-                }}
-                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={sendEventUpdate}
-                className="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors"
-              >
-                Send Update
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
