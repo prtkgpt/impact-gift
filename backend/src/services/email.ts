@@ -93,17 +93,24 @@ export async function sendThankYouEmail(params: SendThankYouEmailParams): Promis
 
   const charitiesList = charities.map(c => `• ${c.name}`).join('\n');
 
-  const emailBody = `Dear ${donorName},
+  // Format charity names for the pledge message
+  let charityText = '';
+  if (charities.length === 1) {
+    charityText = charities[0].name;
+  } else if (charities.length === 2) {
+    charityText = `${charities[0].name} and ${charities[1].name}`;
+  } else if (charities.length > 2) {
+    const lastCharity = charities[charities.length - 1].name;
+    const otherCharities = charities.slice(0, -1).map(c => c.name).join(', ');
+    charityText = `${otherCharities}, and ${lastCharity}`;
+  }
 
-Thank you for your generous donation of $${amount.toFixed(2)} to ${eventTitle}!
+  const emailBody = `Hi ${donorName},
 
-Your contribution will support:
-${charitiesList}
+Thank you for your pledge to donate $${amount.toFixed(2)} to ${charityText}
 
-${receiptUrl ? `View your receipt: ${receiptUrl}\n\n` : ''}${organizerName} is grateful for your support and generosity.
-
-With appreciation,
-Impact Gift Team`;
+With appreciation for your generosity and support,
+${organizerName}`;
 
   if (resend) {
     try {
