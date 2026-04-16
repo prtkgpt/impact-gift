@@ -10,6 +10,7 @@ interface Commitment {
   commitment_amount: number | string;
   charity_name: string;
   charity_logo: string;
+  event_title?: string;
   created_at: string;
   clicked_through: boolean;
 }
@@ -136,6 +137,9 @@ const MyCommitments = () => {
                     <div className="flex-1">
                       <h3 className="font-bold text-gray-900">{commitment.donor_name}</h3>
                       <p className="text-sm text-gray-500">{commitment.donor_email}</p>
+                      {commitment.event_title && (
+                        <p className="text-xs text-gray-600 mt-1">Event: {commitment.event_title}</p>
+                      )}
                     </div>
                     {commitment.clicked_through ? (
                       <span className="inline-flex px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
@@ -191,6 +195,9 @@ const MyCommitments = () => {
                       Donor
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Event Name
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Charity
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -214,6 +221,11 @@ const MyCommitments = () => {
                           </div>
                           <div className="text-sm text-gray-500">{commitment.donor_email}</div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm text-gray-900">
+                          {commitment.event_title || '—'}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">

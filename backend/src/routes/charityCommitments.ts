@@ -83,9 +83,11 @@ router.get('/my-page', authenticate, async (req: AuthRequest, res: Response) => 
 
     // Get all commitments for this user's charity page
     const result = await query(
-      `SELECT cc.*, c.name as charity_name, c.logo_url as charity_logo
+      `SELECT cc.*, c.name as charity_name, c.logo_url as charity_logo,
+              e.title as event_title
        FROM charity_commitments cc
        JOIN charities c ON cc.charity_id = c.id
+       LEFT JOIN events e ON cc.event_id = e.id
        WHERE cc.charity_page_owner_id = $1
        ORDER BY cc.created_at DESC`,
       [userId]
