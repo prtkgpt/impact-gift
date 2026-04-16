@@ -23,6 +23,16 @@ interface SendThankYouEmailParams {
   receiptUrl?: string;
 }
 
+interface SendDonationReminderParams {
+  guestName: string;
+  guestEmail: string;
+  amount: number;
+  charityName: string;
+  charityDonationUrl: string;
+  eventName: string;
+  hostName: string;
+}
+
 /**
  * Notify event organizer about new donation (Stripe)
  */
@@ -130,6 +140,48 @@ ${organizerName}`;
     console.log('Email service not configured. Email preview:', {
       to: donorEmail,
       subject: `Thank you for your donation to ${eventTitle}!`,
+      body: emailBody
+    });
+    return true;
+  }
+}
+
+/**
+ * Send donation reminder email to guest after event ends
+ */
+export async function sendDonationReminder(params: SendDonationReminderParams): Promise<boolean> {
+  const { guestName, guestEmail, amount, charityName, charityDonationUrl, eventName, hostName } = params;
+
+  const emailBody = `Hi ${guestName},
+
+Thank you for pledging $${amount.toFixed(2)} to ${charityName} for ${eventName}.
+
+If you've not already made the donation, please use this link to make it now:
+${charityDonationUrl}
+
+Thank you again for supporting ${charityName}.
+
+Cheers,
+${hostName}`;
+
+  if (resend) {
+    try {
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: guestEmail,
+        subject: `Reminder: Complete your donation to ${charityName}`,
+        text: emailBody,
+        html: emailBody.replace(/\n/g, '<br>')
+      });
+      return true;
+    } catch (error) {
+      console.error('Error sending donation reminder:', error);
+      return false;
+    }
+  } else {
+    console.log('Email service not configured. Email preview:', {
+      to: guestEmail,
+      subject: `Reminder: Complete your donation to ${charityName}`,
       body: emailBody
     });
     return true;

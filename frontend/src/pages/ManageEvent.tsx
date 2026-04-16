@@ -55,6 +55,10 @@ const ManageEvent = () => {
   const [updateFilters, setUpdateFilters] = useState<string[]>(['all']);
   const [filterCounts, setFilterCounts] = useState<any>(null);
 
+  // Donation reminders state
+  const [pendingCommitments, setPendingCommitments] = useState(0);
+  const [sendingReminders, setSendingReminders] = useState(false);
+
   // Event Details tab state
   const [formData, setFormData] = useState({
     title: '',
@@ -142,7 +146,7 @@ const ManageEvent = () => {
       console.log('ManageEvent: Event loaded successfully:', eventRes.data);
 
       // Now fetch all event-specific data in parallel using event ID
-      const [guestsRes, donationsRes, rsvpSummaryRes, attireResult] = await Promise.all([
+      const [guestsRes, donationsRes, rsvpSummaryRes, attireResult, pendingCommitmentsRes] = await Promise.all([
         api.get(`/guests/event/${eventRes.data.id}`).catch((err) => {
           console.error('Error fetching guests:', err);
           return { data: [] };
@@ -158,12 +162,17 @@ const ManageEvent = () => {
         api.get(`/event-photos/event/${eventRes.data.id}?category=attire`).catch((err) => {
           console.error('Error fetching attire photos:', err);
           return { data: { success: false, photos: [] } };
+        }),
+        api.get(`/charity-commitments/pending-count/${eventRes.data.id}`).catch((err) => {
+          console.error('Error fetching pending commitments:', err);
+          return { data: { pending_count: 0 } };
         })
       ]);
 
       setGuests(guestsRes.data);
       setDonations(donationsRes.data);
       setRsvpSummary(rsvpSummaryRes.data);
+      setPendingCommitments(pendingCommitmentsRes.data.pending_count || 0);
 
       // Process attire photos result
       if (attireResult.data.success) {
@@ -368,6 +377,32 @@ const ManageEvent = () => {
       toast.error(error.response?.data?.error || 'Failed to send invitations');
     }
   };
+
+  const sendDonationReminders = async () => {
+    if (!event) return;
+
+    if (pendingCommitments === 0) {
+      toast.error('No pending donation commitments to remind');
+      return;
+    }
+
+    if (!window.confirm(`Send donation reminders to ${pendingCommitments} guest(s) with pending commitments?`)) {
+      return;
+    }
+
+    setSendingReminders(true);
+    try {
+      const response = await api.post(`/charity-commitments/send-reminders/${event.id}`);
+      toast.success(response.data.message);
+      // Refresh pending count
+      await fetchEventData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to send reminders');
+    } finally {
+      setSendingReminders(false);
+    }
+  };
+
   // Event Details tab handlers
   const toggleCharity = (charityId: number) => {
     setSelectedCharityIds((prev) =>
@@ -1534,7 +1569,18 @@ const ManageEvent = () => {
       {activeTab === 'progress' && (
         <div className="space-y-6">
           <div className="card">
-            <h3 className="text-lg font-semibold mb-4">Donation Progress</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Donation Progress</h3>
+              {pendingCommitments > 0 && (
+                <button
+                  onClick={sendDonationReminders}
+                  disabled={sendingReminders}
+                  className="btn btn-secondary text-sm"
+                >
+                  {sendingReminders ? 'Sending...' : `📧 Send Reminders (${pendingCommitments})`}
+                </button>
+              )}
+            </div>
 
             {event.goal_amount && (
               <div className="mb-6">

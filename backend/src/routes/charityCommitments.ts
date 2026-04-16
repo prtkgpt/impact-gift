@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { query } from '../database/db';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { sendDonationReminder } from '../services/email';
 
 const router = Router();
 
@@ -153,6 +154,129 @@ router.get('/my-page/stats', authenticate, async (req: AuthRequest, res: Respons
     });
   } catch (error) {
     console.error('Error fetching charity page stats:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get pending commitments count for an event
+router.get('/pending-count/:eventId', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const eventId = parseInt(req.params.eventId);
+
+    // Verify user owns this event
+    const eventResult = await query(
+      'SELECT user_id FROM events WHERE id = $1',
+      [eventId]
+    );
+
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    if (eventResult.rows[0].user_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    // Get pending commitments count
+    const result = await query(
+      `SELECT COUNT(*) as count
+       FROM charity_commitments
+       WHERE event_id = $1 AND clicked_through = false`,
+      [eventId]
+    );
+
+    res.json({ pending_count: parseInt(result.rows[0].count) });
+  } catch (error) {
+    console.error('Error fetching pending commitments count:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Send donation reminders for an event
+router.post('/send-reminders/:eventId', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const eventId = parseInt(req.params.eventId);
+
+    // Verify user owns this event
+    const eventResult = await query(
+      'SELECT title, user_id, host_name FROM events WHERE id = $1',
+      [eventId]
+    );
+
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const event = eventResult.rows[0];
+    if (event.user_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    // Get all pending commitments for this event
+    const commitmentsResult = await query(
+      `SELECT cc.donor_name, cc.donor_email, cc.commitment_amount, cc.event_title,
+              c.name as charity_name, c.donation_url, c.payment_instructions, c.website_url
+       FROM charity_commitments cc
+       JOIN charities c ON cc.charity_id = c.id
+       WHERE cc.event_id = $1 AND cc.clicked_through = false`,
+      [eventId]
+    );
+
+    const commitments = commitmentsResult.rows;
+
+    if (commitments.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No pending commitments to remind',
+        sent: 0
+      });
+    }
+
+    // Send reminder emails
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const commitment of commitments) {
+      // Determine charity donation URL (prioritize donation_url > payment_instructions > website_url)
+      let charityDonationUrl = commitment.donation_url;
+      if (!charityDonationUrl && commitment.payment_instructions) {
+        const paymentUrl = commitment.payment_instructions.trim();
+        if (paymentUrl.startsWith('http://') || paymentUrl.startsWith('https://')) {
+          charityDonationUrl = paymentUrl;
+        }
+      }
+      if (!charityDonationUrl) {
+        charityDonationUrl = commitment.website_url;
+      }
+
+      const success = await sendDonationReminder({
+        guestName: commitment.donor_name,
+        guestEmail: commitment.donor_email,
+        amount: parseFloat(commitment.commitment_amount),
+        charityName: commitment.charity_name,
+        charityDonationUrl: charityDonationUrl || '#',
+        eventName: commitment.event_title || event.title,
+        hostName: event.host_name
+      });
+
+      if (success) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Sent ${successCount} reminder(s) to guests with pending donations`,
+      sent: successCount,
+      failed: failCount,
+      total: commitments.length
+    });
+  } catch (error) {
+    console.error('Error sending donation reminders:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
