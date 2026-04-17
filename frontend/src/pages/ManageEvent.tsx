@@ -251,6 +251,26 @@ const ManageEvent = () => {
     }
   };
 
+  const duplicateEvent = async () => {
+    if (!event) return;
+
+    if (!window.confirm('Are you sure you want to duplicate this event? This will create a copy with all settings, charities, and co-hosts.')) {
+      return;
+    }
+
+    try {
+      const response = await api.post(`/events/${event.id}/duplicate`);
+      toast.success('Event duplicated successfully!');
+
+      // Navigate to the new event's manage page
+      setTimeout(() => {
+        navigate(`/event/${response.data.event.slug}/manage`);
+      }, 1000);
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to duplicate event');
+    }
+  };
+
   const addGuest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!event) return;
@@ -542,6 +562,13 @@ const ManageEvent = () => {
               className="btn btn-secondary"
             >
               👁️ View Event
+            </button>
+            <button
+              onClick={duplicateEvent}
+              className="btn btn-secondary"
+              title="Create a copy of this event"
+            >
+              📋 Duplicate
             </button>
             <button
               onClick={sendInvitations}

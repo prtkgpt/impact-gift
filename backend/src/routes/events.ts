@@ -729,4 +729,139 @@ router.post('/:slug/notify-guests', authenticate, async (req: AuthRequest, res: 
   }
 });
 
+// Duplicate an event
+router.post('/:identifier/duplicate', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { identifier } = req.params;
+    const userId = req.user!.id;
+
+    // Get the original event
+    const eventResult = await query(
+      `SELECT * FROM events WHERE (id = $1 OR slug = $1) AND is_active = true`,
+      [identifier]
+    );
+
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const originalEvent = eventResult.rows[0];
+
+    // Verify user is the owner
+    if (originalEvent.user_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized to duplicate this event' });
+    }
+
+    // Generate new slug and title
+    const newTitle = `${originalEvent.title} (Copy)`;
+    const newSlug = await generateSlug(newTitle);
+
+    // Create the duplicate event
+    const newEventResult = await query(
+      `INSERT INTO events (
+        user_id, title, description, event_type, event_date,
+        start_date, end_date, start_time, end_time,
+        venue_name, address, virtual_link,
+        host_name, host_phone, rsvp_deadline,
+        goal_amount, potluck_enabled, slug,
+        rsvp_required, plus_one_allowed, dietary_restrictions_enabled,
+        event_theme_id, event_image_id,
+        created_at, updated_at
+      )
+      VALUES (
+        $1, $2, $3, $4, $5,
+        $6, $7, $8, $9,
+        $10, $11, $12,
+        $13, $14, $15,
+        $16, $17, $18,
+        $19, $20, $21,
+        $22, $23,
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+      )
+      RETURNING *`,
+      [
+        userId,
+        newTitle,
+        originalEvent.description,
+        originalEvent.event_type,
+        originalEvent.event_date,
+        originalEvent.start_date,
+        originalEvent.end_date,
+        originalEvent.start_time,
+        originalEvent.end_time,
+        originalEvent.venue_name,
+        originalEvent.address,
+        originalEvent.virtual_link,
+        originalEvent.host_name,
+        originalEvent.host_phone,
+        originalEvent.rsvp_deadline,
+        originalEvent.goal_amount,
+        originalEvent.potluck_enabled,
+        newSlug,
+        originalEvent.rsvp_required,
+        originalEvent.plus_one_allowed,
+        originalEvent.dietary_restrictions_enabled,
+        originalEvent.event_theme_id,
+        originalEvent.event_image_id
+      ]
+    );
+
+    const newEvent = newEventResult.rows[0];
+
+    // Copy event charities
+    const charitiesResult = await query(
+      `SELECT charity_id, custom_instructions FROM event_charities WHERE event_id = $1`,
+      [originalEvent.id]
+    );
+
+    for (const charity of charitiesResult.rows) {
+      await query(
+        `INSERT INTO event_charities (event_id, charity_id, custom_instructions)
+         VALUES ($1, $2, $3)`,
+        [newEvent.id, charity.charity_id, charity.custom_instructions]
+      );
+    }
+
+    // Copy co-hosts
+    const coHostsResult = await query(
+      `SELECT co_host_email, co_host_name, permissions FROM event_co_hosts
+       WHERE event_id = $1 AND status = 'accepted'`,
+      [originalEvent.id]
+    );
+
+    for (const coHost of coHostsResult.rows) {
+      await query(
+        `INSERT INTO event_co_hosts (event_id, co_host_email, co_host_name, permissions, status)
+         VALUES ($1, $2, $3, $4, 'pending')`,
+        [newEvent.id, coHost.co_host_email, coHost.co_host_name, coHost.permissions]
+      );
+    }
+
+    // Copy potluck categories (if potluck is enabled)
+    if (newEvent.potluck_enabled) {
+      const categoriesResult = await query(
+        `SELECT category_name, description FROM potluck_categories WHERE event_id = $1`,
+        [originalEvent.id]
+      );
+
+      for (const category of categoriesResult.rows) {
+        await query(
+          `INSERT INTO potluck_categories (event_id, category_name, description)
+           VALUES ($1, $2, $3)`,
+          [newEvent.id, category.category_name, category.description]
+        );
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      event: newEvent,
+      message: 'Event duplicated successfully'
+    });
+  } catch (error) {
+    console.error('Error duplicating event:', error);
+    res.status(500).json({ error: 'Failed to duplicate event' });
+  }
+});
+
 export default router;
