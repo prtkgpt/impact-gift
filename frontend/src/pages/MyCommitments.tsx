@@ -15,6 +15,7 @@ interface Commitment {
   created_at: string;
   clicked_through: boolean;
   status?: string;
+  source?: string;
 }
 
 interface CommitmentsData {
@@ -69,16 +70,17 @@ const MyCommitments = () => {
     }
   };
 
-  const updateCommitmentStatus = async (commitmentId: number, newStatus: string, donorEmail: string) => {
+  const updateCommitmentStatus = async (commitmentId: number, newStatus: string, donorEmail: string, source: string) => {
     try {
       await api.put(`/donations/${commitmentId}/status`, {
         status: newStatus,
-        donor_email: donorEmail
+        donor_email: donorEmail,
+        source: source
       });
 
       // Update local state
       setMyCommitments(prev =>
-        prev.map(c => c.id === commitmentId ? { ...c, status: newStatus } : c)
+        prev.map(c => c.id === commitmentId ? { ...c, status: newStatus, clicked_through: newStatus === 'completed' } : c)
       );
 
       toast.success(newStatus === 'completed' ? 'Marked as donated!' : 'Status updated');
@@ -323,7 +325,7 @@ const MyCommitments = () => {
                       {commitment.type === 'made' ? (
                         <select
                           value={commitment.status || 'pending'}
-                          onChange={(e) => updateCommitmentStatus(commitment.id, e.target.value, commitment.donor_email)}
+                          onChange={(e) => updateCommitmentStatus(commitment.id, e.target.value, commitment.donor_email, commitment.source || 'event')}
                           className={`w-full px-3 py-2 text-sm font-semibold rounded-lg border-2 cursor-pointer transition-colors ${
                             (commitment.status || 'pending') === 'completed'
                               ? 'text-green-700 bg-green-50 border-green-200'
@@ -430,7 +432,7 @@ const MyCommitments = () => {
                             {commitment.type === 'made' ? (
                               <select
                                 value={commitment.status || 'pending'}
-                                onChange={(e) => updateCommitmentStatus(commitment.id, e.target.value, commitment.donor_email)}
+                                onChange={(e) => updateCommitmentStatus(commitment.id, e.target.value, commitment.donor_email, commitment.source || 'event')}
                                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg border-2 cursor-pointer transition-colors ${
                                   (commitment.status || 'pending') === 'completed'
                                     ? 'text-green-700 bg-green-50 border-green-200 hover:bg-green-100'

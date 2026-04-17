@@ -177,12 +177,13 @@ router.get('/all', async (req: Request, res: Response) => {
   }
 });
 
-// Update donation status (user marks donation as completed)
+// Update commitment status (user marks commitment as completed)
 router.put(
   '/:id/status',
   [
     body('status').isIn(['pending', 'completed']),
-    body('donor_email').isEmail() // Verify ownership
+    body('donor_email').isEmail(), // Verify ownership
+    body('source').isIn(['event', 'charity_page']) // Which table to update
   ],
   async (req: Request, res: Response) => {
     try {
@@ -192,30 +193,47 @@ router.put(
       }
 
       const { id } = req.params;
-      const { status, donor_email } = req.body;
+      const { status, donor_email, source } = req.body;
 
-      // Verify the donation exists and belongs to this donor
-      const donationResult = await query(
-        'SELECT * FROM donations WHERE id = $1 AND donor_email = $2',
-        [id, donor_email]
-      );
+      if (source === 'event') {
+        // Update donations table
+        const donationResult = await query(
+          'SELECT * FROM donations WHERE id = $1 AND donor_email = $2',
+          [id, donor_email]
+        );
 
-      if (donationResult.rows.length === 0) {
-        return res.status(404).json({ error: 'Donation not found or access denied' });
+        if (donationResult.rows.length === 0) {
+          return res.status(404).json({ error: 'Donation not found or access denied' });
+        }
+
+        await query(
+          'UPDATE donations SET status = $1, updated_at = NOW() WHERE id = $2',
+          [status, id]
+        );
+      } else {
+        // Update charity_commitments table
+        const commitmentResult = await query(
+          'SELECT * FROM charity_commitments WHERE id = $1 AND donor_email = $2',
+          [id, donor_email]
+        );
+
+        if (commitmentResult.rows.length === 0) {
+          return res.status(404).json({ error: 'Commitment not found or access denied' });
+        }
+
+        // For charity_commitments, update clicked_through based on status
+        await query(
+          'UPDATE charity_commitments SET clicked_through = $1, updated_at = NOW() WHERE id = $2',
+          [status === 'completed', id]
+        );
       }
-
-      // Update the status
-      const updateResult = await query(
-        'UPDATE donations SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
-        [status, id]
-      );
 
       res.json({
         success: true,
-        donation: updateResult.rows[0]
+        message: 'Status updated successfully'
       });
     } catch (error) {
-      console.error('Error updating donation status:', error);
+      console.error('Error updating commitment status:', error);
       res.status(500).json({ error: 'Server error' });
     }
   }
