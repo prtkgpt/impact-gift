@@ -131,100 +131,60 @@ const Dashboard = () => {
           <CharityPageCard />
         </div>
 
-        {/* Commitments Summary */}
+        {/* Quick Stats */}
         <div className="mb-12 animate-fade-in" style={{ animationDelay: '50ms' }}>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">💝 My Commitments</h2>
-              <p className="text-sm text-gray-600">Summary of all your donation pledges</p>
-            </div>
-            <Link to="/commitments" className="text-primary-600 hover:text-primary-700 font-medium text-sm">
-              View Details →
-            </Link>
-          </div>
-
-          {commitmentsLoading ? (
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 animate-pulse">
-                <div className="h-24 bg-gray-200 rounded"></div>
-              </div>
-              <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 animate-pulse">
-                <div className="h-24 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Commitments Made */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-6 border border-blue-200 hover:shadow-xl transition-shadow">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="bg-blue-100 p-3 rounded-xl">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Commitments I've Made</h3>
-                <p className="text-sm text-gray-600 mb-4">To events and charity pages</p>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Total Pledges</span>
-                    <span className="text-2xl font-bold text-gray-900">{commitmentsMade.count}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Total Amount</span>
-                    <span className="text-2xl font-bold text-blue-600">${commitmentsMade.amount.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Commitments Received */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-lg p-6 border border-green-200 hover:shadow-xl transition-shadow">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="bg-green-100 p-3 rounded-xl">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Commitments I've Received</h3>
-                <p className="text-sm text-gray-600 mb-4">From my events and charity page</p>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Total Pledges</span>
-                    <span className="text-2xl font-bold text-gray-900">{commitmentsReceived.count}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Total Amount</span>
-                    <span className="text-2xl font-bold text-green-600">${commitmentsReceived.amount.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Admin Section - TODO: Add proper admin role check */}
-        <div className="mb-12 animate-fade-in" style={{ animationDelay: '100ms' }}>
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
                 <div className="bg-purple-100 p-3 rounded-xl">
                   <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Admin Area</h3>
-                  <p className="text-sm text-gray-600">Manage charity requests and platform settings</p>
+                  <h2 className="text-xl font-bold text-gray-900">💝 My Commitments</h2>
+                  <p className="text-sm text-gray-600">Donation pledges summary</p>
                 </div>
               </div>
-              <Link
-                to="/admin/charity-requests"
-                className="btn btn-primary"
-              >
-                View Charity Requests
+              <Link to="/commitments" className="text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1">
+                View All
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </Link>
             </div>
+
+            {commitmentsLoading ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
+                <div className="h-20 bg-gray-200 rounded-lg"></div>
+                <div className="h-20 bg-gray-200 rounded-lg"></div>
+                <div className="h-20 bg-gray-200 rounded-lg"></div>
+                <div className="h-20 bg-gray-200 rounded-lg"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <p className="text-xs text-blue-600 font-medium mb-1">Made</p>
+                  <p className="text-2xl font-bold text-gray-900">{commitmentsMade.count}</p>
+                  <p className="text-xs text-gray-600">pledges</p>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <p className="text-xs text-blue-600 font-medium mb-1">Amount</p>
+                  <p className="text-2xl font-bold text-blue-600">${commitmentsMade.amount.toFixed(0)}</p>
+                  <p className="text-xs text-gray-600">pledged</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <p className="text-xs text-green-600 font-medium mb-1">Received</p>
+                  <p className="text-2xl font-bold text-gray-900">{commitmentsReceived.count}</p>
+                  <p className="text-xs text-gray-600">pledges</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <p className="text-xs text-green-600 font-medium mb-1">Amount</p>
+                  <p className="text-2xl font-bold text-green-600">${commitmentsReceived.amount.toFixed(0)}</p>
+                  <p className="text-xs text-gray-600">received</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
