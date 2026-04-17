@@ -107,8 +107,7 @@ router.get('/made-by-me', authenticate, async (req: AuthRequest, res: Response) 
        FROM donations d
        JOIN events e ON d.event_id = e.id
        JOIN users u ON e.user_id = u.id
-       LEFT JOIN event_charities ec ON ec.event_id = e.id
-       LEFT JOIN charities c ON ec.charity_id = c.id
+       LEFT JOIN charities c ON d.charity_id = c.id
        WHERE d.donor_email = $1`,
       [userEmail]
     );
@@ -170,8 +169,7 @@ router.get('/my-page', authenticate, async (req: AuthRequest, res: Response) => 
               'event' as source
        FROM donations d
        JOIN events e ON d.event_id = e.id
-       LEFT JOIN event_charities ec ON ec.event_id = e.id
-       LEFT JOIN charities c ON ec.charity_id = c.id
+       LEFT JOIN charities c ON d.charity_id = c.id
        WHERE e.user_id = $1`,
       [userId]
     );
