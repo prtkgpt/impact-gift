@@ -182,18 +182,25 @@ router.put(
   '/:id/status',
   [
     body('status').isIn(['pending', 'completed']),
-    body('donor_email').isEmail(), // Verify ownership
-    body('source').isIn(['event', 'charity_page']) // Which table to update
+    body('donor_email').isEmail() // Verify ownership
   ],
   async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.error('[STATUS UPDATE] Validation errors:', errors.array());
         return res.status(400).json({ errors: errors.array() });
       }
 
       const { id } = req.params;
-      const { status, donor_email, source } = req.body;
+      const { status, donor_email, source = 'event' } = req.body;
+
+      console.log('[STATUS UPDATE] Request:', { id, status, donor_email, source });
+
+      if (!['event', 'charity_page'].includes(source)) {
+        console.error('[STATUS UPDATE] Invalid source:', source);
+        return res.status(400).json({ error: 'Invalid source' });
+      }
 
       if (source === 'event') {
         // Update donations table
@@ -228,13 +235,16 @@ router.put(
         );
       }
 
+      console.log('[STATUS UPDATE] Success');
       res.json({
         success: true,
         message: 'Status updated successfully'
       });
-    } catch (error) {
-      console.error('Error updating commitment status:', error);
-      res.status(500).json({ error: 'Server error' });
+    } catch (error: any) {
+      console.error('[STATUS UPDATE] Error:', error);
+      console.error('[STATUS UPDATE] Error message:', error.message);
+      console.error('[STATUS UPDATE] Error stack:', error.stack);
+      res.status(500).json({ error: 'Server error', details: error.message });
     }
   }
 );
