@@ -32,7 +32,11 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
                 COALESCE(SUM(d.amount), 0) as total_raised,
                 COUNT(DISTINCT d.id) as donation_count,
                 COUNT(DISTINCT CASE WHEN g.rsvp_status = 'attending' THEN g.id END) as attending_count,
-                COALESCE(ch.user_role, 'owner') as user_role,
+                CASE
+                  WHEN e.user_id = $1 THEN 'owner'
+                  WHEN ch.id IS NOT NULL THEN 'cohost'
+                  ELSE 'owner'
+                END as user_role,
                 json_agg(DISTINCT jsonb_build_object(
                   'id', ec_charities.id,
                   'name', ec_charities.name,
@@ -47,7 +51,7 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
          LEFT JOIN co_hosts ch ON ch.event_id = e.id AND ch.email = $2 AND ch.accepted_at IS NOT NULL
          WHERE (e.user_id = $1 OR ch.id IS NOT NULL)
            AND e.is_active = true
-         GROUP BY e.id, u.first_name, u.last_name, ch.user_role
+         GROUP BY e.id, u.first_name, u.last_name, ch.id
          ORDER BY e.event_date DESC`,
         [userId, userEmail]
       ).catch(err => { console.error('[Dashboard] Events query failed:', err); throw err; }),
