@@ -42,9 +42,61 @@ const Dashboard = () => {
     if (authLoading) return;
     if (!user) return;
 
-    // Load events, invitations, and commitments in parallel
-    Promise.all([fetchEvents(), fetchInvitations(), fetchCommitmentsSummary()]);
+    // Load all dashboard data in one call
+    fetchDashboardSummary();
   }, [authLoading, user]);
+
+  const fetchDashboardSummary = async (retryCount = 0) => {
+    try {
+      const response = await api.get('/dashboard/summary', {
+        timeout: retryCount === 0 ? 15000 : 20000,
+      });
+
+      const { events, invitations, commitments } = response.data;
+
+      // Set all state at once
+      setEvents(events || []);
+      setEventsLoading(false);
+
+      setInvitations(invitations || []);
+      setInvitationsLoading(false);
+
+      setCommitmentsMade({
+        count: commitments.made.total_commitments || 0,
+        amount: commitments.made.total_amount || 0
+      });
+      setCommitmentsReceived({
+        count: commitments.received.total_commitments || 0,
+        amount: commitments.received.total_amount || 0
+      });
+      setCommitmentsLoading(false);
+
+    } catch (error: any) {
+      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+      const isNetworkError = !error.response && error.message === 'Network Error';
+
+      // Retry on timeout or network errors (backend may be waking up from cold start)
+      if ((isTimeout || isNetworkError) && retryCount < 2) {
+        console.log(`Dashboard fetchDashboardSummary retry ${retryCount + 1}`);
+        await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
+        return fetchDashboardSummary(retryCount + 1);
+      }
+
+      console.error('Failed to load dashboard:', error);
+      setEventsError(true);
+      setEventsLoading(false);
+      setInvitationsLoading(false);
+      setCommitmentsLoading(false);
+
+      if (isTimeout) {
+        toast.error('Request timed out. Please check your connection and try again.');
+      } else if (isNetworkError) {
+        toast.error('Cannot connect to server. Please try again later.');
+      } else if (error.response?.status !== 401) {
+        toast.error('Failed to load dashboard. Please refresh the page.');
+      }
+    }
+  };
 
   const fetchEvents = async (retryCount = 0) => {
     try {

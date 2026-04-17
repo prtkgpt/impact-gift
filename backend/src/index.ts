@@ -27,6 +27,7 @@ import eventPhotosRoutes from './routes/eventPhotos';
 import calendarRoutes from './routes/calendar';
 import targetedEmailsRoutes from './routes/targetedEmails';
 import scheduledTasksRoutes from './routes/scheduledTasks';
+import dashboardRoutes from './routes/dashboard';
 
 dotenv.config();
 
@@ -90,6 +91,7 @@ app.get('/api/health', async (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/charities', charitiesRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/donations', donationsRoutes);
