@@ -1,9 +1,29 @@
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../utils/api';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [charityPageSlug, setCharityPageSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchCharityPageSlug();
+    }
+  }, [user]);
+
+  const fetchCharityPageSlug = async () => {
+    try {
+      const response = await api.get('/charity-commitments/my-page/stats');
+      if (response.data.has_charity_page && response.data.charity_page_slug) {
+        setCharityPageSlug(response.data.charity_page_slug);
+      }
+    } catch (error) {
+      console.error('Failed to load charity page slug:', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -26,6 +46,11 @@ const Navbar = () => {
                 <Link to="/dashboard" className="text-gray-700 hover:text-primary-600">
                   Dashboard
                 </Link>
+                {charityPageSlug && (
+                  <Link to={`/charity/${charityPageSlug}`} className="text-gray-700 hover:text-primary-600">
+                    My Charity Page
+                  </Link>
+                )}
                 <Link to="/commitments" className="text-gray-700 hover:text-primary-600">
                   Commitments
                 </Link>

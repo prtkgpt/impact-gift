@@ -6,7 +6,6 @@ import { parseLocalDate } from '../utils/dateUtils';
 import { Event } from '../types';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
-import CharityPageCard from '../components/CharityPageCard';
 import FavoriteCharities from '../components/FavoriteCharities';
 
 interface Invitation {
@@ -155,66 +154,109 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Charity Page Card */}
-        <div className="mb-12 animate-fade-in">
-          <CharityPageCard />
-        </div>
-
-        {/* Quick Stats */}
-        <div className="mb-12 animate-fade-in" style={{ animationDelay: '50ms' }}>
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-purple-100 p-3 rounded-xl">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">💝 My Commitments</h2>
-                  <p className="text-sm text-gray-600">Donation pledges summary</p>
-                </div>
-              </div>
-              <Link to="/commitments" className="text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1">
-                View All
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-
-            {commitmentsLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
-                <div className="h-20 bg-gray-200 rounded-lg"></div>
-                <div className="h-20 bg-gray-200 rounded-lg"></div>
-                <div className="h-20 bg-gray-200 rounded-lg"></div>
-                <div className="h-20 bg-gray-200 rounded-lg"></div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <p className="text-xs text-blue-600 font-medium mb-1">Made</p>
-                  <p className="text-2xl font-bold text-gray-900">{commitmentsMade.count}</p>
-                  <p className="text-xs text-gray-600">pledges</p>
-                </div>
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <p className="text-xs text-blue-600 font-medium mb-1">Amount</p>
-                  <p className="text-2xl font-bold text-blue-600">${commitmentsMade.amount.toFixed(0)}</p>
-                  <p className="text-xs text-gray-600">pledged</p>
-                </div>
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <p className="text-xs text-green-600 font-medium mb-1">Received</p>
-                  <p className="text-2xl font-bold text-gray-900">{commitmentsReceived.count}</p>
-                  <p className="text-xs text-gray-600">pledges</p>
-                </div>
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <p className="text-xs text-green-600 font-medium mb-1">Amount</p>
-                  <p className="text-2xl font-bold text-green-600">${commitmentsReceived.amount.toFixed(0)}</p>
-                  <p className="text-xs text-gray-600">received</p>
-                </div>
-              </div>
-            )}
+        {/* Received Invitations Section */}
+        <div className="mb-16">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">My Invitations</h2>
+            <p className="text-lg text-gray-600">Events you've been invited to</p>
           </div>
+
+          {invitationsLoading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2].map((i) => (
+                <div key={i} className="card animate-pulse">
+                  <div className="h-32 bg-gray-200 rounded-xl mb-3"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          ) : invitations.length === 0 ? (
+            <div className="card-highlight text-center py-12 animate-fade-in">
+              <div className="text-5xl mb-4">📭</div>
+              <h3 className="text-xl font-bold mb-2 text-gray-900">No invitations yet</h3>
+              <p className="text-gray-600">When you receive event invitations, they'll appear here</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {invitations.map((invitation, index) => (
+                <div
+                  key={invitation.id}
+                  className="card-hover group overflow-hidden animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  {/* Event Header */}
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
+                      {invitation.event_title}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Hosted by {invitation.host_first_name} {invitation.host_last_name}
+                    </p>
+                  </div>
+
+                  {/* Event Details */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      {format(parseLocalDate(invitation.event_date), 'MMM dd, yyyy')}
+                      {invitation.start_time && ` at ${invitation.start_time}`}
+                    </div>
+                    {invitation.venue_name && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <span className="mr-2">📍</span>
+                        {invitation.venue_name}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* RSVP Status */}
+                  <div className="mb-4">
+                    {invitation.rsvp_status === 'no_response' ? (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <p className="text-sm font-semibold text-yellow-800">
+                          ⏳ RSVP Pending
+                        </p>
+                      </div>
+                    ) : invitation.rsvp_status === 'attending' ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <p className="text-sm font-semibold text-green-800">
+                          {invitation.additional_guests && invitation.additional_guests > 0
+                            ? `✅ Attending with ${invitation.additional_guests} guest${invitation.additional_guests !== 1 ? 's' : ''}`
+                            : '✅ Attending'}
+                        </p>
+                      </div>
+                    ) : invitation.rsvp_status === 'not_attending' ? (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-sm font-semibold text-red-800">
+                          ❌ Not Attending
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <p className="text-sm font-semibold text-gray-800">
+                          🤔 Maybe
+                          {invitation.additional_guests && invitation.additional_guests > 0
+                            ? ` with ${invitation.additional_guests} guest${invitation.additional_guests !== 1 ? 's' : ''}`
+                            : ''}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Button */}
+                  <Link
+                    to={`/event/${invitation.event_slug}?email=${encodeURIComponent(invitation.email)}`}
+                    className="btn btn-primary w-full text-center text-sm"
+                  >
+                    View Event
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Events Section */}
@@ -403,113 +445,65 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Received Invitations Section */}
-        <div className="mb-16">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">My Invitations</h2>
-            <p className="text-lg text-gray-600">Events you've been invited to</p>
+        {/* Quick Stats - Commitments Summary */}
+        <div className="mb-12 animate-fade-in" style={{ animationDelay: '100ms' }}>
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-purple-100 p-3 rounded-xl">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">💝 My Commitments</h2>
+                  <p className="text-sm text-gray-600">Donation pledges summary</p>
+                </div>
+              </div>
+              <Link to="/commitments" className="text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1">
+                View All
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+
+            {commitmentsLoading ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
+                <div className="h-20 bg-gray-200 rounded-lg"></div>
+                <div className="h-20 bg-gray-200 rounded-lg"></div>
+                <div className="h-20 bg-gray-200 rounded-lg"></div>
+                <div className="h-20 bg-gray-200 rounded-lg"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <p className="text-xs text-blue-600 font-medium mb-1">Made</p>
+                  <p className="text-2xl font-bold text-gray-900">{commitmentsMade.count}</p>
+                  <p className="text-xs text-gray-600">pledges</p>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <p className="text-xs text-blue-600 font-medium mb-1">Amount</p>
+                  <p className="text-2xl font-bold text-blue-600">${commitmentsMade.amount.toFixed(0)}</p>
+                  <p className="text-xs text-gray-600">pledged</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <p className="text-xs text-green-600 font-medium mb-1">Received</p>
+                  <p className="text-2xl font-bold text-gray-900">{commitmentsReceived.count}</p>
+                  <p className="text-xs text-gray-600">pledges</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <p className="text-xs text-green-600 font-medium mb-1">Amount</p>
+                  <p className="text-2xl font-bold text-green-600">${commitmentsReceived.amount.toFixed(0)}</p>
+                  <p className="text-xs text-gray-600">received</p>
+                </div>
+              </div>
+            )}
           </div>
-
-          {invitationsLoading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2].map((i) => (
-                <div key={i} className="card animate-pulse">
-                  <div className="h-32 bg-gray-200 rounded-xl mb-3"></div>
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-              ))}
-            </div>
-          ) : invitations.length === 0 ? (
-            <div className="card-highlight text-center py-12 animate-fade-in">
-              <div className="text-5xl mb-4">📭</div>
-              <h3 className="text-xl font-bold mb-2 text-gray-900">No invitations yet</h3>
-              <p className="text-gray-600">When you receive event invitations, they'll appear here</p>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {invitations.map((invitation, index) => (
-                <div
-                  key={invitation.id}
-                  className="card-hover group overflow-hidden animate-fade-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  {/* Event Header */}
-                  <div className="mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
-                      {invitation.event_title}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Hosted by {invitation.host_first_name} {invitation.host_last_name}
-                    </p>
-                  </div>
-
-                  {/* Event Details */}
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      {format(parseLocalDate(invitation.event_date), 'MMM dd, yyyy')}
-                      {invitation.start_time && ` at ${invitation.start_time}`}
-                    </div>
-                    {invitation.venue_name && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <span className="mr-2">📍</span>
-                        {invitation.venue_name}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* RSVP Status */}
-                  <div className="mb-4">
-                    {invitation.rsvp_status === 'no_response' ? (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                        <p className="text-sm font-semibold text-yellow-800">
-                          ⏳ RSVP Pending
-                        </p>
-                      </div>
-                    ) : invitation.rsvp_status === 'attending' ? (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                        <p className="text-sm font-semibold text-green-800">
-                          {invitation.additional_guests && invitation.additional_guests > 0
-                            ? `✅ Attending with ${invitation.additional_guests} guest${invitation.additional_guests !== 1 ? 's' : ''}`
-                            : '✅ Attending'}
-                        </p>
-                      </div>
-                    ) : invitation.rsvp_status === 'not_attending' ? (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <p className="text-sm font-semibold text-red-800">
-                          ❌ Not Attending
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                        <p className="text-sm font-semibold text-gray-800">
-                          🤔 Maybe
-                          {invitation.additional_guests && invitation.additional_guests > 0
-                            ? ` with ${invitation.additional_guests} guest${invitation.additional_guests !== 1 ? 's' : ''}`
-                            : ''}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Action Button */}
-                  <Link
-                    to={`/event/${invitation.event_slug}?email=${encodeURIComponent(invitation.email)}`}
-                    className="btn btn-primary w-full text-center text-sm"
-                  >
-                    View Event
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Favorite Charities Section */}
-        <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
+        <div className="animate-fade-in" style={{ animationDelay: '150ms' }}>
           <FavoriteCharities />
         </div>
       </div>
