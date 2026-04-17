@@ -44,19 +44,19 @@ Cheers,
 1. In your Render dashboard, click **"New +"** → **"Cron Job"**
 2. Fill in the details:
    - **Name**: `impact-gift-donation-reminders`
-   - **Repository**: Same repo as your backend
-   - **Branch**: `main` (or your production branch)
+   - **Environment**: Docker
+   - **Region**: Same as your backend service (e.g., Oregon US West)
    - **Command**: 
      ```bash
-     curl -X POST https://impact-gift-backend.onrender.com/api/scheduled-tasks/send-event-donation-reminders \
-       -H "x-cron-secret: YOUR_CRON_SECRET_HERE" \
-       -H "Content-Type: application/json"
+     curl -X POST https://impact-gift-backend.onrender.com/api/scheduled-tasks/send-event-donation-reminders -H "x-cron-secret: YOUR_CRON_SECRET_HERE" -H "Content-Type: application/json"
      ```
      *(Replace `YOUR_CRON_SECRET_HERE` with the actual secret from Step 1)*
    
    - **Schedule**: 
      - **Cron Expression**: `0 10 * * *` (runs daily at 10 AM UTC)
      - Or use: `0 2 * * *` (runs daily at 2 AM UTC)
+   
+   - **IMPORTANT**: Do NOT connect this to a repository or add build commands. This is a simple command-only cron job that calls your existing backend API.
    
 3. Click **Create Cron Job**
 
