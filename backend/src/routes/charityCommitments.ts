@@ -88,7 +88,8 @@ router.get('/made-by-me', authenticate, async (req: AuthRequest, res: Response) 
       `SELECT cc.id, cc.donor_name, cc.donor_email, cc.commitment_amount,
               cc.clicked_through, cc.created_at,
               c.name as charity_name, c.logo_url as charity_logo,
-              e.title as event_title, u.name as charity_owner_name,
+              e.title as event_title,
+              CONCAT(u.first_name, ' ', u.last_name) as charity_owner_name,
               'charity_page' as source
        FROM charity_commitments cc
        JOIN charities c ON cc.charity_id = c.id
@@ -104,7 +105,8 @@ router.get('/made-by-me', authenticate, async (req: AuthRequest, res: Response) 
               CASE WHEN d.status = 'completed' THEN true ELSE false END as clicked_through,
               d.created_at,
               c.name as charity_name, c.logo_url as charity_logo,
-              e.title as event_title, u.name as charity_owner_name,
+              e.title as event_title,
+              CONCAT(u.first_name, ' ', u.last_name) as charity_owner_name,
               'event' as source
        FROM donations d
        JOIN events e ON d.event_id = e.id
