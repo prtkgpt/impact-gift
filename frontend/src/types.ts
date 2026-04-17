@@ -253,6 +253,7 @@ export interface PotluckItem {
   guest_name?: string;
   guest_email?: string;
   quantity: number;
+  category?: string;
   notes?: string;
   is_suggested?: boolean;
   claimed_at?: string;

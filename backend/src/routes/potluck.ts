@@ -47,6 +47,7 @@ router.post(
     body('guest_name').trim().notEmpty().withMessage('Guest name required'),
     body('guest_email').isEmail().withMessage('Valid email required'),
     body('quantity').optional().isInt({ min: 1 }).withMessage('Quantity must be at least 1'),
+    body('category').optional().trim(),
     body('notes').optional().trim()
   ],
   async (req: Request, res: Response) => {
@@ -57,7 +58,7 @@ router.post(
       }
 
       const { eventId } = req.params;
-      const { item_name, guest_name, guest_email, quantity, notes } = req.body;
+      const { item_name, guest_name, guest_email, quantity, category, notes } = req.body;
 
       // Verify event exists and has potluck enabled
       const eventCheck = await query(
@@ -75,10 +76,10 @@ router.post(
 
       // Add item
       const result = await query(
-        `INSERT INTO potluck_items (event_id, item_name, guest_name, guest_email, quantity, notes)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO potluck_items (event_id, item_name, guest_name, guest_email, quantity, category, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING *`,
-        [eventId, item_name, guest_name, guest_email, quantity || 1, notes || null]
+        [eventId, item_name, guest_name, guest_email, quantity || 1, category || null, notes || null]
       );
 
       res.status(201).json(result.rows[0]);
@@ -130,6 +131,7 @@ router.post(
   [
     body('item_name').trim().notEmpty().withMessage('Item name required'),
     body('quantity').optional().isInt({ min: 1 }).withMessage('Quantity must be at least 1'),
+    body('category').optional().trim(),
     body('notes').optional().trim()
   ],
   async (req: AuthRequest, res: Response) => {
@@ -140,7 +142,7 @@ router.post(
       }
 
       const { eventId } = req.params;
-      const { item_name, quantity, notes } = req.body;
+      const { item_name, quantity, category, notes } = req.body;
       const userId = req.user!.id;
 
       // Verify user is the event owner or co-host
@@ -167,10 +169,10 @@ router.post(
 
       // Add suggested item (unclaimed)
       const result = await query(
-        `INSERT INTO potluck_items (event_id, item_name, quantity, notes, is_suggested)
-         VALUES ($1, $2, $3, $4, true)
+        `INSERT INTO potluck_items (event_id, item_name, quantity, category, notes, is_suggested)
+         VALUES ($1, $2, $3, $4, $5, true)
          RETURNING *`,
-        [eventId, item_name, quantity || 1, notes || null]
+        [eventId, item_name, quantity || 1, category || null, notes || null]
       );
 
       res.status(201).json(result.rows[0]);

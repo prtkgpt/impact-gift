@@ -18,6 +18,7 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
     guest_name: '',
     guest_email: '',
     quantity: 1,
+    category: '',
     notes: ''
   });
   const [claimFormData, setClaimFormData] = useState({
@@ -54,6 +55,7 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
         guest_name: '',
         guest_email: '',
         quantity: 1,
+        category: '',
         notes: ''
       });
       fetchItems();
@@ -152,10 +154,15 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-gray-900">{item.item_name}</h3>
                       {item.quantity > 1 && (
                         <span className="text-sm text-gray-500">× {item.quantity}</span>
+                      )}
+                      {item.category && (
+                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
+                          {item.category}
+                        </span>
                       )}
                       <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-medium">
                         Unclaimed
@@ -198,10 +205,15 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-gray-900">{item.item_name}</h3>
                       {item.quantity > 1 && (
                         <span className="text-sm text-gray-500">× {item.quantity}</span>
+                      )}
+                      {item.category && (
+                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
+                          {item.category}
+                        </span>
                       )}
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
@@ -305,6 +317,28 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
                   value={formData.quantity}
                   onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
                 />
+              </div>
+
+              <div>
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                  Category
+                </label>
+                <select
+                  id="category"
+                  className="input"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                >
+                  <option value="">Select category...</option>
+                  <option value="Appetizer">Appetizer</option>
+                  <option value="Main Course">Main Course</option>
+                  <option value="Side Dish">Side Dish</option>
+                  <option value="Salad">Salad</option>
+                  <option value="Dessert">Dessert</option>
+                  <option value="Beverage">Beverage</option>
+                  <option value="Snacks">Snacks</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
 
               <div>
