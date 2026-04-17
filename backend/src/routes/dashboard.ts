@@ -10,7 +10,9 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
     const userId = req.user!.id;
     const userEmail = req.user!.email;
 
-    // Execute all queries in parallel
+    console.log('[Dashboard] Fetching summary for user:', userId, userEmail);
+
+    // Execute all queries in parallel with error handling
     const [
       userResult,
       eventsResult,
@@ -20,7 +22,8 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
       receivedCommitmentsResult
     ] = await Promise.all([
       // User's charity page info
-      query('SELECT charity_page_slug FROM users WHERE id = $1', [userId]),
+      query('SELECT charity_page_slug FROM users WHERE id = $1', [userId])
+        .catch(err => { console.error('[Dashboard] User query failed:', err); throw err; }),
 
       // User's events
       query(
@@ -47,7 +50,7 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
          GROUP BY e.id, u.first_name, u.last_name, ch.user_role
          ORDER BY e.event_date DESC`,
         [userId, userEmail]
-      ),
+      ).catch(err => { console.error('[Dashboard] Events query failed:', err); throw err; }),
 
       // User's invitations
       query(
@@ -66,7 +69,7 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
          WHERE LOWER(g.email) = LOWER($1)
          ORDER BY e.event_date DESC`,
         [userEmail]
-      ),
+      ).catch(err => { console.error('[Dashboard] Invitations query failed:', err); throw err; }),
 
       // Commitments from charity pages (made by me)
       query(
@@ -84,7 +87,7 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
          LEFT JOIN users u ON cc.charity_page_owner_id = u.id
          WHERE cc.donor_email = $1`,
         [userEmail]
-      ),
+      ).catch(err => { console.error('[Dashboard] Charity commitments query failed:', err); throw err; }),
 
       // Donations from events (made by me)
       query(
@@ -102,7 +105,7 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
          LEFT JOIN charities c ON d.charity_id = c.id
          WHERE d.donor_email = $1`,
         [userEmail]
-      ),
+      ).catch(err => { console.error('[Dashboard] Event donations query failed:', err); throw err; }),
 
       // Commitments received (to my charity page)
       query(
@@ -112,8 +115,12 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
          FROM charity_commitments
          WHERE charity_page_owner_id = $1`,
         [userId]
-      )
+      ).catch(err => { console.error('[Dashboard] Received commitments query failed:', err); throw err; })
     ]);
+
+    console.log('[Dashboard] Queries completed successfully');
+    console.log('[Dashboard] Events:', eventsResult.rows.length);
+    console.log('[Dashboard] Invitations:', invitationsResult.rows.length);
 
     const charity_page_slug = userResult.rows[0]?.charity_page_slug || null;
 
@@ -152,9 +159,17 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
         }
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching dashboard summary:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
+    res.status(500).json({
+      error: 'Server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
