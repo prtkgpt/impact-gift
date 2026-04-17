@@ -523,31 +523,8 @@ router.get('/find-by-email/:eventId/:email', async (req, res: Response) => {
   }
 });
 
-// Get guest by ID (public endpoint for RSVP page)
-router.get('/:guestId', async (req, res: Response) => {
-  try {
-    const { guestId } = req.params;
-
-    const result = await query(
-      `SELECT g.*, e.title as event_title, e.slug as event_slug, e.event_date
-       FROM guests g
-       JOIN events e ON g.event_id = e.id
-       WHERE g.id = $1`,
-      [guestId]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Guest not found' });
-    }
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Error fetching guest:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
 // Get master guest list (all unique guests from user's past events)
+// IMPORTANT: This must come BEFORE /:guestId route to avoid matching "master-list" as a guest ID
 router.get('/master-list', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
@@ -577,6 +554,30 @@ router.get('/master-list', authenticate, async (req: AuthRequest, res: Response)
     });
   } catch (error) {
     console.error('[MASTER GUEST LIST] Error fetching master guest list:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get guest by ID (public endpoint for RSVP page)
+router.get('/:guestId', async (req, res: Response) => {
+  try {
+    const { guestId } = req.params;
+
+    const result = await query(
+      `SELECT g.*, e.title as event_title, e.slug as event_slug, e.event_date
+       FROM guests g
+       JOIN events e ON g.event_id = e.id
+       WHERE g.id = $1`,
+      [guestId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Guest not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching guest:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
