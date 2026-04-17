@@ -214,7 +214,7 @@ router.put(
         }
 
         await query(
-          'UPDATE donations SET status = $1, updated_at = NOW() WHERE id = $2',
+          'UPDATE donations SET status = $1 WHERE id = $2',
           [status, id]
         );
       } else {
