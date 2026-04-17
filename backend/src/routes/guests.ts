@@ -551,34 +551,32 @@ router.get('/:guestId', async (req, res: Response) => {
 router.get('/master-list', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
-    const userEmail = req.user!.email;
 
-    // Get all unique guests from user's events (including co-hosted events)
+    console.log(`[MASTER GUEST LIST] Fetching for user ${userId}`);
+
+    // Get all unique guests from user's events
     const result = await query(
       `SELECT
               MAX(g.email) as email,
               MAX(g.name) as name,
               COUNT(DISTINCT g.event_id) as event_count,
-              MAX(g.created_at) as last_invited,
-              STRING_AGG(DISTINCT e.title, ', ') as event_titles
+              MAX(g.created_at) as last_invited
        FROM guests g
        JOIN events e ON g.event_id = e.id
-       LEFT JOIN event_co_hosts ech ON ech.event_id = e.id AND ech.co_host_email = $2 AND ech.status = 'accepted'
-       WHERE e.user_id = $1 OR ech.id IS NOT NULL
+       WHERE e.user_id = $1
        GROUP BY LOWER(g.email)
        ORDER BY MAX(g.created_at) DESC`,
-      [userId, userEmail]
+      [userId]
     );
 
-    console.log(`[MASTER GUEST LIST] User ${userId} has ${result.rows.length} unique guests`);
+    console.log(`[MASTER GUEST LIST] Found ${result.rows.length} unique guests`);
 
     res.json({
       guests: result.rows,
       total: result.rows.length
     });
   } catch (error) {
-    console.error('Error fetching master guest list:', error);
-    console.error('Error details:', error);
+    console.error('[MASTER GUEST LIST] Error fetching master guest list:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
