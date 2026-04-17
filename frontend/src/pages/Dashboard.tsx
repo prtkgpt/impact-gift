@@ -328,15 +328,27 @@ const Dashboard = () => {
                 >
                   {/* Event Header */}
                   <div className="flex items-start gap-4 mb-6">
-                    {event.charities && event.charities[0]?.logo_url && (
-                      <div className="flex-shrink-0">
+                    <div className="flex-shrink-0">
+                      {event.charities && event.charities[0]?.logo_url ? (
                         <img
                           src={event.charities[0].logo_url}
                           alt={event.charities[0].name}
                           className="w-16 h-16 rounded-2xl object-cover shadow-md"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            if (e.currentTarget.nextElementSibling) {
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
+                            }
+                          }}
                         />
+                      ) : null}
+                      <div
+                        className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center text-3xl shadow-md"
+                        style={{ display: event.charities && event.charities[0]?.logo_url ? 'none' : 'flex' }}
+                      >
+                        💝
                       </div>
-                    )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-xl font-bold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
