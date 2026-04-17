@@ -26,6 +26,7 @@ import eventImagesRoutes from './routes/eventImages';
 import eventPhotosRoutes from './routes/eventPhotos';
 import calendarRoutes from './routes/calendar';
 import targetedEmailsRoutes from './routes/targetedEmails';
+import scheduledTasksRoutes from './routes/scheduledTasks';
 
 dotenv.config();
 
@@ -109,6 +110,7 @@ app.use('/api/event-images', eventImagesRoutes);
 app.use('/api/event-photos', eventPhotosRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/targeted-emails', targetedEmailsRoutes);
+app.use('/api/scheduled-tasks', scheduledTasksRoutes);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
