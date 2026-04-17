@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import Papa from 'papaparse';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { Event, Guest, Donation, RSVPSummaryResponse, Charity } from '../types';
@@ -419,6 +420,49 @@ const ManageEvent = () => {
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to add guests');
     }
+  };
+
+  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !event) return;
+
+    // Reset file input
+    e.target.value = '';
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const guests = results.data.map((row: any) => ({
+          name: row.name || row.Name || '',
+          email: row.email || row.Email || ''
+        })).filter((g: any) => g.email && g.name);
+
+        if (guests.length === 0) {
+          toast.error('No valid guests found. CSV should have "name" and "email" columns.');
+          return;
+        }
+
+        try {
+          const response = await api.post(`/guests/bulk-upload/${event.id}`, { guests });
+
+          await fetchEventData();
+
+          const { imported, skipped, errors } = response.data;
+          if (errors && errors.length > 0) {
+            toast.error(`Imported ${imported}, skipped ${skipped}. ${errors.length} errors.`);
+          } else {
+            toast.success(`✅ Imported ${imported} guest${imported !== 1 ? 's' : ''}${skipped > 0 ? `, skipped ${skipped} duplicate${skipped !== 1 ? 's' : ''}` : ''}`);
+          }
+        } catch (error: any) {
+          toast.error(error.response?.data?.error || 'Failed to upload CSV');
+        }
+      },
+      error: (error) => {
+        toast.error('Failed to parse CSV file');
+        console.error('CSV parse error:', error);
+      }
+    });
   };
 
   const removeGuest = async (guestId: number) => {
@@ -1141,14 +1185,25 @@ const ManageEvent = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Quick Add Guests</h3>
-                <p className="text-sm text-gray-600 mt-1">Import guests from your past events</p>
+                <p className="text-sm text-gray-600 mt-1">Import from past events or upload a CSV file</p>
               </div>
-              <button
-                onClick={openMasterGuestList}
-                className="btn btn-secondary"
-              >
-                📋 Import from Past Events
-              </button>
+              <div className="flex gap-3">
+                <label className="btn btn-secondary cursor-pointer">
+                  📤 Upload CSV
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleCSVUpload}
+                    className="hidden"
+                  />
+                </label>
+                <button
+                  onClick={openMasterGuestList}
+                  className="btn btn-secondary"
+                >
+                  📋 Import from Past Events
+                </button>
+              </div>
             </div>
           </div>
 

@@ -582,4 +582,78 @@ router.get('/:guestId', async (req, res: Response) => {
   }
 });
 
+// Bulk upload guests from CSV
+router.post('/bulk-upload/:eventId', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { eventId } = req.params;
+    const { guests } = req.body; // Array of {name, email}
+
+    if (!Array.isArray(guests) || guests.length === 0) {
+      return res.status(400).json({ error: 'Invalid guest data' });
+    }
+
+    // Verify the user is owner or accepted co-host
+    const hasAccess = await isOwnerOrCoHost(req.user!.id, parseInt(eventId), req.user!.email);
+    if (!hasAccess) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    let imported = 0;
+    let skipped = 0;
+    const errors: string[] = [];
+
+    for (const guest of guests) {
+      const { name, email } = guest;
+
+      // Validate email format
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errors.push(`Invalid email: ${email || 'empty'}`);
+        continue;
+      }
+
+      // Validate name
+      if (!name || name.trim().length === 0) {
+        errors.push(`Missing name for: ${email}`);
+        continue;
+      }
+
+      try {
+        // Check if guest already exists
+        const existingGuest = await query(
+          'SELECT id FROM guests WHERE event_id = $1 AND LOWER(email) = LOWER($2)',
+          [eventId, email]
+        );
+
+        if (existingGuest.rows.length > 0) {
+          skipped++;
+          continue;
+        }
+
+        // Insert new guest
+        await query(
+          `INSERT INTO guests (event_id, email, name)
+           VALUES ($1, $2, $3)`,
+          [eventId, email.toLowerCase(), name.trim()]
+        );
+
+        imported++;
+      } catch (error) {
+        console.error('Error importing guest:', error);
+        errors.push(`Failed to import: ${email}`);
+      }
+    }
+
+    res.json({
+      success: true,
+      imported,
+      skipped,
+      total: guests.length,
+      errors: errors.length > 0 ? errors : undefined
+    });
+  } catch (error) {
+    console.error('Error bulk uploading guests:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;
