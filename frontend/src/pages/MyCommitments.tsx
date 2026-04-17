@@ -56,9 +56,12 @@ const MyCommitments = () => {
     try {
       const response = await api.get('/charity-commitments/made-by-me');
       console.log('My commitments response:', response.data);
+      console.log('Commitments array:', response.data.commitments);
+      console.log('Number of commitments:', response.data.commitments?.length);
       setMyCommitments(response.data.commitments || []);
     } catch (error: any) {
       console.error('Failed to load my commitments:', error);
+      console.error('Error response:', error.response?.data);
     } finally {
       setMyCommitmentsLoading(false);
     }

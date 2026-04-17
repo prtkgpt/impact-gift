@@ -81,6 +81,8 @@ router.get('/made-by-me', authenticate, async (req: AuthRequest, res: Response) 
 
     const userEmail = userResult.rows[0].email;
 
+    console.log('[made-by-me] Fetching commitments for email:', userEmail);
+
     // Get commitments from charity pages
     const charityCommitments = await query(
       `SELECT cc.id, cc.donor_name, cc.donor_email, cc.commitment_amount,
@@ -111,6 +113,9 @@ router.get('/made-by-me', authenticate, async (req: AuthRequest, res: Response) 
        WHERE d.donor_email = $1`,
       [userEmail]
     );
+
+    console.log('[made-by-me] Charity commitments found:', charityCommitments.rows.length);
+    console.log('[made-by-me] Event donations found:', eventDonations.rows.length);
 
     // Combine both sources
     const allCommitments = [...charityCommitments.rows, ...eventDonations.rows];
