@@ -64,6 +64,13 @@ const ManageEvent = () => {
   const [cancellationReason, setCancellationReason] = useState('');
   const [cancelling, setCancelling] = useState(false);
 
+  // Master guest list state
+  const [showMasterListModal, setShowMasterListModal] = useState(false);
+  const [masterGuestList, setMasterGuestList] = useState<any[]>([]);
+  const [selectedMasterGuests, setSelectedMasterGuests] = useState<Set<string>>(new Set());
+  const [masterListLoading, setMasterListLoading] = useState(false);
+  const [masterListSearch, setMasterListSearch] = useState('');
+
   // Event Details tab state
   const [formData, setFormData] = useState({
     title: '',
@@ -295,6 +302,74 @@ const ManageEvent = () => {
       toast.error(error.response?.data?.error || 'Failed to cancel event');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const openMasterGuestList = async () => {
+    setShowMasterListModal(true);
+    setMasterListLoading(true);
+    try {
+      const response = await api.get('/guests/master-list');
+      setMasterGuestList(response.data.guests || []);
+    } catch (error: any) {
+      toast.error('Failed to load guest list');
+    } finally {
+      setMasterListLoading(false);
+    }
+  };
+
+  const toggleMasterGuest = (email: string) => {
+    const newSelected = new Set(selectedMasterGuests);
+    if (newSelected.has(email)) {
+      newSelected.delete(email);
+    } else {
+      newSelected.add(email);
+    }
+    setSelectedMasterGuests(newSelected);
+  };
+
+  const importSelectedGuests = async () => {
+    if (!event || selectedMasterGuests.size === 0) return;
+
+    try {
+      // Filter out guests already in the current event
+      const currentEmails = new Set(guests.map(g => g.email.toLowerCase()));
+      const guestsToImport = Array.from(selectedMasterGuests).filter(
+        email => !currentEmails.has(email.toLowerCase())
+      );
+
+      if (guestsToImport.length === 0) {
+        toast.error('All selected guests are already invited to this event');
+        return;
+      }
+
+      // Get guest details from master list
+      const guestDetails = masterGuestList
+        .filter(g => guestsToImport.includes(g.email))
+        .map(g => ({ email: g.email, name: g.name }));
+
+      // Add guests one by one
+      let addedCount = 0;
+      for (const guest of guestDetails) {
+        try {
+          const response = await api.post('/guests', {
+            event_id: event.id,
+            email: guest.email,
+            name: guest.name || undefined
+          });
+          setGuests(prev => [...prev, response.data]);
+          addedCount++;
+        } catch (error: any) {
+          console.error(`Failed to add ${guest.email}:`, error);
+        }
+      }
+
+      toast.success(`Added ${addedCount} guest(s) from past events`);
+      setShowMasterListModal(false);
+      setSelectedMasterGuests(new Set());
+      setMasterListSearch('');
+    } catch (error: any) {
+      toast.error('Failed to import guests');
     }
   };
 
@@ -1061,6 +1136,22 @@ const ManageEvent = () => {
       {/* Guest List Tab */}
       {activeTab === 'guests' && (
         <div className="space-y-6">
+          {/* Import from Past Events Button */}
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Quick Add Guests</h3>
+                <p className="text-sm text-gray-600 mt-1">Import guests from your past events</p>
+              </div>
+              <button
+                onClick={openMasterGuestList}
+                className="btn btn-secondary"
+              >
+                📋 Import from Past Events
+              </button>
+            </div>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-6">
             {/* Add Single Guest */}
             <div className="card">
@@ -1770,6 +1861,148 @@ const ManageEvent = () => {
               >
                 {cancelling ? 'Cancelling...' : 'Cancel Event'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Master Guest List Modal */}
+      {showMasterListModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Import from Past Events</h2>
+                <button
+                  onClick={() => {
+                    setShowMasterListModal(false);
+                    setSelectedMasterGuests(new Set());
+                    setMasterListSearch('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Select guests from your previous events to add to this event
+              </p>
+            </div>
+
+            <div className="p-6 border-b border-gray-200">
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={masterListSearch}
+                onChange={(e) => setMasterListSearch(e.target.value)}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              {masterListLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-primary-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading guest list...</p>
+                </div>
+              ) : masterGuestList.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-5xl mb-4">👥</div>
+                  <p className="text-gray-600">No guests from past events yet</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {masterGuestList
+                    .filter(guest => {
+                      const search = masterListSearch.toLowerCase();
+                      return !search ||
+                        guest.email.toLowerCase().includes(search) ||
+                        guest.name?.toLowerCase().includes(search);
+                    })
+                    .map((guest) => {
+                      const isAlreadyInvited = guests.some(
+                        g => g.email.toLowerCase() === guest.email.toLowerCase()
+                      );
+                      const isSelected = selectedMasterGuests.has(guest.email);
+
+                      return (
+                        <div
+                          key={guest.email}
+                          className={`p-4 border-2 rounded-lg transition-colors ${
+                            isAlreadyInvited
+                              ? 'bg-gray-50 border-gray-200 opacity-50'
+                              : isSelected
+                              ? 'bg-primary-50 border-primary-300'
+                              : 'bg-white border-gray-200 hover:border-primary-200'
+                          }`}
+                        >
+                          <label className="flex items-start gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => !isAlreadyInvited && toggleMasterGuest(guest.email)}
+                              disabled={isAlreadyInvited}
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-gray-900">
+                                  {guest.name || guest.email}
+                                </span>
+                                {isAlreadyInvited && (
+                                  <span className="text-xs px-2 py-1 bg-gray-200 text-gray-600 rounded">
+                                    Already invited
+                                  </span>
+                                )}
+                              </div>
+                              {guest.name && (
+                                <div className="text-sm text-gray-600">{guest.email}</div>
+                              )}
+                              <div className="text-xs text-gray-500 mt-1">
+                                Invited to {guest.event_count} event{guest.event_count > 1 ? 's' : ''}
+                              </div>
+                            </div>
+                          </label>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm text-gray-600">
+                  {selectedMasterGuests.size} guest{selectedMasterGuests.size !== 1 ? 's' : ''} selected
+                </span>
+                {selectedMasterGuests.size > 0 && (
+                  <button
+                    onClick={() => setSelectedMasterGuests(new Set())}
+                    className="text-sm text-gray-600 hover:text-gray-800"
+                  >
+                    Clear selection
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowMasterListModal(false);
+                    setSelectedMasterGuests(new Set());
+                    setMasterListSearch('');
+                  }}
+                  className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={importSelectedGuests}
+                  disabled={selectedMasterGuests.size === 0}
+                  className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add {selectedMasterGuests.size > 0 ? `${selectedMasterGuests.size} ` : ''}Guest{selectedMasterGuests.size !== 1 ? 's' : ''}
+                </button>
+              </div>
             </div>
           </div>
         </div>

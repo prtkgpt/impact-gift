@@ -547,4 +547,36 @@ router.get('/:guestId', async (req, res: Response) => {
   }
 });
 
+// Get master guest list (all unique guests from user's past events)
+router.get('/master-list', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.id;
+
+    // Get all unique guests from user's events (including co-hosted events)
+    const result = await query(
+      `SELECT DISTINCT ON (LOWER(g.email))
+              g.email,
+              g.name,
+              COUNT(DISTINCT g.event_id) as event_count,
+              MAX(g.created_at) as last_invited,
+              STRING_AGG(DISTINCT e.title, ', ' ORDER BY e.title) as event_titles
+       FROM guests g
+       JOIN events e ON g.event_id = e.id
+       LEFT JOIN event_co_hosts ech ON ech.event_id = e.id AND ech.co_host_email = $2
+       WHERE (e.user_id = $1 OR ech.status = 'accepted')
+       GROUP BY LOWER(g.email), g.email, g.name
+       ORDER BY LOWER(g.email), MAX(g.created_at) DESC`,
+      [userId, req.user!.email]
+    );
+
+    res.json({
+      guests: result.rows,
+      total: result.rows.length
+    });
+  } catch (error) {
+    console.error('Error fetching master guest list:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;
