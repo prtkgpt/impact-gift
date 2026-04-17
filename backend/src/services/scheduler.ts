@@ -28,20 +28,21 @@ export function startScheduledTasks() {
       for (const event of events) {
         console.log(`[SCHEDULER] Processing event: ${event.title} (ID: ${event.id})`);
 
-        // Get all pending donations for this event
+        // Get all pending donations for this event that haven't been reminded yet
         const donationsResult = await query(
-          `SELECT d.donor_name, d.donor_email, d.amount,
+          `SELECT d.id, d.donor_name, d.donor_email, d.amount,
                   c.name as charity_name, c.donation_url, c.payment_instructions, c.website_url
            FROM donations d
            JOIN charities c ON d.charity_id = c.id
            WHERE d.event_id = $1
              AND d.status != 'completed'
-             AND d.donor_email IS NOT NULL`,
+             AND d.donor_email IS NOT NULL
+             AND d.reminder_sent_at IS NULL`,
           [event.id]
         );
 
         const pendingDonations = donationsResult.rows;
-        console.log(`[SCHEDULER] Found ${pendingDonations.length} pending donation(s) for event ${event.id}`);
+        console.log(`[SCHEDULER] Found ${pendingDonations.length} pending donation(s) needing reminders for event ${event.id}`);
 
         for (const donation of pendingDonations) {
           // Determine charity donation URL
@@ -67,6 +68,11 @@ export function startScheduledTasks() {
           });
 
           if (success) {
+            // Mark reminder as sent
+            await query(
+              'UPDATE donations SET reminder_sent_at = NOW() WHERE id = $1',
+              [donation.id]
+            );
             totalSent++;
             console.log(`[SCHEDULER] Sent reminder to ${donation.donor_email}`);
           } else {
