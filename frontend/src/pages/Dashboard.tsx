@@ -328,11 +328,11 @@ const Dashboard = () => {
                 >
                   {/* Event Header */}
                   <div className="flex items-start gap-4 mb-6">
-                    {event.charity_logo && (
+                    {event.charities && event.charities[0]?.logo_url && (
                       <div className="flex-shrink-0">
                         <img
-                          src={event.charity_logo}
-                          alt={event.charity_name}
+                          src={event.charities[0].logo_url}
+                          alt={event.charities[0].name}
                           className="w-16 h-16 rounded-2xl object-cover shadow-md"
                         />
                       </div>
@@ -346,7 +346,13 @@ const Dashboard = () => {
                           <span className="badge badge-primary text-xs flex-shrink-0">Co-Host</span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 truncate">{event.charity_name}</p>
+                      {event.charities && event.charities.length > 0 && (
+                        <p className="text-sm text-gray-600 truncate">
+                          {event.charities.length === 1
+                            ? event.charities[0].name
+                            : `${event.charities[0].name} +${event.charities.length - 1} more`}
+                        </p>
+                      )}
                     </div>
                   </div>
 

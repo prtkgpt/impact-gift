@@ -26,7 +26,6 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
       query(
         `SELECT e.*,
                 u.first_name, u.last_name,
-                c.name as charity_name, c.logo_url as charity_logo,
                 COALESCE(SUM(d.amount), 0) as total_raised,
                 COUNT(DISTINCT d.id) as donation_count,
                 COUNT(DISTINCT CASE WHEN g.rsvp_status = 'attending' THEN g.id END) as attending_count,
@@ -39,14 +38,13 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
          FROM events e
          JOIN users u ON e.user_id = u.id
          LEFT JOIN event_charities ec ON ec.event_id = e.id
-         LEFT JOIN charities c ON ec.charity_id = c.id
          LEFT JOIN charities ec_charities ON ec.charity_id = ec_charities.id
          LEFT JOIN donations d ON d.event_id = e.id
          LEFT JOIN guests g ON g.event_id = e.id
          LEFT JOIN co_hosts ch ON ch.event_id = e.id AND ch.email = $2 AND ch.status = 'accepted'
          WHERE (e.user_id = $1 OR ch.id IS NOT NULL)
            AND e.is_active = true
-         GROUP BY e.id, u.first_name, u.last_name, c.name, c.logo_url, ch.user_role
+         GROUP BY e.id, u.first_name, u.last_name, ch.user_role
          ORDER BY e.event_date DESC`,
         [userId, userEmail]
       ),
