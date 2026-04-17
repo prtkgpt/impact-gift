@@ -33,6 +33,15 @@ const MyCommitments = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'made' | 'received'>('all');
 
+  const getCharityInitials = (charityName: string) => {
+    return charityName
+      .split(' ')
+      .filter(word => word.length > 0)
+      .map(word => word[0].toUpperCase())
+      .slice(0, 2)
+      .join('');
+  };
+
   useEffect(() => {
     console.log('MyCommitments component mounted');
     Promise.all([fetchCommitments(), fetchMyCommitments()]);
@@ -269,8 +278,8 @@ const MyCommitments = () => {
                 {filteredCommitments.map((commitment) => (
                   <div key={`${commitment.type}-${commitment.id}`} className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center text-xl flex-shrink-0">
-                        💝
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        {getCharityInitials(commitment.charity_name)}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -386,8 +395,8 @@ const MyCommitments = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center text-xl flex-shrink-0">
-                                💝
+                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                {getCharityInitials(commitment.charity_name)}
                               </div>
                               <span className="text-sm font-medium text-gray-900">
                                 {commitment.charity_name}

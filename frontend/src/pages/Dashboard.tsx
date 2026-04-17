@@ -36,6 +36,15 @@ const Dashboard = () => {
   const [commitmentsReceived, setCommitmentsReceived] = useState({ count: 0, amount: 0 });
   const [commitmentsLoading, setCommitmentsLoading] = useState(true);
 
+  const getCharityInitials = (charityName: string) => {
+    return charityName
+      .split(' ')
+      .filter(word => word.length > 0)
+      .map(word => word[0].toUpperCase())
+      .slice(0, 2)
+      .join('');
+  };
+
   useEffect(() => {
     // Wait for auth to finish loading before fetching data
     if (authLoading) return;
@@ -328,21 +337,30 @@ const Dashboard = () => {
                 >
                   {/* Event Header */}
                   <div className="mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-xl font-bold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
-                        {event.title}
-                      </h3>
-                      {event.user_role === 'cohost' && (
-                        <span className="badge badge-primary text-xs flex-shrink-0">Co-Host</span>
+                    <div className="flex items-center gap-3 mb-2">
+                      {event.charities && event.charities.length > 0 && (
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0">
+                          {getCharityInitials(event.charities[0].name)}
+                        </div>
                       )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-xl font-bold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
+                            {event.title}
+                          </h3>
+                          {event.user_role === 'cohost' && (
+                            <span className="badge badge-primary text-xs flex-shrink-0">Co-Host</span>
+                          )}
+                        </div>
+                        {event.charities && event.charities.length > 0 && (
+                          <p className="text-sm text-gray-600 truncate">
+                            {event.charities.length === 1
+                              ? event.charities[0].name
+                              : `${event.charities[0].name} +${event.charities.length - 1} more`}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    {event.charities && event.charities.length > 0 && (
-                      <p className="text-sm text-gray-600 truncate">
-                        💝 {event.charities.length === 1
-                          ? event.charities[0].name
-                          : `${event.charities[0].name} +${event.charities.length - 1} more`}
-                      </p>
-                    )}
                   </div>
 
                   {/* Event Details */}
