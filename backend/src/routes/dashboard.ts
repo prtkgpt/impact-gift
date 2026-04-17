@@ -44,7 +44,7 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
          LEFT JOIN charities ec_charities ON ec.charity_id = ec_charities.id
          LEFT JOIN donations d ON d.event_id = e.id
          LEFT JOIN guests g ON g.event_id = e.id
-         LEFT JOIN co_hosts ch ON ch.event_id = e.id AND ch.email = $2 AND ch.status = 'accepted'
+         LEFT JOIN co_hosts ch ON ch.event_id = e.id AND ch.email = $2 AND ch.accepted_at IS NOT NULL
          WHERE (e.user_id = $1 OR ch.id IS NOT NULL)
            AND e.is_active = true
          GROUP BY e.id, u.first_name, u.last_name, ch.user_role
