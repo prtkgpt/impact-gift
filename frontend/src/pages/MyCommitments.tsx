@@ -330,7 +330,7 @@ const MyCommitments = () => {
                               : 'text-yellow-700 bg-yellow-50 border-yellow-200'
                           }`}
                         >
-                          <option value="pending">Pending</option>
+                          <option value="pending">Pledged</option>
                           <option value="completed">Donated</option>
                         </select>
                       ) : (
@@ -339,7 +339,7 @@ const MyCommitments = () => {
                             ? 'text-green-700 bg-green-50 border-green-200'
                             : 'text-gray-700 bg-gray-50 border-gray-200'
                         }`}>
-                          {commitment.clicked_through ? '✓ Pledged' : 'Pending'}
+                          {commitment.clicked_through ? '✓ Pledged' : 'Pledged'}
                         </span>
                       )}
                     </div>
@@ -437,7 +437,7 @@ const MyCommitments = () => {
                                     : 'text-yellow-700 bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
                                 }`}
                               >
-                                <option value="pending">Pending</option>
+                                <option value="pending">Pledged</option>
                                 <option value="completed">Donated</option>
                               </select>
                             ) : (
@@ -446,7 +446,7 @@ const MyCommitments = () => {
                                   ? 'text-green-700 bg-green-50 border-green-200'
                                   : 'text-gray-700 bg-gray-50 border-gray-200'
                               }`}>
-                                {commitment.clicked_through ? '✓ Pledged' : 'Pending'}
+                                {commitment.clicked_through ? '✓ Pledged' : 'Pledged'}
                               </span>
                             )}
                           </td>
