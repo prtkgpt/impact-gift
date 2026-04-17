@@ -130,6 +130,10 @@ async function startServer() {
       console.log('✅ Migrations completed');
     }
 
+    // Start scheduled tasks (donation reminders, etc.)
+    const { startScheduledTasks } = await import('./services/scheduler');
+    startScheduledTasks();
+
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
