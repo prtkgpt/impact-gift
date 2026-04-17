@@ -86,7 +86,9 @@ router.get('/made-by-me', authenticate, async (req: AuthRequest, res: Response) 
     // Get commitments from charity pages
     const charityCommitments = await query(
       `SELECT cc.id, cc.donor_name, cc.donor_email, cc.commitment_amount,
-              cc.clicked_through, cc.created_at,
+              cc.clicked_through,
+              CASE WHEN cc.clicked_through = true THEN 'completed' ELSE 'pending' END as status,
+              cc.created_at,
               c.name as charity_name, c.logo_url as charity_logo,
               e.title as event_title,
               CONCAT(u.first_name, ' ', u.last_name) as charity_owner_name,
