@@ -59,6 +59,11 @@ const ManageEvent = () => {
   const [pendingCommitments, setPendingCommitments] = useState(0);
   const [sendingReminders, setSendingReminders] = useState(false);
 
+  // Cancel event state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState('');
+  const [cancelling, setCancelling] = useState(false);
+
   // Event Details tab state
   const [formData, setFormData] = useState({
     title: '',
@@ -268,6 +273,28 @@ const ManageEvent = () => {
       }, 1000);
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to duplicate event');
+    }
+  };
+
+  const cancelEvent = async () => {
+    if (!event) return;
+
+    setCancelling(true);
+    try {
+      const response = await api.post(`/events/${event.id}/cancel`, {
+        cancellation_reason: cancellationReason || undefined
+      });
+
+      toast.success(`Event cancelled. ${response.data.notified_guests} guest(s) notified.`);
+      setShowCancelModal(false);
+      setCancellationReason('');
+
+      // Refresh event data to show cancelled status
+      await fetchEventData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to cancel event');
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -573,13 +600,33 @@ const ManageEvent = () => {
             <button
               onClick={sendInvitations}
               className="btn btn-primary"
-              disabled={pendingInvites === 0}
+              disabled={pendingInvites === 0 || event.cancelled}
             >
               📧 Send Invitation{pendingInvites !== 1 && pendingInvites > 0 ? 's' : ''} {pendingInvites > 0 && `(${pendingInvites})`}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Cancelled Banner */}
+      {event.cancelled && (
+        <div className="mb-6 p-6 bg-red-100 border-2 border-red-300 rounded-lg">
+          <div className="flex items-start gap-3">
+            <div className="text-3xl">🚫</div>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold text-red-900 mb-2">This Event Has Been Cancelled</h2>
+              <p className="text-red-800 mb-1">
+                Cancelled on: {event.cancelled_at ? new Date(event.cancelled_at).toLocaleString() : 'N/A'}
+              </p>
+              {event.cancellation_reason && (
+                <p className="text-red-800">
+                  <strong>Reason:</strong> {event.cancellation_reason}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
@@ -908,6 +955,24 @@ const ManageEvent = () => {
               </button>
             </div>
           </form>
+
+          {/* Danger Zone */}
+          {!event?.cancelled && (
+            <div className="mt-8 p-6 bg-red-50 border-2 border-red-200 rounded-lg">
+              <h3 className="text-lg font-semibold text-red-900 mb-2">Danger Zone</h3>
+              <p className="text-sm text-red-700 mb-4">
+                Once you cancel this event, all invited guests will be notified and the event will be marked as cancelled.
+                This action cannot be undone.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(true)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                ⚠️ Cancel Event
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -1650,6 +1715,62 @@ const ManageEvent = () => {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Event Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">Cancel Event</h2>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-800">
+                  <strong>⚠️ Warning:</strong> This action cannot be undone. All invited guests will be notified
+                  that the event has been cancelled.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reason for cancellation (optional)
+                </label>
+                <textarea
+                  value={cancellationReason}
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                  placeholder="Let your guests know why you're cancelling..."
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                  rows={4}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  This message will be included in the cancellation email sent to all guests.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancellationReason('');
+                }}
+                disabled={cancelling}
+                className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Keep Event
+              </button>
+              <button
+                onClick={cancelEvent}
+                disabled={cancelling}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {cancelling ? 'Cancelling...' : 'Cancel Event'}
+              </button>
+            </div>
           </div>
         </div>
       )}

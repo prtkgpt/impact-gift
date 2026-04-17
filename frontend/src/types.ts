@@ -68,6 +68,9 @@ export interface Event {
   co_hosts?: CoHost[]; // List of co-hosts for the event
   is_cohost?: boolean; // Whether current user is a co-host
   user_role?: 'owner' | 'cohost' | 'guest'; // Current user's role for this event
+  cancelled?: boolean; // Whether the event has been cancelled
+  cancelled_at?: string; // Timestamp when the event was cancelled
+  cancellation_reason?: string; // Optional reason for cancellation
 }
 
 export interface Donation {

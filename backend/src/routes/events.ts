@@ -864,4 +864,108 @@ router.post('/:identifier/duplicate', authenticate, async (req: AuthRequest, res
   }
 });
 
+// Cancel an event
+router.post('/:identifier/cancel', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { identifier } = req.params;
+    const { cancellation_reason } = req.body;
+    const userId = req.user!.id;
+
+    // Get the event
+    const eventResult = await query(
+      `SELECT e.*, u.email as organizer_email, u.first_name, u.last_name
+       FROM events e
+       JOIN users u ON e.user_id = u.id
+       WHERE (e.id = $1 OR e.slug = $1) AND e.is_active = true`,
+      [identifier]
+    );
+
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const event = eventResult.rows[0];
+
+    // Verify user is the owner
+    if (event.user_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized to cancel this event' });
+    }
+
+    // Check if already cancelled
+    if (event.cancelled) {
+      return res.status(400).json({ error: 'Event is already cancelled' });
+    }
+
+    // Cancel the event
+    await query(
+      `UPDATE events
+       SET cancelled = true,
+           cancelled_at = CURRENT_TIMESTAMP,
+           cancellation_reason = $1,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2`,
+      [cancellation_reason || null, event.id]
+    );
+
+    // Get all invited guests to notify them
+    const guestsResult = await query(
+      `SELECT email, name FROM guests
+       WHERE event_id = $1 AND invitation_sent = true`,
+      [event.id]
+    );
+
+    const guests = guestsResult.rows;
+
+    // Send cancellation emails (using Resend if configured)
+    const { Resend } = await import('resend');
+    const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+    if (resend && guests.length > 0) {
+      const organizerName = `${event.first_name} ${event.last_name}`;
+      const reasonText = cancellation_reason
+        ? `\n\nReason: ${cancellation_reason}`
+        : '';
+
+      for (const guest of guests) {
+        const emailBody = `Hi ${guest.name || 'there'},
+
+Unfortunately, the following event has been cancelled:
+
+${event.title}
+${event.event_date ? `Date: ${new Date(event.event_date).toLocaleDateString()}` : ''}
+${event.venue_name ? `Venue: ${event.venue_name}` : ''}${reasonText}
+
+We apologize for any inconvenience this may cause.
+
+Best regards,
+${organizerName}`;
+
+        try {
+          await resend.emails.send({
+            from: 'Impact Gift <noreply@giftwithimpact.com>',
+            to: guest.email,
+            replyTo: event.organizer_email,
+            subject: `Event Cancelled: ${event.title}`,
+            text: emailBody,
+            html: emailBody.replace(/\n/g, '<br>')
+          });
+        } catch (emailError) {
+          console.error(`Failed to send cancellation email to ${guest.email}:`, emailError);
+        }
+      }
+
+      console.log(`[CANCEL EVENT] Sent cancellation emails to ${guests.length} guests for event ${event.id}`);
+    }
+
+    res.json({
+      success: true,
+      message: 'Event cancelled successfully',
+      notified_guests: guests.length
+    });
+  } catch (error) {
+    console.error('Error cancelling event:', error);
+    res.status(500).json({ error: 'Failed to cancel event' });
+  }
+});
+
 export default router;
