@@ -103,6 +103,7 @@ router.get('/made-by-me', authenticate, async (req: AuthRequest, res: Response) 
     const eventDonations = await query(
       `SELECT d.id, d.donor_name, d.donor_email, d.amount as commitment_amount,
               CASE WHEN d.status = 'completed' THEN true ELSE false END as clicked_through,
+              d.status,
               d.created_at,
               c.name as charity_name, c.logo_url as charity_logo,
               e.title as event_title,

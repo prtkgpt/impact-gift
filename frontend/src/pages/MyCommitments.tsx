@@ -14,6 +14,7 @@ interface Commitment {
   charity_owner_name?: string;
   created_at: string;
   clicked_through: boolean;
+  status?: string;
 }
 
 interface CommitmentsData {
@@ -65,6 +66,25 @@ const MyCommitments = () => {
       console.error('Error response:', error.response?.data);
     } finally {
       setMyCommitmentsLoading(false);
+    }
+  };
+
+  const updateCommitmentStatus = async (commitmentId: number, newStatus: string, donorEmail: string) => {
+    try {
+      await api.put(`/donations/${commitmentId}/status`, {
+        status: newStatus,
+        donor_email: donorEmail
+      });
+
+      // Update local state
+      setMyCommitments(prev =>
+        prev.map(c => c.id === commitmentId ? { ...c, status: newStatus } : c)
+      );
+
+      toast.success(newStatus === 'completed' ? 'Marked as donated!' : 'Status updated');
+    } catch (error: any) {
+      console.error('Failed to update status:', error);
+      toast.error(error.response?.data?.error || 'Failed to update status');
     }
   };
 
@@ -281,30 +301,47 @@ const MyCommitments = () => {
                           </p>
                         )}
                       </div>
-                      {commitment.clicked_through ? (
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-200">
-                          ✓
-                        </span>
-                      ) : (
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold text-yellow-700 bg-yellow-50 rounded-full border border-yellow-200">
-                          ○
-                        </span>
-                      )}
                     </div>
 
-                    <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                    <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
                       <div>
-                        <p className="text-xs text-gray-500">Amount</p>
+                        <p className="text-xs text-gray-500 mb-1">Amount</p>
                         <p className="text-xl font-bold text-accent-600">
                           ${Number(commitment.commitment_amount).toFixed(2)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500">Date</p>
+                        <p className="text-xs text-gray-500 mb-1">Date</p>
                         <p className="text-sm text-gray-700">
                           {format(new Date(commitment.created_at), 'MMM dd, yyyy')}
                         </p>
                       </div>
+                    </div>
+
+                    <div className="pt-3">
+                      <p className="text-xs text-gray-500 mb-1">Status</p>
+                      {commitment.type === 'made' ? (
+                        <select
+                          value={commitment.status || 'pending'}
+                          onChange={(e) => updateCommitmentStatus(commitment.id, e.target.value, commitment.donor_email)}
+                          className={`w-full px-3 py-2 text-sm font-semibold rounded-lg border-2 cursor-pointer transition-colors ${
+                            (commitment.status || 'pending') === 'completed'
+                              ? 'text-green-700 bg-green-50 border-green-200'
+                              : 'text-yellow-700 bg-yellow-50 border-yellow-200'
+                          }`}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="completed">Donated</option>
+                        </select>
+                      ) : (
+                        <span className={`inline-flex w-full justify-center px-3 py-2 text-sm font-semibold rounded-lg border-2 ${
+                          commitment.clicked_through
+                            ? 'text-green-700 bg-green-50 border-green-200'
+                            : 'text-gray-700 bg-gray-50 border-gray-200'
+                        }`}>
+                          {commitment.clicked_through ? '✓ Pledged' : 'Pending'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -390,13 +427,26 @@ const MyCommitments = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {commitment.clicked_through ? (
-                              <span className="inline-flex px-3 py-1 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-200">
-                                ✓ Done
-                              </span>
+                            {commitment.type === 'made' ? (
+                              <select
+                                value={commitment.status || 'pending'}
+                                onChange={(e) => updateCommitmentStatus(commitment.id, e.target.value, commitment.donor_email)}
+                                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border-2 cursor-pointer transition-colors ${
+                                  (commitment.status || 'pending') === 'completed'
+                                    ? 'text-green-700 bg-green-50 border-green-200 hover:bg-green-100'
+                                    : 'text-yellow-700 bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
+                                }`}
+                              >
+                                <option value="pending">Pending</option>
+                                <option value="completed">Donated</option>
+                              </select>
                             ) : (
-                              <span className="inline-flex px-3 py-1 text-xs font-semibold text-yellow-700 bg-yellow-50 rounded-full border border-yellow-200">
-                                Pending
+                              <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full border ${
+                                commitment.clicked_through
+                                  ? 'text-green-700 bg-green-50 border-green-200'
+                                  : 'text-gray-700 bg-gray-50 border-gray-200'
+                              }`}>
+                                {commitment.clicked_through ? '✓ Pledged' : 'Pending'}
                               </span>
                             )}
                           </td>

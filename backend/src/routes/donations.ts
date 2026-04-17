@@ -177,4 +177,48 @@ router.get('/all', async (req: Request, res: Response) => {
   }
 });
 
+// Update donation status (user marks donation as completed)
+router.put(
+  '/:id/status',
+  [
+    body('status').isIn(['pending', 'completed']),
+    body('donor_email').isEmail() // Verify ownership
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { id } = req.params;
+      const { status, donor_email } = req.body;
+
+      // Verify the donation exists and belongs to this donor
+      const donationResult = await query(
+        'SELECT * FROM donations WHERE id = $1 AND donor_email = $2',
+        [id, donor_email]
+      );
+
+      if (donationResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Donation not found or access denied' });
+      }
+
+      // Update the status
+      const updateResult = await query(
+        'UPDATE donations SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+        [status, id]
+      );
+
+      res.json({
+        success: true,
+        donation: updateResult.rows[0]
+      });
+    } catch (error) {
+      console.error('Error updating donation status:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
 export default router;
