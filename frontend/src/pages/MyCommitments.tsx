@@ -269,17 +269,9 @@ const MyCommitments = () => {
                 {filteredCommitments.map((commitment) => (
                   <div key={`${commitment.type}-${commitment.id}`} className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
                     <div className="flex items-center gap-2 mb-3">
-                      {commitment.charity_logo && (
-                        <img
-                          src={commitment.charity_logo}
-                          alt={commitment.charity_name}
-                          className="w-10 h-10 rounded object-contain bg-gray-50 p-1"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(commitment.charity_name)}&size=40&background=f43f5e&color=fff`;
-                          }}
-                        />
-                      )}
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center text-xl flex-shrink-0">
+                        💝
+                      </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-bold text-gray-900">{commitment.charity_name}</h3>
@@ -394,17 +386,9 @@ const MyCommitments = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-3">
-                              {commitment.charity_logo && (
-                                <img
-                                  src={commitment.charity_logo}
-                                  alt={commitment.charity_name}
-                                  className="w-10 h-10 rounded-lg object-contain bg-gray-50 p-1"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(commitment.charity_name)}&size=40&background=f43f5e&color=fff`;
-                                  }}
-                                />
-                              )}
+                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center text-xl flex-shrink-0">
+                                💝
+                              </div>
                               <span className="text-sm font-medium text-gray-900">
                                 {commitment.charity_name}
                               </span>

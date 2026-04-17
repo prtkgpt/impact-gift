@@ -133,14 +133,14 @@ const EventPage = () => {
         <meta property="og:url" content={pageUrl} />
         <meta property="og:title" content={shareTitle} />
         <meta property="og:description" content={shareDescription} />
-        <meta property="og:image" content={event.event_image_url || event.charity_logo || ''} />
+        <meta property="og:image" content={event.event_image_url || ''} />
 
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content={pageUrl} />
         <meta property="twitter:title" content={shareTitle} />
         <meta property="twitter:description" content={shareDescription} />
-        <meta property="twitter:image" content={event.event_image_url || event.charity_logo || ''} />
+        <meta property="twitter:image" content={event.event_image_url || ''} />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
