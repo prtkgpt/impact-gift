@@ -223,7 +223,7 @@ router.put(
 
         // For charity_commitments, update clicked_through based on status
         await query(
-          'UPDATE charity_commitments SET clicked_through = $1, updated_at = NOW() WHERE id = $2',
+          'UPDATE charity_commitments SET clicked_through = $1 WHERE id = $2',
           [status === 'completed', id]
         );
       }
