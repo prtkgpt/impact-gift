@@ -554,18 +554,19 @@ router.get('/master-list', authenticate, async (req: AuthRequest, res: Response)
 
     // Get all unique guests from user's events (including co-hosted events)
     const result = await query(
-      `SELECT DISTINCT ON (LOWER(g.email))
-              g.email,
-              g.name,
+      `SELECT
+              LOWER(g.email) as email_lower,
+              MAX(g.email) as email,
+              MAX(g.name) as name,
               COUNT(DISTINCT g.event_id) as event_count,
               MAX(g.created_at) as last_invited,
-              STRING_AGG(DISTINCT e.title, ', ' ORDER BY e.title) as event_titles
+              STRING_AGG(DISTINCT e.title, ', ') as event_titles
        FROM guests g
        JOIN events e ON g.event_id = e.id
        LEFT JOIN event_co_hosts ech ON ech.event_id = e.id AND ech.co_host_email = $2
        WHERE (e.user_id = $1 OR ech.status = 'accepted')
-       GROUP BY LOWER(g.email), g.email, g.name
-       ORDER BY LOWER(g.email), MAX(g.created_at) DESC`,
+       GROUP BY LOWER(g.email)
+       ORDER BY MAX(g.created_at) DESC`,
       [userId, req.user!.email]
     );
 
