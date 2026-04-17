@@ -124,7 +124,10 @@ router.get('/made-by-me', authenticate, async (req: AuthRequest, res: Response) 
     allCommitments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     const total_commitments = allCommitments.length;
-    const total_amount = allCommitments.reduce((sum, c) => sum + parseFloat(c.commitment_amount), 0);
+    const total_amount = allCommitments.reduce((sum, c) => {
+      const amount = parseFloat(c.commitment_amount);
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
 
     res.json({
       commitments: allCommitments,
@@ -133,6 +136,8 @@ router.get('/made-by-me', authenticate, async (req: AuthRequest, res: Response) 
     });
   } catch (error) {
     console.error('Error fetching my commitments:', error);
+    console.error('Error details:', error instanceof Error ? error.message : error);
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -186,7 +191,10 @@ router.get('/my-page', authenticate, async (req: AuthRequest, res: Response) => 
     allCommitments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     const total_commitments = allCommitments.length;
-    const total_amount = allCommitments.reduce((sum, c) => sum + parseFloat(c.commitment_amount), 0);
+    const total_amount = allCommitments.reduce((sum, c) => {
+      const amount = parseFloat(c.commitment_amount);
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
 
     res.json({
       commitments: allCommitments,
@@ -196,6 +204,7 @@ router.get('/my-page', authenticate, async (req: AuthRequest, res: Response) => 
     });
   } catch (error) {
     console.error('Error fetching commitments:', error);
+    console.error('Error details:', error instanceof Error ? error.message : error);
     res.status(500).json({ error: 'Server error' });
   }
 });
