@@ -29,6 +29,7 @@ const MyCommitments = () => {
   const [loading, setLoading] = useState(true);
   const [myCommitmentsLoading, setMyCommitmentsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'made' | 'received'>('all');
 
   useEffect(() => {
     console.log('MyCommitments component mounted');
@@ -105,6 +106,23 @@ const MyCommitments = () => {
     );
   }
 
+  // Calculate totals
+  const myCommitmentsTotal = myCommitments.reduce((sum, c) => sum + Number(c.commitment_amount || 0), 0);
+  const receivedCommitmentsTotal = data?.total_amount || 0;
+  const myCommitmentsCount = myCommitments.length;
+  const receivedCommitmentsCount = data?.commitments?.length || 0;
+
+  // Combine and filter commitments
+  const allCommitments = [
+    ...myCommitments.map(c => ({ ...c, type: 'made' as const })),
+    ...(data?.commitments || []).map(c => ({ ...c, type: 'received' as const }))
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  const filteredCommitments = allCommitments.filter(c => {
+    if (activeTab === 'all') return true;
+    return c.type === activeTab;
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -112,56 +130,164 @@ const MyCommitments = () => {
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">💝 My Commitments</h1>
           <p className="text-base sm:text-lg text-gray-600">
-            Track your donation commitments and commitments from others
+            Track all your donation commitments in one place
           </p>
         </div>
 
-        {/* My Charity Commitments Section */}
-        <div className="mb-12">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Commitments I've Made</h2>
-            <p className="text-base text-gray-600">Donations I've pledged to charities</p>
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="bg-blue-50 rounded-2xl shadow-lg p-6 border-2 border-blue-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Commitments I've Made</h3>
+                <p className="text-sm text-gray-600">To events and charity pages</p>
+              </div>
+            </div>
+            <div className="flex justify-between items-end">
+              <div>
+                <p className="text-sm text-gray-600">Total Pledges</p>
+                <p className="text-3xl font-bold text-gray-900">{myCommitmentsCount}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-gray-600">Total Amount</p>
+                <p className="text-3xl font-bold text-blue-600">${myCommitmentsTotal.toFixed(2)}</p>
+              </div>
+            </div>
           </div>
 
-          {myCommitmentsLoading ? (
+          <div className="bg-green-50 rounded-2xl shadow-lg p-6 border-2 border-green-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Commitments I've Received</h3>
+                <p className="text-sm text-gray-600">From my events and charity page</p>
+              </div>
+            </div>
+            <div className="flex justify-between items-end">
+              <div>
+                <p className="text-sm text-gray-600">Total Pledges</p>
+                <p className="text-3xl font-bold text-gray-900">{receivedCommitmentsCount}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-gray-600">Total Amount</p>
+                <p className="text-3xl font-bold text-green-600">${receivedCommitmentsTotal.toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="flex gap-8">
+              <button
+                onClick={() => setActiveTab('all')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'all'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                All Commitments ({allCommitments.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('made')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'made'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Made by Me ({myCommitmentsCount})
+              </button>
+              <button
+                onClick={() => setActiveTab('received')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'received'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Received ({receivedCommitmentsCount})
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Commitments List */}
+        <div className="mb-12">
+
+          {(loading || myCommitmentsLoading) ? (
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 animate-pulse">
               <div className="h-32 bg-gray-200 rounded"></div>
             </div>
-          ) : myCommitments.length === 0 ? (
+          ) : filteredCommitments.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-12 text-center border border-gray-200">
               <div className="text-5xl sm:text-6xl mb-4">💝</div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">No Commitments Made Yet</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">No Commitments Yet</h3>
               <p className="text-sm sm:text-base text-gray-600">
-                When you pledge to donate to charities, they'll appear here
+                {activeTab === 'all' && 'When you make or receive donation pledges, they\'ll appear here'}
+                {activeTab === 'made' && 'When you pledge to donate to charities, they\'ll appear here'}
+                {activeTab === 'received' && 'When others pledge to your events or charity page, they\'ll appear here'}
               </p>
             </div>
           ) : (
             <>
               {/* Mobile Card Layout */}
               <div className="block md:hidden space-y-4">
-                {myCommitments.map((commitment) => (
-                  <div key={commitment.id} className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
+                {filteredCommitments.map((commitment) => (
+                  <div key={`${commitment.type}-${commitment.id}`} className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
                     <div className="flex items-center gap-2 mb-3">
                       {commitment.charity_logo && (
                         <img
                           src={commitment.charity_logo}
                           alt={commitment.charity_name}
                           className="w-10 h-10 rounded object-contain bg-gray-50 p-1"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(commitment.charity_name)}&size=40&background=f43f5e&color=fff`;
+                          }}
                         />
                       )}
                       <div className="flex-1">
-                        <h3 className="font-bold text-gray-900">{commitment.charity_name}</h3>
-                        {commitment.event_title && (
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold text-gray-900">{commitment.charity_name}</h3>
+                          {commitment.type === 'made' ? (
+                            <span className="inline-flex px-2 py-0.5 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
+                              Made
+                            </span>
+                          ) : (
+                            <span className="inline-flex px-2 py-0.5 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
+                              Received
+                            </span>
+                          )}
+                        </div>
+                        {commitment.type === 'made' && commitment.event_title && (
                           <p className="text-xs text-gray-600">Event: {commitment.event_title}</p>
+                        )}
+                        {commitment.type === 'received' && (
+                          <p className="text-xs text-gray-600">
+                            {commitment.donor_name}
+                            {commitment.event_title && ` • ${commitment.event_title}`}
+                          </p>
                         )}
                       </div>
                       {commitment.clicked_through ? (
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
-                          Completed
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-200">
+                          ✓
                         </span>
                       ) : (
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold text-yellow-700 bg-yellow-100 rounded-full">
-                          Pending
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold text-yellow-700 bg-yellow-50 rounded-full border border-yellow-200">
+                          ○
                         </span>
                       )}
                     </div>
@@ -191,10 +317,16 @@ const MyCommitments = () => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Charity
                         </th>
                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Event/Owner
+                          From/To
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Event
                         </th>
                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Amount
@@ -208,8 +340,19 @@ const MyCommitments = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {myCommitments.map((commitment) => (
-                        <tr key={commitment.id} className="hover:bg-gray-50 transition-colors">
+                      {filteredCommitments.map((commitment) => (
+                        <tr key={`${commitment.type}-${commitment.id}`} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {commitment.type === 'made' ? (
+                              <span className="inline-flex px-3 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
+                                Made
+                              </span>
+                            ) : (
+                              <span className="inline-flex px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
+                                Received
+                              </span>
+                            )}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-3">
                               {commitment.charity_logo && (
@@ -217,6 +360,10 @@ const MyCommitments = () => {
                                   src={commitment.charity_logo}
                                   alt={commitment.charity_name}
                                   className="w-10 h-10 rounded-lg object-contain bg-gray-50 p-1"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(commitment.charity_name)}&size=40&background=f43f5e&color=fff`;
+                                  }}
                                 />
                               )}
                               <span className="text-sm font-medium text-gray-900">
@@ -225,7 +372,17 @@ const MyCommitments = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {commitment.event_title || commitment.charity_owner_name || '—'}
+                            {commitment.type === 'received' ? (
+                              <div>
+                                <div className="font-medium text-gray-900">{commitment.donor_name}</div>
+                                <div className="text-xs text-gray-500">{commitment.donor_email}</div>
+                              </div>
+                            ) : (
+                              commitment.charity_owner_name || '—'
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {commitment.event_title || '—'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-sm font-bold text-accent-600">
@@ -234,11 +391,11 @@ const MyCommitments = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {commitment.clicked_through ? (
-                              <span className="inline-flex px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
-                                Completed
+                              <span className="inline-flex px-3 py-1 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-200">
+                                ✓ Done
                               </span>
                             ) : (
-                              <span className="inline-flex px-3 py-1 text-xs font-semibold text-yellow-700 bg-yellow-100 rounded-full">
+                              <span className="inline-flex px-3 py-1 text-xs font-semibold text-yellow-700 bg-yellow-50 rounded-full border border-yellow-200">
                                 Pending
                               </span>
                             )}
@@ -254,176 +411,6 @@ const MyCommitments = () => {
               </div>
             </>
           )}
-        </div>
-
-        {/* Commitments to My Charity Page Section */}
-        <div className="mb-12">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Commitments Made by Others</h2>
-            <p className="text-base text-gray-600">Donations others have pledged to my events and charity page</p>
-          </div>
-
-        {/* Commitments Table */}
-        {!data?.commitments || data.commitments.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-12 text-center border border-gray-200">
-            <div className="text-5xl sm:text-6xl mb-4">🎁</div>
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">No Commitments Yet</h3>
-            <p className="text-sm sm:text-base text-gray-600 mb-4">
-              {!data?.charity_page_slug
-                ? "Set up your charity page to start receiving commitments from friends and family."
-                : "Share your charity page link to start receiving commitments!"}
-            </p>
-            {data?.charity_page_slug && (
-              <p className="text-xs sm:text-sm text-gray-500 break-all">
-                Your charity page: giftwithimpact.com/charity/{data.charity_page_slug}
-              </p>
-            )}
-          </div>
-        ) : (
-          <>
-            {/* Mobile Card Layout */}
-            <div className="block md:hidden space-y-4">
-              {data.commitments.map((commitment) => (
-                <div key={commitment.id} className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="font-bold text-gray-900">{commitment.donor_name}</h3>
-                      <p className="text-sm text-gray-500">{commitment.donor_email}</p>
-                      {commitment.event_title && (
-                        <p className="text-xs text-gray-600 mt-1">Event: {commitment.event_title}</p>
-                      )}
-                    </div>
-                    {commitment.clicked_through ? (
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
-                        Committed
-                      </span>
-                    ) : (
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-100 rounded-full">
-                        Pending
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100">
-                    {commitment.charity_logo && (
-                      <img
-                        src={commitment.charity_logo}
-                        alt={commitment.charity_name}
-                        className="w-8 h-8 rounded object-contain bg-gray-50 p-1"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(commitment.charity_name)}&size=32&background=f43f5e&color=fff`;
-                        }}
-                      />
-                    )}
-                    <span className="text-sm font-medium text-gray-700">{commitment.charity_name}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-xs text-gray-500">Amount</p>
-                      <p className="text-xl font-bold text-accent-600">
-                        ${Number(commitment.commitment_amount).toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-500">Date</p>
-                      <p className="text-sm text-gray-700">
-                        {format(new Date(commitment.created_at), 'MMM dd, yyyy')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Desktop Table Layout */}
-            <div className="hidden md:block bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Guest
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Event Name
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Charity
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {data.commitments.map((commitment) => (
-                    <tr key={commitment.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-semibold text-gray-900">
-                            {commitment.donor_name}
-                          </div>
-                          <div className="text-sm text-gray-500">{commitment.donor_email}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-900">
-                          {commitment.event_title || '—'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          {commitment.charity_logo && (
-                            <img
-                              src={commitment.charity_logo}
-                              alt={commitment.charity_name}
-                              className="w-10 h-10 rounded-lg object-contain bg-gray-50 p-1"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(commitment.charity_name)}&size=40&background=f43f5e&color=fff`;
-                              }}
-                            />
-                          )}
-                          <span className="text-sm font-medium text-gray-900">
-                            {commitment.charity_name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-bold text-accent-600">
-                          ${Number(commitment.commitment_amount).toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {format(new Date(commitment.created_at), 'MMM dd, yyyy')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {commitment.clicked_through ? (
-                          <span className="inline-flex px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
-                            Committed
-                          </span>
-                        ) : (
-                          <span className="inline-flex px-3 py-1 text-xs font-semibold text-gray-700 bg-gray-100 rounded-full">
-                            Pending
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          </>
-        )}
         </div>
       </div>
     </div>
