@@ -152,29 +152,6 @@ const Dashboard = () => {
     }
   };
 
-  const fetchCommitmentsSummary = async () => {
-    try {
-      const [madeResponse, receivedResponse] = await Promise.all([
-        api.get('/charity-commitments/made-by-me'),
-        api.get('/charity-commitments/my-page')
-      ]);
-
-      setCommitmentsMade({
-        count: madeResponse.data.total_commitments || 0,
-        amount: madeResponse.data.total_amount || 0
-      });
-
-      setCommitmentsReceived({
-        count: receivedResponse.data.total_commitments || 0,
-        amount: receivedResponse.data.total_amount || 0
-      });
-    } catch (error: any) {
-      console.error('Failed to load commitments summary:', error);
-    } finally {
-      setCommitmentsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

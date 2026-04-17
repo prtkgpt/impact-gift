@@ -67,6 +67,7 @@ const ManageEvent = () => {
 
   // Master guest list state
   const [showMasterListModal, setShowMasterListModal] = useState(false);
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [masterGuestList, setMasterGuestList] = useState<any[]>([]);
   const [selectedMasterGuests, setSelectedMasterGuests] = useState<Set<string>>(new Set());
   const [masterListLoading, setMasterListLoading] = useState(false);
@@ -1180,14 +1181,14 @@ const ManageEvent = () => {
       {/* Guest List Tab */}
       {activeTab === 'guests' && (
         <div className="space-y-6">
-          {/* Import from Past Events Button */}
+          {/* Quick Add Guests */}
           <div className="card">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Quick Add Guests</h3>
-                <p className="text-sm text-gray-600 mt-1">Import from past events or upload a CSV file</p>
+                <p className="text-sm text-gray-600 mt-1">Upload a CSV, paste emails, or import from past events</p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <label className="btn btn-secondary cursor-pointer">
                   📤 Upload CSV
                   <input
@@ -1198,6 +1199,12 @@ const ManageEvent = () => {
                   />
                 </label>
                 <button
+                  onClick={() => setShowBulkImportModal(true)}
+                  className="btn btn-secondary"
+                >
+                  ✉️ Paste Email List
+                </button>
+                <button
                   onClick={openMasterGuestList}
                   className="btn btn-secondary"
                 >
@@ -1207,11 +1214,11 @@ const ManageEvent = () => {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Add Single Guest */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Add Guest</h3>
-              <form onSubmit={addGuest} className="space-y-4">
+          {/* Add Single Guest */}
+          <div className="card">
+            <h3 className="text-lg font-semibold mb-4">Add Guest</h3>
+            <form onSubmit={addGuest} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Email *
@@ -1237,33 +1244,11 @@ const ManageEvent = () => {
                     onChange={(e) => setGuestName(e.target.value)}
                   />
                 </div>
-                <button type="submit" className="btn btn-primary w-full">
-                  Add Guest
-                </button>
-              </form>
-            </div>
-
-            {/* Bulk Import */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Bulk Import</h3>
-              <form onSubmit={addBulkGuests} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Paste Emails (one per line or comma-separated)
-                  </label>
-                  <textarea
-                    className="input"
-                    rows={6}
-                    placeholder="friend1@example.com&#10;friend2@example.com&#10;friend3@example.com"
-                    value={bulkEmails}
-                    onChange={(e) => setBulkEmails(e.target.value)}
-                  />
-                </div>
-                <button type="submit" className="btn btn-primary w-full">
-                  Import Guests
-                </button>
-              </form>
-            </div>
+              </div>
+              <button type="submit" className="btn btn-primary">
+                Add Guest
+              </button>
+            </form>
           </div>
 
           {/* Guest List */}
@@ -1915,6 +1900,67 @@ const ManageEvent = () => {
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {cancelling ? 'Cancelling...' : 'Cancel Event'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Paste Email List Modal */}
+      {showBulkImportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Paste Email List</h2>
+                <button
+                  onClick={() => {
+                    setShowBulkImportModal(false);
+                    setBulkEmails('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Paste a list of email addresses to quickly add multiple guests
+              </p>
+            </div>
+
+            <div className="p-6 flex-1 overflow-y-auto">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Emails (one per line or comma-separated)
+              </label>
+              <textarea
+                className="input"
+                rows={10}
+                placeholder="friend1@example.com&#10;friend2@example.com&#10;friend3@example.com"
+                value={bulkEmails}
+                onChange={(e) => setBulkEmails(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex gap-3">
+              <button
+                onClick={() => {
+                  setShowBulkImportModal(false);
+                  setBulkEmails('');
+                }}
+                className="btn btn-secondary flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async (e) => {
+                  await addBulkGuests(e as any);
+                  setShowBulkImportModal(false);
+                }}
+                disabled={!bulkEmails.trim()}
+                className="btn btn-primary flex-1"
+              >
+                Import Guests
               </button>
             </div>
           </div>
