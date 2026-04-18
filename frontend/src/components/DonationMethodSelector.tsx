@@ -96,22 +96,23 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess, showCloseButton = 
     const amount = amounts[selectedCharity];
 
     return (
-      <div className="space-y-4 sm:space-y-6">
-        <div className="bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200 rounded-xl p-4 sm:p-5 shadow-sm">
-          <h3 className="text-sm sm:text-base font-bold text-primary-900 mb-2">
+      <div className="space-y-6">
+        <div className="card-accent">
+          <h3 className="text-heading-4 text-neutral-900 mb-2">
             Donating ${amount} to {charity?.name}
           </h3>
-          <p className="text-xs sm:text-sm text-primary-800 leading-relaxed">
+          <p className="text-caption">
             Please provide your details so we can track your donation and update the event progress.
           </p>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Your Name *
+            <label htmlFor="donor-name" className="label label-required">
+              Your Name
             </label>
             <input
+              id="donor-name"
               type="text"
               required
               className="input"
@@ -122,10 +123,11 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess, showCloseButton = 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Your Email *
+            <label htmlFor="donor-email" className="label label-required">
+              Your Email
             </label>
             <input
+              id="donor-email"
               type="email"
               required
               className="input"
@@ -133,29 +135,29 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess, showCloseButton = 
               value={donorInfo.email}
               onChange={(e) => setDonorInfo({ ...donorInfo, email: e.target.value })}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              We'll send you a confirmation and the organizer will be notified
+            <p className="text-caption mt-1.5">
+              We'll send you a confirmation and notify the organizer
             </p>
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={handleSubmitDonation}
-            disabled={loading}
-            className="btn btn-primary flex-1 py-3 font-semibold"
-          >
-            {loading ? 'Processing...' : `Continue to ${charity?.name}`}
-          </button>
+        <div className="flex flex-col-reverse sm:flex-row gap-3">
           <button
             onClick={() => {
               setShowDonorForm(false);
               setSelectedCharity(null);
             }}
             disabled={loading}
-            className="btn btn-secondary py-3"
+            className="btn btn-secondary w-full sm:w-auto"
           >
             Back
+          </button>
+          <button
+            onClick={handleSubmitDonation}
+            disabled={loading}
+            className="btn btn-primary w-full sm:flex-1"
+          >
+            {loading ? 'Processing...' : `Continue to ${charity?.name}`}
           </button>
         </div>
       </div>
@@ -163,37 +165,49 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess, showCloseButton = 
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-6">
       {/* Show header with appropriate message */}
       {charities.length === 1 ? (
-        <div className="bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200 rounded-xl p-4 sm:p-5 shadow-sm">
-          <h3 className="text-sm sm:text-base font-bold text-primary-900 mb-2 flex items-center">
-            <span className="text-xl sm:text-2xl mr-2">💝</span>
-            Donate to My Favorite Charity
-          </h3>
-          <p className="text-xs sm:text-sm text-primary-800 leading-relaxed">
-            Enter your donation amount to donate directly on their website.
-          </p>
+        <div className="card-accent">
+          <div className="flex items-start gap-3">
+            <svg className="w-6 h-6 text-primary-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            <div>
+              <h3 className="text-heading-4 text-neutral-900 mb-1">
+                Donate to My Favorite Charity
+              </h3>
+              <p className="text-caption">
+                Enter your donation amount to donate directly on their website.
+              </p>
+            </div>
+          </div>
         </div>
       ) : charities.length > 1 ? (
-        <div className="bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200 rounded-xl p-4 sm:p-5 shadow-sm">
-          <h3 className="text-sm sm:text-base font-bold text-primary-900 mb-2 flex items-center">
-            <span className="text-xl sm:text-2xl mr-2">💝</span>
-            Choose a Charity to Support
-          </h3>
-          <p className="text-xs sm:text-sm text-primary-800 leading-relaxed">
-            Select a charity below and enter your donation amount to donate directly on their website.
-          </p>
+        <div className="card-accent">
+          <div className="flex items-start gap-3">
+            <svg className="w-6 h-6 text-primary-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            <div>
+              <h3 className="text-heading-4 text-neutral-900 mb-1">
+                Choose a Charity to Support
+              </h3>
+              <p className="text-caption">
+                Select a charity below and enter your donation amount to donate directly on their website.
+              </p>
+            </div>
+          </div>
         </div>
       ) : null}
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {charities.length === 0 ? (
-          <div className="text-center py-10 sm:py-12 text-gray-500 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-            <p className="text-base sm:text-lg px-4">No charities selected for this event.</p>
+          <div className="text-center py-12 text-neutral-500 bg-neutral-50 rounded-xl border-2 border-dashed border-neutral-300">
+            <p className="text-body px-4">No charities selected for this event.</p>
           </div>
         ) : (
-          <div className="max-h-[60vh] overflow-y-auto pr-1 space-y-3">
+          <div className="max-h-[60vh] overflow-y-auto pr-1 space-y-4">
             {charities.map((charity) => {
               // Get icon based on category
               const getCharityIcon = (category: string) => {
@@ -217,42 +231,42 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess, showCloseButton = 
               return (
                 <div
                   key={charity.id}
-                  className="border-2 border-gray-200 rounded-xl p-4 sm:p-5 bg-white shadow-sm hover:border-primary-300 transition-colors"
+                  className="card-interactive"
                 >
-                  <div className="flex items-start gap-3 sm:gap-4 mb-4">
-                    {/* Icon based on category */}
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-primary-100 flex items-center justify-center text-2xl sm:text-3xl flex-shrink-0">
+                  <div className="flex items-start gap-4 mb-4">
+                    {/* Icon based on category - smaller, cleaner */}
+                    <div className="w-12 h-12 rounded-lg bg-primary-50 flex items-center justify-center text-xl flex-shrink-0">
                       {getCharityIcon(charity.category)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-gray-900 text-base sm:text-lg break-words">
+                      <h4 className="text-heading-4 text-neutral-900">
                         {charity.name}
                       </h4>
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium mt-0.5">{charity.category}</p>
+                      <p className="text-caption">{charity.category}</p>
                       {charity.custom_instructions && (
-                        <p className="text-xs text-primary-700 mt-1.5 leading-relaxed italic">
+                        <p className="text-caption italic mt-1 text-primary-700">
                           "{charity.custom_instructions}"
                         </p>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex gap-2 sm:gap-3">
+                  <div className="flex gap-3">
                     <div className="flex-1 relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-lg">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 font-medium">$</span>
                       <input
                         type="number"
                         min="1"
                         step="0.01"
                         placeholder="Amount"
-                        className="w-full pl-8 pr-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-medium text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="input pl-8"
                         value={amounts[charity.id] || ''}
                         onChange={(e) => handleAmountChange(charity.id, e.target.value)}
                       />
                     </div>
                     <button
                       onClick={() => handleDonateClick(charity.id)}
-                      className="px-4 sm:px-6 py-2.5 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white font-semibold rounded-lg transition-colors whitespace-nowrap touch-manipulation active:scale-95"
+                      className="btn btn-primary whitespace-nowrap"
                     >
                       Donate Now
                     </button>
@@ -267,7 +281,7 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess, showCloseButton = 
       {showCloseButton && (
         <button
           onClick={onCancel}
-          className="btn btn-secondary w-full py-3 font-semibold hover:bg-gray-200 active:bg-gray-300 transition-colors rounded-xl touch-manipulation active:scale-95"
+          className="btn btn-secondary w-full"
         >
           Close
         </button>
