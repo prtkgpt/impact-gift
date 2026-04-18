@@ -252,21 +252,21 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess, showCloseButton = 
                   </div>
 
                   <div className="flex gap-3">
-                    <div className="flex-1 relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 font-medium">$</span>
+                    <div className="relative w-32 sm:w-40">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 font-medium text-lg">$</span>
                       <input
                         type="number"
                         min="1"
                         step="0.01"
                         placeholder="Amount"
-                        className="input pl-8"
+                        className="input input-no-spinner pl-9 text-lg font-semibold"
                         value={amounts[charity.id] || ''}
                         onChange={(e) => handleAmountChange(charity.id, e.target.value)}
                       />
                     </div>
                     <button
                       onClick={() => handleDonateClick(charity.id)}
-                      className="btn btn-primary whitespace-nowrap"
+                      className="btn btn-primary whitespace-nowrap flex-1"
                     >
                       Donate Now
                     </button>

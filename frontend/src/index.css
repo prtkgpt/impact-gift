@@ -135,6 +135,17 @@ body {
     @apply border-red-500 focus:ring-red-500 focus:border-red-500;
   }
 
+  /* Hide number input spinners */
+  .input-no-spinner::-webkit-inner-spin-button,
+  .input-no-spinner::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .input-no-spinner[type="number"] {
+    -moz-appearance: textfield;
+  }
+
   .textarea {
     @apply input resize-y min-h-[120px];
   }
