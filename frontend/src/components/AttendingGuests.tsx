@@ -3,6 +3,7 @@ import api from '../utils/api';
 
 interface AttendingGuest {
   name: string;
+  email: string;
   rsvp_comment?: string;
   rsvp_at: string;
   additional_guests: number;
@@ -60,7 +61,7 @@ const AttendingGuests = ({ eventSlug, refreshTrigger }: AttendingGuestsProps) =>
             </div>
             <div className="ml-3 flex-1">
               <div className="font-medium text-gray-900">
-                {guest.name || 'Guest'}
+                {guest.name && guest.name !== 'Guest' ? guest.name : guest.email}
                 {guest.additional_guests > 0 && (
                   <span className="ml-2 text-sm text-gray-500 font-normal">
                     +{guest.additional_guests}
