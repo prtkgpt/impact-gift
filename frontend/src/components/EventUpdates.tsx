@@ -95,7 +95,7 @@ const EventUpdates: React.FC<EventUpdatesProps> = ({ eventId, isOwner, initialUp
               required
               rows={4}
               className="input"
-              placeholder="Share an update with your donors..."
+              placeholder="Share an update with your guests..."
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
             />
