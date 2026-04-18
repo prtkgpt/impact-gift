@@ -764,7 +764,6 @@ router.post('/:identifier/duplicate', authenticate, async (req: AuthRequest, res
         venue_name, address, virtual_link,
         host_name, host_phone, rsvp_deadline,
         goal_amount, potluck_enabled, slug,
-        rsvp_required, plus_one_allowed, dietary_restrictions_enabled,
         created_at, updated_at
       )
       VALUES (
@@ -773,7 +772,6 @@ router.post('/:identifier/duplicate', authenticate, async (req: AuthRequest, res
         $10, $11, $12,
         $13, $14, $15,
         $16, $17, $18,
-        $19, $20, $21,
         CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
       )
       RETURNING *`,
@@ -795,10 +793,7 @@ router.post('/:identifier/duplicate', authenticate, async (req: AuthRequest, res
         originalEvent.rsvp_deadline,
         originalEvent.goal_amount,
         originalEvent.potluck_enabled,
-        newSlug,
-        originalEvent.rsvp_required,
-        originalEvent.plus_one_allowed,
-        originalEvent.dietary_restrictions_enabled
+        newSlug
       ]
     );
 
