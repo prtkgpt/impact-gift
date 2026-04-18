@@ -822,33 +822,34 @@ router.post('/:identifier/duplicate', authenticate, async (req: AuthRequest, res
       );
     }
 
-    // Copy co-hosts
+    // Copy co-hosts (only accepted ones)
     const coHostsResult = await query(
-      `SELECT co_host_email, co_host_name, permissions FROM event_co_hosts
-       WHERE event_id = $1 AND status = 'accepted'`,
+      `SELECT email, name FROM co_hosts
+       WHERE event_id = $1 AND accepted_at IS NOT NULL`,
       [originalEvent.id]
     );
 
     for (const coHost of coHostsResult.rows) {
       await query(
-        `INSERT INTO event_co_hosts (event_id, co_host_email, co_host_name, permissions, status)
-         VALUES ($1, $2, $3, $4, 'pending')`,
-        [newEvent.id, coHost.co_host_email, coHost.co_host_name, coHost.permissions]
+        `INSERT INTO co_hosts (event_id, email, name, invited_at)
+         VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
+        [newEvent.id, coHost.email, coHost.name]
       );
     }
 
-    // Copy potluck categories (if potluck is enabled)
+    // Copy suggested potluck items (if potluck is enabled)
     if (newEvent.potluck_enabled) {
-      const categoriesResult = await query(
-        `SELECT category_name, description FROM potluck_categories WHERE event_id = $1`,
+      const itemsResult = await query(
+        `SELECT item_name, quantity, category, notes FROM potluck_items
+         WHERE event_id = $1 AND is_suggested = true`,
         [originalEvent.id]
       );
 
-      for (const category of categoriesResult.rows) {
+      for (const item of itemsResult.rows) {
         await query(
-          `INSERT INTO potluck_categories (event_id, category_name, description)
-           VALUES ($1, $2, $3)`,
-          [newEvent.id, category.category_name, category.description]
+          `INSERT INTO potluck_items (event_id, item_name, quantity, category, notes, is_suggested)
+           VALUES ($1, $2, $3, $4, $5, true)`,
+          [newEvent.id, item.item_name, item.quantity, item.category, item.notes]
         );
       }
     }
