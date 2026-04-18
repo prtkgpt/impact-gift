@@ -737,7 +737,7 @@ router.post('/:identifier/duplicate', authenticate, async (req: AuthRequest, res
 
     // Get the original event
     const eventResult = await query(
-      `SELECT * FROM events WHERE (id = $1 OR slug = $1) AND is_active = true`,
+      `SELECT * FROM events WHERE (id::text = $1 OR slug = $1) AND is_active = true`,
       [identifier]
     );
 
