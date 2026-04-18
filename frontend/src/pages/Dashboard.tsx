@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import api from '../utils/api';
-import { parseLocalDate } from '../utils/dateUtils';
+import { parseLocalDate, formatTime } from '../utils/dateUtils';
 import { Event } from '../types';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -213,7 +213,7 @@ const Dashboard = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       {format(parseLocalDate(invitation.event_date), 'MMM dd, yyyy')}
-                      {invitation.start_time && ` at ${invitation.start_time}`}
+                      {invitation.start_time && ` at ${formatTime(invitation.start_time)}`}
                     </div>
                     {invitation.venue_name && (
                       <div className="flex items-center text-caption">

@@ -3,7 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Helmet } from 'react-helmet-async';
 import api from '../utils/api';
-import { parseLocalDate } from '../utils/dateUtils';
+import { parseLocalDate, formatTime } from '../utils/dateUtils';
 import { Event } from '../types';
 import toast from 'react-hot-toast';
 import DonationMethodSelector from '../components/DonationMethodSelector';
@@ -184,7 +184,7 @@ const EventPage = () => {
               </svg>
               <span className="font-medium">
                 {format(parseLocalDate(event.event_date), 'MMMM dd, yyyy')}
-                {event.start_time && ` at ${event.start_time}`}
+                {event.start_time && ` at ${formatTime(event.start_time)}`}
               </span>
             </div>
             {event.venue_name && (
@@ -261,8 +261,8 @@ const EventPage = () => {
                       </p>
                       {event.start_time && (
                         <p className="text-caption">
-                          {event.start_time}
-                          {event.end_time && ` - ${event.end_time}`}
+                          {formatTime(event.start_time)}
+                          {event.end_time && ` - ${formatTime(event.end_time)}`}
                         </p>
                       )}
                     </div>
