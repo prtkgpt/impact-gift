@@ -13,82 +13,189 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #fafafa;
-  color: #1a1a1a;
-  line-height: 1.6;
+  color: #171717;
+  line-height: 1.5;
 }
 
 @layer components {
-  /* Buttons */
-  .btn {
-    @apply inline-flex items-center justify-center px-6 py-3.5 rounded-xl font-semibold text-base transition-all duration-200 shadow-sm hover:shadow-lg active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed;
+  /* Typography Scale - Airbnb-inspired */
+  .text-display {
+    @apply text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight;
   }
 
-  .btn-primary {
-    @apply bg-gradient-to-r from-primary-600 to-accent-500 text-white hover:from-primary-700 hover:to-accent-600 shadow-md hover:shadow-xl;
+  .text-heading-1 {
+    @apply text-3xl sm:text-4xl font-bold tracking-tight leading-tight;
   }
 
-  .btn-secondary {
-    @apply bg-white text-gray-900 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50;
+  .text-heading-2 {
+    @apply text-2xl sm:text-3xl font-bold tracking-tight;
   }
 
-  .btn-tertiary {
-    @apply bg-transparent text-gray-700 hover:bg-gray-100;
+  .text-heading-3 {
+    @apply text-xl sm:text-2xl font-semibold;
   }
 
-  /* Inputs */
-  .input {
-    @apply w-full px-4 py-3.5 text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 bg-white hover:border-gray-300;
+  .text-heading-4 {
+    @apply text-lg sm:text-xl font-semibold;
   }
 
-  .input:focus {
-    @apply shadow-lg;
+  .text-body-large {
+    @apply text-base sm:text-lg leading-relaxed;
   }
 
-  /* Cards */
-  .card {
-    @apply bg-white rounded-3xl shadow-sm border border-gray-100 p-8 transition-all duration-300;
+  .text-body {
+    @apply text-sm sm:text-base leading-normal;
   }
 
-  .card-hover {
-    @apply bg-white rounded-3xl shadow-sm border border-gray-100 p-8 hover:shadow-2xl hover:scale-[1.01] hover:-translate-y-1 transition-all duration-300 cursor-pointer;
+  .text-caption {
+    @apply text-xs sm:text-sm text-neutral-600;
   }
 
-  .card-highlight {
-    @apply bg-gradient-to-br from-primary-50 via-accent-50 to-purple-50 rounded-3xl border-2 border-primary-100 p-8 shadow-lg;
-  }
-
-  /* Typography */
+  /* Override existing h1-h6 */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold tracking-tight;
+    @apply font-bold tracking-tight text-neutral-900;
   }
 
   h1 {
-    @apply text-5xl;
+    @apply text-4xl sm:text-5xl;
   }
 
   h2 {
-    @apply text-4xl;
+    @apply text-2xl sm:text-3xl;
   }
 
   h3 {
-    @apply text-2xl;
+    @apply text-xl sm:text-2xl;
+  }
+
+  h4 {
+    @apply text-lg sm:text-xl;
+  }
+
+  /* Buttons - Refined for Airbnb style */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 min-h-[44px];
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-sm hover:shadow-md hover:from-primary-700 hover:to-primary-800 active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply bg-white text-neutral-900 border border-neutral-300 shadow-soft hover:shadow-card hover:border-neutral-400 active:scale-[0.98];
+  }
+
+  .btn-tertiary {
+    @apply bg-transparent text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white shadow-sm hover:shadow-md hover:bg-red-700 active:scale-[0.98];
+  }
+
+  .btn-icon {
+    @apply p-2 min-h-[44px] min-w-[44px] rounded-lg hover:bg-neutral-100 active:bg-neutral-200 transition-colors;
+  }
+
+  .btn-sm {
+    @apply px-3 py-2 text-sm min-h-[36px];
+  }
+
+  /* Cards - Cleaner shadows and borders */
+  .card {
+    @apply bg-white rounded-xl shadow-card border border-neutral-200/50 p-6 sm:p-8 transition-shadow duration-200;
+  }
+
+  .card-hover {
+    @apply bg-white rounded-xl shadow-card border border-neutral-200/50 p-6 sm:p-8 hover:shadow-card-hover transition-all duration-200 cursor-pointer;
+  }
+
+  .card-interactive {
+    @apply bg-white rounded-xl shadow-soft border border-neutral-200 p-6 sm:p-8 hover:border-neutral-300 transition-all duration-200 cursor-pointer;
+  }
+
+  .card-accent {
+    @apply bg-primary-50 rounded-xl border border-primary-200 p-6 sm:p-8 shadow-soft;
+  }
+
+  .card-info {
+    @apply bg-neutral-50 rounded-xl border border-neutral-200 p-4 sm:p-5;
+  }
+
+  /* Form Inputs - Lighter borders */
+  .input {
+    @apply w-full px-4 py-3 text-sm sm:text-base border border-neutral-300 rounded-lg bg-white text-neutral-900 placeholder-neutral-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 hover:border-neutral-400 outline-none transition-all duration-200 min-h-[44px];
+  }
+
+  .input:focus {
+    @apply shadow-focus;
+  }
+
+  .input-error {
+    @apply border-red-500 focus:ring-red-500 focus:border-red-500;
+  }
+
+  .textarea {
+    @apply input resize-y min-h-[120px];
+  }
+
+  .select {
+    @apply input pr-10 appearance-none bg-no-repeat;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-neutral-700 mb-1.5;
+  }
+
+  .label-required::after {
+    @apply text-red-500;
+    content: ' *';
   }
 
   /* Badges */
   .badge {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
   }
 
   .badge-primary {
-    @apply bg-primary-100 text-primary-700;
+    @apply bg-primary-100 text-primary-800;
   }
 
   .badge-success {
-    @apply bg-green-100 text-green-700;
+    @apply bg-green-100 text-green-800;
   }
 
   .badge-warning {
-    @apply bg-orange-100 text-orange-700;
+    @apply bg-yellow-100 text-yellow-800;
+  }
+
+  .badge-danger {
+    @apply bg-red-100 text-red-800;
+  }
+
+  .badge-neutral {
+    @apply bg-neutral-100 text-neutral-800;
+  }
+
+  .badge-lg {
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  /* Loading Spinners */
+  .spinner {
+    @apply animate-spin rounded-full border-2 border-neutral-200 border-t-primary-600;
+  }
+
+  .spinner-sm {
+    @apply w-4 h-4;
+  }
+
+  .spinner-md {
+    @apply w-8 h-8;
+  }
+
+  .spinner-lg {
+    @apply w-12 h-12;
   }
 
   /* Animations */
@@ -106,9 +213,46 @@ body {
   .animate-fade-in {
     animation: fadeIn 0.5s ease-out;
   }
+
+  @keyframes pageEnter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .page-enter {
+    animation: pageEnter 0.3s ease-out;
+  }
+
+  /* Skeleton loading */
+  .skeleton {
+    @apply bg-neutral-200 animate-pulse rounded;
+  }
+
+  /* Focus visible for accessibility */
+  .focus-visible-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
+  }
 }
 
-/* Custom scrollbar */
+@layer utilities {
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Custom scrollbar for main scroll */
 ::-webkit-scrollbar {
   width: 10px;
 }
