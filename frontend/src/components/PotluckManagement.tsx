@@ -281,6 +281,28 @@ const PotluckManagement = ({ eventId }: PotluckManagementProps) => {
 
             <form onSubmit={handleAddSuggestedItem} className="space-y-4">
               <div>
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                  Category
+                </label>
+                <select
+                  id="category"
+                  className="input"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                >
+                  <option value="">Select category...</option>
+                  <option value="Appetizer">Appetizer</option>
+                  <option value="Main Course">Main Course</option>
+                  <option value="Side Dish">Side Dish</option>
+                  <option value="Salad">Salad</option>
+                  <option value="Dessert">Dessert</option>
+                  <option value="Beverage">Beverage</option>
+                  <option value="Snacks">Snacks</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
                 <label htmlFor="item_name" className="block text-sm font-medium text-gray-700 mb-1">
                   Item Name *
                 </label>
@@ -308,28 +330,6 @@ const PotluckManagement = ({ eventId }: PotluckManagementProps) => {
                   value={formData.quantity}
                   onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
                 />
-              </div>
-
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
-                </label>
-                <select
-                  id="category"
-                  className="input"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                >
-                  <option value="">Select category...</option>
-                  <option value="Appetizer">Appetizer</option>
-                  <option value="Main Course">Main Course</option>
-                  <option value="Side Dish">Side Dish</option>
-                  <option value="Salad">Salad</option>
-                  <option value="Dessert">Dessert</option>
-                  <option value="Beverage">Beverage</option>
-                  <option value="Snacks">Snacks</option>
-                  <option value="Other">Other</option>
-                </select>
               </div>
 
               <div>
