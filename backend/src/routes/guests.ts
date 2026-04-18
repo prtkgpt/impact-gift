@@ -188,24 +188,29 @@ router.post(
         return res.status(403).json({ error: 'Not authorized' });
       }
 
-      const addedGuests = [];
+      // Build batch INSERT for better performance
+      const values: any[] = [];
+      const placeholders: string[] = [];
 
-      for (const guest of guests) {
-        const result = await query(
-          `INSERT INTO guests (event_id, email, name)
-           VALUES ($1, $2, $3)
-           ON CONFLICT (event_id, email) DO UPDATE
-           SET name = EXCLUDED.name,
-               updated_at = CURRENT_TIMESTAMP
-           RETURNING *`,
-          [event_id, guest.email, guest.name || null]
-        );
-        addedGuests.push(result.rows[0]);
-      }
+      guests.forEach((guest: any, index: number) => {
+        const baseIndex = index * 3;
+        placeholders.push(`($${baseIndex + 1}, $${baseIndex + 2}, $${baseIndex + 3})`);
+        values.push(event_id, guest.email, guest.name || null);
+      });
+
+      const result = await query(
+        `INSERT INTO guests (event_id, email, name)
+         VALUES ${placeholders.join(', ')}
+         ON CONFLICT (event_id, email) DO UPDATE
+         SET name = EXCLUDED.name,
+             updated_at = CURRENT_TIMESTAMP
+         RETURNING *`,
+        values
+      );
 
       res.status(201).json({
-        message: `${addedGuests.length} guest(s) added successfully`,
-        guests: addedGuests
+        message: `${result.rows.length} guest(s) added successfully`,
+        guests: result.rows
       });
     } catch (error) {
       console.error('Error adding guests in bulk:', error);

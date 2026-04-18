@@ -139,8 +139,8 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
       return sum + (isNaN(amount) ? 0 : amount);
     }, 0);
 
-    // Cache for 30 seconds
-    res.setHeader('Cache-Control', 'private, max-age=30');
+    // Cache for 60 seconds
+    res.setHeader('Cache-Control', 'private, max-age=60');
 
     res.json({
       charity_page: {

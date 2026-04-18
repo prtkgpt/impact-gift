@@ -91,6 +91,7 @@ View your invitation: {{EVENT_LINK}}`;
 
       let sentCount = 0;
       const errors_list: any[] = [];
+      const sentGuestIds: number[] = [];
 
       for (const guest of guests) {
         // Create personalized event URL
@@ -168,16 +169,8 @@ View your invitation: {{EVENT_LINK}}`;
 
             console.log(`✅ Email sent to ${guest.email}`);
 
-            // Mark as sent
-            await query(
-              `UPDATE guests
-               SET invitation_sent = true,
-                   invitation_sent_at = CURRENT_TIMESTAMP,
-                   updated_at = CURRENT_TIMESTAMP
-               WHERE id = $1`,
-              [guest.id]
-            );
-
+            // Track successfully sent guest
+            sentGuestIds.push(guest.id);
             sentCount++;
           } catch (emailError: any) {
             console.error(`❌ Failed to send email to ${guest.email}:`, emailError);
@@ -192,17 +185,22 @@ View your invitation: {{EVENT_LINK}}`;
             });
           }
         } else {
-          // Development mode - just mark as sent and return the email content
-          await query(
-            `UPDATE guests
-             SET invitation_sent = true,
-                 invitation_sent_at = CURRENT_TIMESTAMP,
-                 updated_at = CURRENT_TIMESTAMP
-             WHERE id = $1`,
-            [guest.id]
-          );
+          // Development mode - just track as sent
+          sentGuestIds.push(guest.id);
           sentCount++;
         }
+      }
+
+      // Batch update all successfully sent guests
+      if (sentGuestIds.length > 0) {
+        await query(
+          `UPDATE guests
+           SET invitation_sent = true,
+               invitation_sent_at = CURRENT_TIMESTAMP,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ANY($1::int[])`,
+          [sentGuestIds]
+        );
       }
 
       const response: any = {
