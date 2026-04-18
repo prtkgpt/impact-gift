@@ -161,30 +161,32 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-neutral-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Received Invitations Section */}
         <div className="mb-16">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">My Invitations</h2>
-            <p className="text-lg text-gray-600">Events you've been invited to</p>
+            <h2 className="text-heading-1 text-neutral-900 mb-2">My Invitations</h2>
+            <p className="text-body-large text-neutral-600">Events you've been invited to</p>
           </div>
 
           {invitationsLoading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2].map((i) => (
                 <div key={i} className="card animate-pulse">
-                  <div className="h-32 bg-gray-200 rounded-xl mb-3"></div>
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-32 bg-neutral-200 rounded-xl mb-3"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
                 </div>
               ))}
             </div>
           ) : invitations.length === 0 ? (
-            <div className="card-highlight text-center py-12 animate-fade-in">
-              <div className="text-5xl mb-4">📭</div>
-              <h3 className="text-xl font-bold mb-2 text-gray-900">No invitations yet</h3>
-              <p className="text-gray-600">When you receive event invitations, they'll appear here</p>
+            <div className="card-info text-center py-12 animate-fade-in">
+              <svg className="w-16 h-16 text-neutral-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <h3 className="text-heading-3 mb-2 text-neutral-900">No invitations yet</h3>
+              <p className="text-body text-neutral-600">When you receive event invitations, they'll appear here</p>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -196,26 +198,29 @@ const Dashboard = () => {
                 >
                   {/* Event Header */}
                   <div className="mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
+                    <h3 className="text-heading-4 text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
                       {invitation.event_title}
                     </h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-caption">
                       Hosted by {invitation.host_first_name} {invitation.host_last_name}
                     </p>
                   </div>
 
                   {/* Event Details */}
                   <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center text-caption">
+                      <svg className="w-4 h-4 mr-2 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       {format(parseLocalDate(invitation.event_date), 'MMM dd, yyyy')}
                       {invitation.start_time && ` at ${invitation.start_time}`}
                     </div>
                     {invitation.venue_name && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <span className="mr-2">📍</span>
+                      <div className="flex items-center text-caption">
+                        <svg className="w-4 h-4 mr-2 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
                         {invitation.venue_name}
                       </div>
                     )}
@@ -224,29 +229,41 @@ const Dashboard = () => {
                   {/* RSVP Status */}
                   <div className="mb-4">
                     {invitation.rsvp_status === 'no_response' ? (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                         <p className="text-sm font-semibold text-yellow-800">
-                          ⏳ RSVP Pending
+                          RSVP Pending
                         </p>
                       </div>
                     ) : invitation.rsvp_status === 'attending' ? (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
                         <p className="text-sm font-semibold text-green-800">
                           {invitation.additional_guests && invitation.additional_guests > 0
-                            ? `✅ Attending with ${invitation.additional_guests} guest${invitation.additional_guests !== 1 ? 's' : ''}`
-                            : '✅ Attending'}
+                            ? `Attending with ${invitation.additional_guests} guest${invitation.additional_guests !== 1 ? 's' : ''}`
+                            : 'Attending'}
                         </p>
                       </div>
                     ) : invitation.rsvp_status === 'not_attending' ? (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                         <p className="text-sm font-semibold text-red-800">
-                          ❌ Not Attending
+                          Not Attending
                         </p>
                       </div>
                     ) : (
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                        <p className="text-sm font-semibold text-gray-800">
-                          🤔 Maybe
+                      <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 text-neutral-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-sm font-semibold text-neutral-800">
+                          Maybe
                           {invitation.additional_guests && invitation.additional_guests > 0
                             ? ` with ${invitation.additional_guests} guest${invitation.additional_guests !== 1 ? 's' : ''}`
                             : ''}
@@ -272,8 +289,8 @@ const Dashboard = () => {
         <div className="mb-16">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">My Events</h1>
-              <p className="text-lg text-gray-600">Events you're hosting</p>
+              <h1 className="text-display text-neutral-900 mb-2">My Events</h1>
+              <p className="text-body-large text-neutral-600">Events you're hosting</p>
             </div>
             <Link to="/create-event" className="btn btn-primary">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -287,17 +304,19 @@ const Dashboard = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="card animate-pulse">
-                  <div className="h-48 bg-gray-200 rounded-xl mb-4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-48 bg-neutral-200 rounded-xl mb-4"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-3/4 mb-3"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
                 </div>
               ))}
             </div>
           ) : eventsError ? (
-            <div className="card-highlight text-center py-16 animate-fade-in">
-              <div className="text-7xl mb-6">⚠️</div>
-              <h2 className="text-3xl font-bold mb-3 text-gray-900">Unable to load events</h2>
-              <p className="text-lg text-gray-600 mb-8 max-w-md mx-auto">
+            <div className="card-info text-center py-16 animate-fade-in">
+              <svg className="w-16 h-16 text-neutral-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h2 className="text-heading-2 mb-3 text-neutral-900">Unable to load events</h2>
+              <p className="text-body-large text-neutral-600 mb-8 max-w-md mx-auto">
                 We couldn't connect to the server. Please check your internet connection and try again.
               </p>
               <button
@@ -314,10 +333,12 @@ const Dashboard = () => {
               </button>
             </div>
           ) : events.length === 0 ? (
-            <div className="card-highlight text-center py-16 animate-fade-in">
-              <div className="text-7xl mb-6">🎉</div>
-              <h2 className="text-3xl font-bold mb-3 text-gray-900">No events yet</h2>
-              <p className="text-lg text-gray-600 mb-8 max-w-md mx-auto">
+            <div className="card-info text-center py-16 animate-fade-in">
+              <svg className="w-16 h-16 text-neutral-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <h2 className="text-heading-2 mb-3 text-neutral-900">No events yet</h2>
+              <p className="text-body-large text-neutral-600 mb-8 max-w-md mx-auto">
                 Create your first fundraising event and start making an impact
               </p>
               <Link to="/create-event" className="btn btn-primary inline-flex">
@@ -339,13 +360,13 @@ const Dashboard = () => {
                   <div className="mb-6">
                     <div className="flex items-center gap-3 mb-2">
                       {event.charities && event.charities.length > 0 && (
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0">
+                        <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-sm shadow-soft flex-shrink-0">
                           {getCharityInitials(event.charities[0].name)}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-xl font-bold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
+                          <h3 className="text-heading-4 text-neutral-900 truncate group-hover:text-primary-600 transition-colors">
                             {event.title}
                           </h3>
                           {event.user_role === 'cohost' && (
@@ -353,7 +374,7 @@ const Dashboard = () => {
                           )}
                         </div>
                         {event.charities && event.charities.length > 0 && (
-                          <p className="text-sm text-gray-600 truncate">
+                          <p className="text-caption truncate">
                             {event.charities.length === 1
                               ? event.charities[0].name
                               : `${event.charities[0].name} +${event.charities.length - 1} more`}
@@ -365,8 +386,8 @@ const Dashboard = () => {
 
                   {/* Event Details */}
                   <div className="space-y-3 mb-6">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center text-caption">
+                      <svg className="w-4 h-4 mr-2 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       {format(parseLocalDate(event.event_date), 'MMMM dd, yyyy')}
@@ -377,28 +398,28 @@ const Dashboard = () => {
                   </div>
 
                   {/* Event Stats - Show different stats based on whether event has charities */}
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 mb-6">
+                  <div className="bg-neutral-50 rounded-xl p-5 mb-6 border border-neutral-200">
                     {event.charities && event.charities.length > 0 ? (
                       // Event with charities - show Total Raised + RSVP count
                       <>
                         <div className="flex justify-between items-baseline mb-3">
-                          <span className="text-sm font-medium text-gray-600">Total Raised</span>
-                          <span className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
+                          <span className="text-caption font-medium">Total Raised</span>
+                          <span className="text-3xl font-bold text-primary-600">
                             ${Number(event.total_raised || 0).toFixed(2)}
                           </span>
                         </div>
 
                         {event.goal_amount && (
                           <>
-                            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2 overflow-hidden">
+                            <div className="w-full bg-neutral-200 rounded-full h-2.5 mb-2 overflow-hidden">
                               <div
-                                className="bg-gradient-to-r from-primary-600 to-accent-500 h-2.5 rounded-full transition-all duration-500"
+                                className="bg-primary-600 h-2.5 rounded-full transition-all duration-500"
                                 style={{
                                   width: `${Math.min((Number(event.total_raised) / Number(event.goal_amount)) * 100, 100)}%`
                                 }}
                               />
                             </div>
-                            <div className="flex justify-between text-xs text-gray-600">
+                            <div className="flex justify-between text-caption">
                               <span>{event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}</span>
                               <span>Goal: ${Number(event.goal_amount).toFixed(2)}</span>
                             </div>
@@ -406,16 +427,16 @@ const Dashboard = () => {
                         )}
 
                         {!event.goal_amount && (
-                          <p className="text-xs text-gray-600 mb-2">
+                          <p className="text-caption mb-2">
                             {event.donation_count} donation{event.donation_count !== 1 ? 's' : ''}
                           </p>
                         )}
 
                         {/* Show RSVP count for charity events too */}
-                        <div className="pt-3 border-t border-gray-200 mt-3">
+                        <div className="pt-3 border-t border-neutral-200 mt-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-gray-600">RSVPs</span>
-                            <span className="text-lg font-bold text-gray-900">
+                            <span className="text-caption font-medium">RSVPs</span>
+                            <span className="text-lg font-bold text-neutral-900">
                               {event.attending_count || 0} attending
                             </span>
                           </div>
@@ -425,12 +446,12 @@ const Dashboard = () => {
                       // Event without charities - show RSVP count only
                       <>
                         <div className="flex justify-between items-baseline mb-3">
-                          <span className="text-sm font-medium text-gray-600">RSVPs</span>
-                          <span className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
+                          <span className="text-caption font-medium">RSVPs</span>
+                          <span className="text-3xl font-bold text-primary-600">
                             {event.attending_count || 0}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-caption">
                           {event.attending_count === 1 ? 'guest' : 'guests'} attending
                         </p>
                       </>
@@ -460,17 +481,17 @@ const Dashboard = () => {
 
         {/* Quick Stats - Commitments Summary */}
         <div className="mb-12 animate-fade-in" style={{ animationDelay: '100ms' }}>
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
+          <div className="card">
+            <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="bg-purple-100 p-3 rounded-xl">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div className="bg-primary-100 p-3 rounded-xl">
+                  <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">💝 My Commitments</h2>
-                  <p className="text-sm text-gray-600">Donation pledges summary</p>
+                  <h2 className="text-heading-3 text-neutral-900">My Commitments</h2>
+                  <p className="text-caption">Donation pledges summary</p>
                 </div>
               </div>
               <Link to="/commitments" className="text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1">
@@ -483,32 +504,32 @@ const Dashboard = () => {
 
             {commitmentsLoading ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
-                <div className="h-20 bg-gray-200 rounded-lg"></div>
-                <div className="h-20 bg-gray-200 rounded-lg"></div>
-                <div className="h-20 bg-gray-200 rounded-lg"></div>
-                <div className="h-20 bg-gray-200 rounded-lg"></div>
+                <div className="h-20 bg-neutral-200 rounded-lg"></div>
+                <div className="h-20 bg-neutral-200 rounded-lg"></div>
+                <div className="h-20 bg-neutral-200 rounded-lg"></div>
+                <div className="h-20 bg-neutral-200 rounded-lg"></div>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <p className="text-xs text-blue-600 font-medium mb-1">Made</p>
-                  <p className="text-2xl font-bold text-gray-900">{commitmentsMade.count}</p>
-                  <p className="text-xs text-gray-600">pledges</p>
+                <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
+                  <p className="text-caption font-medium mb-1">Made</p>
+                  <p className="text-2xl font-bold text-neutral-900">{commitmentsMade.count}</p>
+                  <p className="text-caption">pledges</p>
                 </div>
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <p className="text-xs text-blue-600 font-medium mb-1">Amount</p>
-                  <p className="text-2xl font-bold text-blue-600">${commitmentsMade.amount.toFixed(0)}</p>
-                  <p className="text-xs text-gray-600">pledged</p>
+                <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
+                  <p className="text-caption font-medium mb-1">Amount</p>
+                  <p className="text-2xl font-bold text-primary-600">${commitmentsMade.amount.toFixed(0)}</p>
+                  <p className="text-caption">pledged</p>
                 </div>
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <p className="text-xs text-green-600 font-medium mb-1">Received</p>
-                  <p className="text-2xl font-bold text-gray-900">{commitmentsReceived.count}</p>
-                  <p className="text-xs text-gray-600">pledges</p>
+                <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
+                  <p className="text-caption font-medium mb-1">Received</p>
+                  <p className="text-2xl font-bold text-neutral-900">{commitmentsReceived.count}</p>
+                  <p className="text-caption">pledges</p>
                 </div>
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <p className="text-xs text-green-600 font-medium mb-1">Amount</p>
-                  <p className="text-2xl font-bold text-green-600">${commitmentsReceived.amount.toFixed(0)}</p>
-                  <p className="text-xs text-gray-600">received</p>
+                <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
+                  <p className="text-caption font-medium mb-1">Amount</p>
+                  <p className="text-2xl font-bold text-primary-600">${commitmentsReceived.amount.toFixed(0)}</p>
+                  <p className="text-caption">received</p>
                 </div>
               </div>
             )}
