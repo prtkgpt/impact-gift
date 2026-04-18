@@ -5,6 +5,7 @@ export interface User {
   last_name: string;
   phone_number?: string;
   address?: string;
+  charity_page_slug?: string | null;
 }
 
 export interface AuthResponse {

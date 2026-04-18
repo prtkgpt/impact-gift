@@ -68,7 +68,7 @@ router.post(
       const password_hash = await bcrypt.hash(password, 10);
 
       const result = await query(
-        'INSERT INTO users (email, password_hash, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name',
+        'INSERT INTO users (email, password_hash, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name, charity_page_slug',
         [email, password_hash, first_name, last_name]
       );
 
@@ -83,7 +83,16 @@ router.post(
       await linkCoHostInvitations(user.id, user.email);
 
       console.log('User created successfully:', user.email);
-      res.status(201).json({ token, user });
+      res.status(201).json({
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          charity_page_slug: user.charity_page_slug
+        }
+      });
     } catch (error: any) {
       console.error('Signup error details:', {
         message: error.message,
@@ -123,7 +132,7 @@ router.post(
 
       const { email, password } = req.body;
 
-      const result = await query('SELECT * FROM users WHERE email = $1', [email]);
+      const result = await query('SELECT id, email, first_name, last_name, password_hash, charity_page_slug FROM users WHERE email = $1', [email]);
       if (result.rows.length === 0) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
@@ -149,7 +158,8 @@ router.post(
         id: user.id,
         email: user.email,
         first_name: user.first_name,
-        last_name: user.last_name
+        last_name: user.last_name,
+        charity_page_slug: user.charity_page_slug
       };
 
       res.json({ token, user: userPayload });
@@ -320,7 +330,7 @@ router.post(
 router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const result = await query(
-      'SELECT id, email, first_name, last_name FROM users WHERE id = $1',
+      'SELECT id, email, first_name, last_name, charity_page_slug FROM users WHERE id = $1',
       [req.user!.id]
     );
 
