@@ -161,31 +161,40 @@ const EventPage = () => {
         </div>
       )}
 
-      <div className="relative bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 text-white py-12 sm:py-16 lg:py-20 overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="relative bg-white border-b border-neutral-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
           <div className="mb-6">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-2 sm:mb-3 tracking-tight leading-tight break-words">
+                <h1 className="text-display text-neutral-900 mb-3">
                   {event.title}
                 </h1>
               </div>
               {isCoHost && !isOwner && (
-                <span className="flex-shrink-0 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white font-medium border border-white/30">
-                  👥 Co-Host
+                <span className="badge badge-lg bg-primary-600 text-white flex-shrink-0">
+                  Co-Host
                 </span>
               )}
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-white/90">
-            <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm">
-              📅 {format(parseLocalDate(event.event_date), 'MMMM dd, yyyy')}
-              {event.start_time && ` at ${event.start_time}`}
-            </span>
-            {event.venue_name && (
-              <span className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/10 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm">
-                📍 {event.venue_name}
+          <div className="flex flex-wrap items-center gap-4 text-neutral-700">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="font-medium">
+                {format(parseLocalDate(event.event_date), 'MMMM dd, yyyy')}
+                {event.start_time && ` at ${event.start_time}`}
               </span>
+            </div>
+            {event.venue_name && (
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="font-medium">{event.venue_name}</span>
+              </div>
             )}
           </div>
         </div>
@@ -195,41 +204,41 @@ const EventPage = () => {
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
           <div className="md:col-span-2 space-y-6 lg:space-y-8">
             {event.description && event.description.trim() && (
-              <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-5 text-gray-900">About This Event</h2>
-                <p className="text-gray-700 leading-relaxed text-base sm:text-lg whitespace-pre-wrap">{event.description}</p>
+              <div className="card">
+                <h2 className="text-heading-2 mb-4 text-neutral-900">About This Event</h2>
+                <p className="text-body-large text-neutral-700 whitespace-pre-wrap leading-relaxed">{event.description}</p>
               </div>
             )}
 
             {/* Dress Code / Attire Photos */}
             {attirePhotos.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
+              <div className="card">
                 <EventPhotosGallery
                   photos={attirePhotos}
-                  title="👗 What to Wear"
+                  title="What to Wear"
                 />
               </div>
             )}
 
             {/* Event Memories Photos */}
             {eventMemoriesPhotos.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
+              <div className="card">
                 <EventPhotosGallery
                   photos={eventMemoriesPhotos}
-                  title="📷 Event Memories"
+                  title="Event Memories"
                 />
               </div>
             )}
 
             {/* Event Details Card */}
             {(event.start_time || event.end_time || event.venue_name || event.address || event.virtual_link || event.host_name || event.host_phone || event.rsvp_deadline) && (
-              <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 sm:p-8 border border-gray-100">
-                <div className="flex items-center justify-between mb-4 sm:mb-5">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Event Details</h2>
+              <div className="card">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-heading-2 text-neutral-900">Event Details</h2>
                   <a
                     href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/calendar/event/${event.slug}`}
                     download
-                    className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium text-sm transition-colors"
+                    className="btn btn-secondary btn-sm"
                   >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -237,19 +246,21 @@ const EventPage = () => {
                     Add to Calendar
                   </a>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {/* Date and Time */}
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                      <span className="text-xl">📅</span>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">Date & Time</h3>
-                      <p className="text-gray-700">
+                    <div className="flex-1">
+                      <h3 className="text-heading-4 text-neutral-900 mb-1">Date & Time</h3>
+                      <p className="text-body text-neutral-700">
                         {format(parseLocalDate(event.event_date), 'EEEE, MMMM dd, yyyy')}
                       </p>
                       {event.start_time && (
-                        <p className="text-gray-600 text-sm">
+                        <p className="text-caption">
                           {event.start_time}
                           {event.end_time && ` - ${event.end_time}`}
                         </p>
@@ -259,17 +270,20 @@ const EventPage = () => {
 
                   {/* Location */}
                   {(event.venue_name || event.address) && (
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                        <span className="text-xl">📍</span>
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">Location</h3>
+                      <div className="flex-1">
+                        <h3 className="text-heading-4 text-neutral-900 mb-1">Location</h3>
                         {event.venue_name && (
-                          <p className="text-gray-700 font-medium">{event.venue_name}</p>
+                          <p className="text-body text-neutral-700 font-medium">{event.venue_name}</p>
                         )}
                         {event.address && (
-                          <p className="text-gray-600 text-sm whitespace-pre-wrap">{event.address}</p>
+                          <p className="text-caption whitespace-pre-wrap">{event.address}</p>
                         )}
                       </div>
                     </div>
@@ -277,17 +291,19 @@ const EventPage = () => {
 
                   {/* Virtual Link */}
                   {event.virtual_link && (
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                        <span className="text-xl">💻</span>
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">Virtual Event</h3>
+                      <div className="flex-1">
+                        <h3 className="text-heading-4 text-neutral-900 mb-1">Virtual Event</h3>
                         <a
                           href={event.virtual_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-primary-600 hover:text-primary-700 hover:underline break-all"
+                          className="text-primary-600 hover:text-primary-700 hover:underline break-all text-body"
                         >
                           Join Virtual Event
                         </a>
@@ -297,17 +313,19 @@ const EventPage = () => {
 
                   {/* Host Contact */}
                   {(event.host_name || event.host_phone) && (
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                        <span className="text-xl">👤</span>
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">Host</h3>
+                      <div className="flex-1">
+                        <h3 className="text-heading-4 text-neutral-900 mb-1">Host</h3>
                         {event.host_name && (
-                          <p className="text-gray-700">{event.host_name}</p>
+                          <p className="text-body text-neutral-700">{event.host_name}</p>
                         )}
                         {event.host_phone && (
-                          <p className="text-gray-600 text-sm">
+                          <p className="text-caption">
                             <a href={`tel:${event.host_phone}`} className="hover:text-primary-600">
                               {event.host_phone}
                             </a>
@@ -319,17 +337,19 @@ const EventPage = () => {
 
                   {/* Co-Hosts */}
                   {event.co_hosts && event.co_hosts.filter(ch => ch.accepted_at).length > 0 && (
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                        <span className="text-xl">👥</span>
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">Co-Hosts</h3>
+                      <div className="flex-1">
+                        <h3 className="text-heading-4 text-neutral-900 mb-1">Co-Hosts</h3>
                         <div className="space-y-1">
                           {event.co_hosts
                             .filter(ch => ch.accepted_at)
                             .map((coHost) => (
-                              <p key={coHost.id} className="text-gray-700">
+                              <p key={coHost.id} className="text-body text-neutral-700">
                                 {coHost.first_name && coHost.last_name
                                   ? `${coHost.first_name} ${coHost.last_name}`
                                   : coHost.name || coHost.email}
@@ -342,13 +362,15 @@ const EventPage = () => {
 
                   {/* RSVP Deadline */}
                   {event.rsvp_deadline && (
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                        <span className="text-xl">⏰</span>
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">RSVP Deadline</h3>
-                        <p className="text-gray-700">
+                      <div className="flex-1">
+                        <h3 className="text-heading-4 text-neutral-900 mb-1">RSVP Deadline</h3>
+                        <p className="text-body text-neutral-700">
                           {format(parseLocalDate(event.rsvp_deadline), 'MMMM dd, yyyy')}
                         </p>
                       </div>
