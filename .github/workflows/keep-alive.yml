@@ -1,0 +1,56 @@
+name: Keep Services Warm
+
+on:
+  schedule:
+    # Run every 5 minutes during peak hours (8 AM - 11 PM UTC)
+    # Adjust timezone as needed - this covers most active hours globally
+    - cron: '*/5 8-23 * * *'
+    # Also run every 14 minutes during off-peak to stay within free tier limits
+    - cron: '*/14 0-7 * * *'
+
+  # Allow manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Backend API
+        run: |
+          echo "🔄 Pinging backend to keep it warm..."
+
+          # Replace with your actual Render backend URL
+          BACKEND_URL="${{ secrets.BACKEND_URL || 'https://your-backend.onrender.com' }}"
+
+          # Ping health endpoint (create this if it doesn't exist)
+          response=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/api/health" || echo "000")
+
+          if [ "$response" -eq 200 ]; then
+            echo "✅ Backend is warm (HTTP $response)"
+          else
+            echo "⚠️  Backend returned HTTP $response (might be warming up...)"
+
+            # Try a second endpoint as backup
+            echo "🔄 Trying alternative endpoint..."
+            response2=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/api" || echo "000")
+            echo "📊 Alternative endpoint: HTTP $response2"
+          fi
+
+      - name: Ping Database (via API)
+        run: |
+          echo "🔄 Pinging database through API..."
+
+          BACKEND_URL="${{ secrets.BACKEND_URL || 'https://your-backend.onrender.com' }}"
+
+          # This will trigger database connection
+          curl -s "$BACKEND_URL/api/charities?limit=1" > /dev/null || true
+
+          echo "✅ Database ping completed"
+
+      - name: Report Status
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🎯 Keep-alive job completed"
+          echo "⏰ Time: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
