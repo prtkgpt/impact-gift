@@ -2,7 +2,10 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { queryClient } from './lib/queryClient';
 import Navbar from './components/Navbar';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -47,8 +50,9 @@ function App() {
   return (
     <HelmetProvider>
       <ErrorBoundary>
-        <AuthProvider>
-          <Router>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <Router>
           <div className="min-h-screen bg-gray-50">
             <Navbar />
             <Toaster position="top-right" />
@@ -123,8 +127,10 @@ function App() {
             </Routes>
             </Suspense>
           </div>
-          </Router>
-        </AuthProvider>
+            </Router>
+          </AuthProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
       </ErrorBoundary>
     </HelmetProvider>
   );
