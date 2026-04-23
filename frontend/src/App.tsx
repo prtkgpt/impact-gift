@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { queryClient } from './lib/queryClient';
 import Navbar from './components/Navbar';
 import ErrorBoundary from './components/ErrorBoundary';
+import api from './utils/api';
 
 // Eagerly load critical pages for optimal performance
 import EventPage from './pages/EventPage';
@@ -28,6 +29,23 @@ const Profile = lazy(() => import('./pages/Profile'));
 const AdminCharityRequests = lazy(() => import('./pages/AdminCharityRequests'));
 const AcceptCoHostInvitation = lazy(() => import('./pages/AcceptCoHostInvitation'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+
+// Backend warmup component to wake sleeping server
+const BackendWarmup = () => {
+  useEffect(() => {
+    // Ping API health endpoint to wake server from cold start
+    // This runs silently in background without blocking UI
+    const warmup = async () => {
+      try {
+        await api.get('/health', { timeout: 30000 });
+      } catch {
+        // Ignore errors - this is just a warmup request
+      }
+    };
+    warmup();
+  }, []);
+  return null;
+};
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -53,6 +71,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <Router>
+          <BackendWarmup />
           <div className="min-h-screen bg-gray-50">
             <Navbar />
             <Toaster position="top-right" />
