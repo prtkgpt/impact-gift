@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -23,7 +24,9 @@ const ForgotPassword = () => {
         setResetUrl(response.data.resetUrl);
       }
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to send reset email');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to send reset email';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

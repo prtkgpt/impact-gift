@@ -5,14 +5,14 @@ import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { Event, Guest, Donation, RSVPSummaryResponse, Charity } from '../types';
 import { EventPhoto } from '../components/EventPhotosUploader';
-import DetailsTab from '../components/manage-event/DetailsTab';
 import CharitiesTab from '../components/manage-event/CharitiesTab';
-import GuestsTab from '../components/manage-event/GuestsTab';
 import RSVPTab from '../components/manage-event/RSVPTab';
-import CommunicationTab from '../components/manage-event/CommunicationTab';
 import CoHostsTab from '../components/manage-event/CoHostsTab';
 import PotluckTab from '../components/manage-event/PotluckTab';
 import ProgressTab from '../components/manage-event/ProgressTab';
+import EventImageSelector from '../components/EventImageSelector';
+import EventPhotosUploader from '../components/EventPhotosUploader';
+import { isAxiosError, getErrorMessage } from '../utils/errors';
 
 const ManageEvent = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -102,7 +102,6 @@ const ManageEvent = () => {
   // Charities tab state
   const [charities, setCharities] = useState<Charity[]>([]);
   const [selectedCharityIds, setSelectedCharityIds] = useState<number[]>([]);
-  const [showRequestModal, setShowRequestModal] = useState(false);
 
   useEffect(() => {
     if (!slug) {
@@ -123,7 +122,7 @@ const ManageEvent = () => {
         try {
           const response = await api.get(`/targeted-emails/preview/${event.id}`);
           setFilterCounts(response.data);
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Failed to fetch filter counts:', error);
         }
       }
@@ -231,12 +230,18 @@ const ManageEvent = () => {
       }
     } catch (error: unknown) {
       console.error('ManageEvent: Error fetching event data:', error);
-      console.error('ManageEvent: Error response:', error.response);
-      console.error('ManageEvent: Error status:', error.response?.status);
+      if (isAxiosError(error)) {
+        console.error('ManageEvent: Error response:', error.response);
+        console.error('ManageEvent: Error status:', error.response?.status);
+      }
 
       // Retry logic for network errors or timeouts
-      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
-      const isNetworkError = error.message === 'Network Error' || !error.response;
+      const errorCode = isAxiosError(error) ? error.code : undefined;
+      const errorMessage = getErrorMessage(error);
+      const hasResponse = isAxiosError(error) ? !!error.response : false;
+
+      const isTimeout = errorCode === 'ECONNABORTED' || errorMessage?.includes('timeout');
+      const isNetworkError = errorMessage === 'Network Error' || !hasResponse;
 
       if ((isTimeout || isNetworkError) && retryCount < 2) {
         const delay = (retryCount + 1) * 2000; // 2s, 4s
@@ -244,13 +249,15 @@ const ManageEvent = () => {
         return fetchEventData(retryCount + 1);
       }
 
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to load event';
-      setError(errorMessage);
-      if (error.response?.status === 404 || error.response?.status === 403) {
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const finalErrorMessage = (data?.error as string) || errorMessage || 'Failed to load event';
+      setError(finalErrorMessage);
+      const status = isAxiosError(error) ? error.response?.status : undefined;
+      if (status === 404 || status === 403) {
         toast.error('Event not found or you do not have permission');
         setTimeout(() => navigate('/dashboard'), 2000);
       } else {
-        toast.error(errorMessage);
+        toast.error(finalErrorMessage);
       }
     } finally {
       setLoading(false);
@@ -273,7 +280,9 @@ const ManageEvent = () => {
         navigate(`/event/${response.data.event.slug}/manage`);
       }, 1000);
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to duplicate event');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to duplicate event';
+      toast.error(errorMsg);
     }
   };
 
@@ -293,7 +302,9 @@ const ManageEvent = () => {
       // Refresh event data to show cancelled status
       await fetchEventData();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to cancel event');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to cancel event';
+      toast.error(errorMsg);
     } finally {
       setCancelling(false);
     }
@@ -383,7 +394,9 @@ const ManageEvent = () => {
       setGuestName('');
       toast.success('Guest added successfully!');
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to add guest');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to add guest';
+      toast.error(errorMsg);
     }
   };
 
@@ -411,7 +424,9 @@ const ManageEvent = () => {
       setBulkEmails('');
       toast.success(response.data.message);
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to add guests');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to add guests';
+      toast.error(errorMsg);
     }
   };
 
@@ -448,7 +463,9 @@ const ManageEvent = () => {
             toast.success(`✅ Imported ${imported} guest${imported !== 1 ? 's' : ''}${skipped > 0 ? `, skipped ${skipped} duplicate${skipped !== 1 ? 's' : ''}` : ''}`);
           }
         } catch (error: unknown) {
-          toast.error(error.response?.data?.error || 'Failed to upload CSV');
+          const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to upload CSV';
+          toast.error(errorMsg);
         }
       },
       error: (error) => {
@@ -466,7 +483,9 @@ const ManageEvent = () => {
       setGuests(guests.filter(g => g.id !== guestId));
       toast.success('Guest removed');
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to remove guest');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to remove guest';
+      toast.error(errorMsg);
     }
   };
 
@@ -477,8 +496,12 @@ const ManageEvent = () => {
       await fetchEventData();
     } catch (error: unknown) {
       console.error(`[RESEND FRONTEND] Error resending invitation:`, error);
-      console.error(`[RESEND FRONTEND] Error response:`, error.response?.data);
-      toast.error(error.response?.data?.error || 'Failed to resend invitation');
+      if (isAxiosError(error)) {
+        console.error(`[RESEND FRONTEND] Error response:`, error.response?.data);
+      }
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to resend invitation';
+      toast.error(errorMsg);
     }
   };
 
@@ -507,7 +530,9 @@ const ManageEvent = () => {
       setEditName('');
       toast.success('Guest updated successfully!');
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to update guest');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to update guest';
+      toast.error(errorMsg);
     }
   };
 
@@ -530,7 +555,9 @@ const ManageEvent = () => {
       toast.success(response.data.message);
       await fetchEventData();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to send invitations');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to send invitations';
+      toast.error(errorMsg);
     }
   };
 
@@ -553,7 +580,9 @@ const ManageEvent = () => {
       // Refresh pending count
       await fetchEventData();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to send reminders');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to send reminders';
+      toast.error(errorMsg);
     } finally {
       setSendingReminders(false);
     }
@@ -620,7 +649,7 @@ const ManageEvent = () => {
         if (photo.id) {
           try {
             await api.put(`/event-photos/${photo.id}/caption`, { caption: photo.caption || '' });
-          } catch (captionError) {
+          } catch (captionError: unknown) {
             console.error('Error updating photo caption:', captionError);
           }
         }
@@ -631,7 +660,9 @@ const ManageEvent = () => {
       // Refresh event data
       await fetchEventData();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to update event');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to update event';
+      toast.error(errorMsg);
     } finally {
       setSaveLoading(false);
     }
@@ -1552,7 +1583,9 @@ const ManageEvent = () => {
                       setUpdateMessage('');
                       setUpdateFilters(['all']);
                     } catch (error: unknown) {
-                      toast.error(error.response?.data?.error || 'Failed to send message');
+                      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to send message';
+                      toast.error(errorMsg);
                     }
                   }}
                   className="btn btn-primary"

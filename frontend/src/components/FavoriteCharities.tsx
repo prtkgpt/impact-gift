@@ -3,6 +3,7 @@ import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { FavoriteCharity, Charity } from '../types';
 import RequestCharityModal from './RequestCharityModal';
+import { isAxiosError, getErrorMessage } from '../utils/errors';
 
 const CHARITY_CATEGORIES = [
   'Disaster Relief',
@@ -51,8 +52,12 @@ const FavoriteCharities = () => {
       });
       setFavorites(response.data);
     } catch (error: unknown) {
-      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
-      const isNetworkError = !error.response && error.message === 'Network Error';
+      const errorCode = isAxiosError(error) ? error.code : undefined;
+      const errorMessage = getErrorMessage(error);
+      const hasResponse = isAxiosError(error) ? !!error.response : false;
+
+      const isTimeout = errorCode === 'ECONNABORTED' || errorMessage?.includes('timeout');
+      const isNetworkError = !hasResponse && errorMessage === 'Network Error';
 
       if ((isTimeout || isNetworkError) && retryCount < 2) {
         await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
@@ -72,8 +77,12 @@ const FavoriteCharities = () => {
       });
       setCharities(response.data.charities);
     } catch (error: unknown) {
-      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
-      const isNetworkError = !error.response && error.message === 'Network Error';
+      const errorCode = isAxiosError(error) ? error.code : undefined;
+      const errorMessage = getErrorMessage(error);
+      const hasResponse = isAxiosError(error) ? !!error.response : false;
+
+      const isTimeout = errorCode === 'ECONNABORTED' || errorMessage?.includes('timeout');
+      const isNetworkError = !hasResponse && errorMessage === 'Network Error';
 
       if ((isTimeout || isNetworkError) && retryCount < 2) {
         await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
@@ -97,7 +106,9 @@ const FavoriteCharities = () => {
       fetchFavorites();
       resetForm();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to add favorite charity');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to add favorite charity';
+      toast.error(errorMsg);
     }
   };
 
@@ -128,7 +139,9 @@ const FavoriteCharities = () => {
       setEditingCharityId(null);
       resetForm();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to update charity');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to update charity';
+      toast.error(errorMsg);
     }
   };
 
@@ -140,7 +153,9 @@ const FavoriteCharities = () => {
       toast.success('Charity removed from favorites');
       fetchFavorites();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to remove');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to remove';
+      toast.error(errorMsg);
     }
   };
 

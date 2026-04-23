@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 interface RequestCharityModalProps {
   onClose: () => void;
@@ -50,7 +51,9 @@ const RequestCharityModal = ({ onClose, onSuccess }: RequestCharityModalProps) =
         onClose();
       }, 2000);
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to submit charity request');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to submit charity request';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

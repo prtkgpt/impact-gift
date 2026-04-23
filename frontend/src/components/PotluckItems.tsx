@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { PotluckItem } from '../types';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 interface PotluckItemsProps {
   eventId: number;
@@ -60,7 +61,9 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
       });
       fetchItems();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to add item');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to add item';
+      toast.error(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -80,7 +83,9 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
       toast.success('Item removed from potluck');
       fetchItems();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to remove item');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to remove item';
+      toast.error(errorMsg);
     }
   };
 
@@ -101,7 +106,9 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
       });
       fetchItems();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to claim item');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to claim item';
+      toast.error(errorMsg);
     } finally {
       setSubmitting(false);
     }

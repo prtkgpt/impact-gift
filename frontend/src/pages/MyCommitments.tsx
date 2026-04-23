@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 interface Commitment {
   id: number;
@@ -53,7 +54,9 @@ const MyCommitments = () => {
       setError(null);
     } catch (error: unknown) {
       console.error('Failed to load commitments:', error);
-      setError(error.response?.data?.error || 'Failed to load commitments');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to load commitments';
+      setError(errorMsg);
       toast.error('Failed to load commitments');
     } finally {
       setLoading(false);
@@ -66,7 +69,8 @@ const MyCommitments = () => {
       setMyCommitments(response.data.commitments || []);
     } catch (error: unknown) {
       console.error('Failed to load my commitments:', error);
-      console.error('Error response:', error.response?.data);
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      console.error('Error response:', data);
     } finally {
       setMyCommitmentsLoading(false);
     }
@@ -88,7 +92,9 @@ const MyCommitments = () => {
       toast.success(newStatus === 'completed' ? 'Marked as donated!' : 'Status updated');
     } catch (error: unknown) {
       console.error('Failed to update status:', error);
-      toast.error(error.response?.data?.error || 'Failed to update status');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to update status';
+      toast.error(errorMsg);
     }
   };
 

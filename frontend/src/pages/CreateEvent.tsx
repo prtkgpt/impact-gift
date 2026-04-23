@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import RequestCharityModal from '../components/RequestCharityModal';
 import EventImageSelector from '../components/EventImageSelector';
 import EventPhotosUploader, { EventPhoto } from '../components/EventPhotosUploader';
+import { isAxiosError, getErrorMessage } from '../utils/errors';
 
 const CreateEvent = () => {
   const [charities, setCharities] = useState<Charity[]>([]);
@@ -107,13 +108,14 @@ const CreateEvent = () => {
       navigate(`/event/${response.data.slug}/manage`, { state: { tab: 'guests' } });
     } catch (error: unknown) {
       console.error('Event creation error:', error);
-      console.error('Error response:', error.response);
-      console.error('Error response data:', error.response?.data);
+      if (isAxiosError(error)) {
+        console.error('Error response:', error.response);
+        console.error('Error response data:', error.response?.data);
+      }
 
-      const errorMessage = error.response?.data?.error
-        || error.response?.data?.errors?.[0]?.msg
-        || error.message
-        || 'Failed to create event';
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errors = data?.errors as Array<{ msg: string }> | undefined;
+      const errorMessage = (data?.error as string) || errors?.[0]?.msg || getErrorMessage(error) || 'Failed to create event';
 
       toast.error(errorMessage);
     } finally {

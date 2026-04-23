@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -19,7 +20,9 @@ const Login = () => {
       toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Login failed');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Login failed';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

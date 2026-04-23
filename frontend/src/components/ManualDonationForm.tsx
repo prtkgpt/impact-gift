@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Event } from '../types';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 interface ManualDonationFormProps {
   event: Event;
@@ -45,7 +46,9 @@ const ManualDonationForm = ({ event, onSuccess, onCancel }: ManualDonationFormPr
         onSuccess();
       }, 5000);
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to submit donation info');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to submit donation info';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

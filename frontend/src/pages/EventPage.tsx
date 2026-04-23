@@ -14,6 +14,7 @@ import AttendingGuests from '../components/AttendingGuests';
 import PotluckItems from '../components/PotluckItems';
 import EventPhotosGallery, { EventPhoto } from '../components/EventPhotosGallery';
 import { useAuth } from '../contexts/AuthContext';
+import { isAxiosError, getErrorMessage } from '../utils/errors';
 
 const EventPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -70,9 +71,14 @@ const EventPage = () => {
         setEventMemoriesPhotos(memoriesResult.value.data.photos);
       }
     } catch (error: unknown) {
-      const is404 = error.response?.status === 404;
-      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
-      const isNetworkError = !error.response && error.message === 'Network Error';
+      const status = isAxiosError(error) ? error.response?.status : undefined;
+      const errorCode = isAxiosError(error) ? error.code : undefined;
+      const errorMsg = getErrorMessage(error);
+      const hasResponse = isAxiosError(error) ? !!error.response : false;
+
+      const is404 = status === 404;
+      const isTimeout = errorCode === 'ECONNABORTED' || errorMsg?.includes('timeout');
+      const isNetworkError = !hasResponse;
 
       if (!is404 && retryCount < 2) {
         // Retry on timeout or network errors (backend may be waking up from cold start)

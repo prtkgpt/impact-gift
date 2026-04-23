@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import api from '../utils/api';
 import { EventUpdate } from '../types';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 interface EventUpdatesProps {
   eventId: number;
@@ -49,7 +50,9 @@ const EventUpdates: React.FC<EventUpdatesProps> = ({ eventId, isOwner, initialUp
       setShowForm(false);
       fetchUpdates();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to post update');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to post update';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

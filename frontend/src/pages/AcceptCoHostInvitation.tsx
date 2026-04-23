@@ -3,6 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 const AcceptCoHostInvitation = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -59,11 +60,14 @@ const AcceptCoHostInvitation = () => {
         navigate(`/event/${slug}`);
       }, 2000);
     } catch (error: unknown) {
-      if (error.response?.data?.error === 'Invitation already accepted') {
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      if (data?.error === 'Invitation already accepted') {
         setAlreadyAccepted(true);
         toast.error('This invitation has already been accepted');
       } else {
-        toast.error(error.response?.data?.error || 'Failed to accept invitation');
+        const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+        const errorMsg = (data?.error as string) || 'Failed to accept invitation';
+      toast.error(errorMsg);
       }
     } finally {
       setAccepting(false);

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -41,7 +42,9 @@ const ResetPassword = () => {
       toast.success('Password reset successfully!');
       navigate('/login');
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to reset password');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to reset password';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

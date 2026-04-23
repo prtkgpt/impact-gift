@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 interface CharityRequest {
   id: number;
@@ -62,7 +63,9 @@ const AdminCharityRequests = () => {
       setAdminNotes('');
       fetchRequests();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to approve request');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to approve request';
+      toast.error(errorMsg);
     } finally {
       setProcessing(false);
     }
@@ -88,7 +91,9 @@ const AdminCharityRequests = () => {
       setAdminNotes('');
       fetchRequests();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to reject request');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to reject request';
+      toast.error(errorMsg);
     } finally {
       setProcessing(false);
     }

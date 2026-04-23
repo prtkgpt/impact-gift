@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Event } from '../types';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 interface DonationMethodSelectorProps {
   event: Event;
@@ -85,7 +86,9 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess, showCloseButton = 
         setTimeout(() => onSuccess(), 1000);
       }
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to record donation');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to record donation';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

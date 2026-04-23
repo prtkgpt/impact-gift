@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { PotluckItem } from '../types';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 interface PotluckManagementProps {
   eventId: number;
@@ -50,7 +51,9 @@ const PotluckManagement = ({ eventId }: PotluckManagementProps) => {
       });
       fetchItems();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to add suggested item');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to add suggested item';
+      toast.error(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -64,7 +67,9 @@ const PotluckManagement = ({ eventId }: PotluckManagementProps) => {
       toast.success('Suggested item deleted');
       fetchItems();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to delete item');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to delete item';
+      toast.error(errorMsg);
     }
   };
 

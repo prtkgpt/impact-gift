@@ -75,7 +75,7 @@ export function useUpdateRSVP() {
       });
       return response.data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       // Invalidate all guest-related queries for this event
       queryClient.invalidateQueries({ queryKey: ['event-guests'] });
       queryClient.invalidateQueries({ queryKey: ['rsvp-summary'] });

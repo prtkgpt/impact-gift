@@ -7,6 +7,7 @@ import { Event } from '../types';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import FavoriteCharities from '../components/FavoriteCharities';
+import { isAxiosError, getErrorMessage } from '../utils/errors';
 
 interface Invitation {
   id: number;
@@ -80,8 +81,13 @@ const Dashboard = () => {
       setCommitmentsLoading(false);
 
     } catch (error: unknown) {
-      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
-      const isNetworkError = !error.response && error.message === 'Network Error';
+      const errorCode = isAxiosError(error) ? error.code : undefined;
+      const errorMessage = getErrorMessage(error);
+      const hasResponse = isAxiosError(error) ? !!error.response : false;
+      const status = isAxiosError(error) ? error.response?.status : undefined;
+
+      const isTimeout = errorCode === 'ECONNABORTED' || errorMessage?.includes('timeout');
+      const isNetworkError = !hasResponse && errorMessage === 'Network Error';
 
       // Retry on timeout or network errors (backend may be waking up from cold start)
       if ((isTimeout || isNetworkError) && retryCount < 2) {
@@ -99,7 +105,7 @@ const Dashboard = () => {
         toast.error('Request timed out. Please check your connection and try again.');
       } else if (isNetworkError) {
         toast.error('Cannot connect to server. Please try again later.');
-      } else if (error.response?.status !== 401) {
+      } else if (status !== 401) {
         toast.error('Failed to load dashboard. Please refresh the page.');
       }
     }
@@ -113,8 +119,13 @@ const Dashboard = () => {
       });
       setEvents(response.data);
     } catch (error: unknown) {
-      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
-      const isNetworkError = !error.response && error.message === 'Network Error';
+      const errorCode = isAxiosError(error) ? error.code : undefined;
+      const errorMessage = getErrorMessage(error);
+      const hasResponse = isAxiosError(error) ? !!error.response : false;
+      const status = isAxiosError(error) ? error.response?.status : undefined;
+
+      const isTimeout = errorCode === 'ECONNABORTED' || errorMessage?.includes('timeout');
+      const isNetworkError = !hasResponse && errorMessage === 'Network Error';
 
       // Retry on timeout or network errors (backend may be waking up from cold start)
       if ((isTimeout || isNetworkError) && retryCount < 2) {
@@ -128,7 +139,7 @@ const Dashboard = () => {
         toast.error('Request timed out. Please check your connection and try again.');
       } else if (isNetworkError) {
         toast.error('Cannot connect to server. Please try again later.');
-      } else if (error.response?.status !== 401) {
+      } else if (status !== 401) {
         toast.error('Failed to load events. Please refresh the page.');
       }
     } finally {
@@ -143,8 +154,12 @@ const Dashboard = () => {
       });
       setInvitations(response.data);
     } catch (error: unknown) {
-      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
-      const isNetworkError = !error.response && error.message === 'Network Error';
+      const errorCode = isAxiosError(error) ? error.code : undefined;
+      const errorMessage = getErrorMessage(error);
+      const hasResponse = isAxiosError(error) ? !!error.response : false;
+
+      const isTimeout = errorCode === 'ECONNABORTED' || errorMessage?.includes('timeout');
+      const isNetworkError = !hasResponse && errorMessage === 'Network Error';
 
       if ((isTimeout || isNetworkError) && retryCount < 2) {
         await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));

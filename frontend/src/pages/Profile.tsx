@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { UpdateUserProfileInput } from '../types';
+import { isAxiosError } from '../utils/errors';
 
 const Profile = () => {
   const [loading, setLoading] = useState(false);
@@ -52,7 +53,9 @@ const Profile = () => {
       toast.success('Profile updated successfully!');
       await fetchProfile(); // Refresh to get the updated data
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to update profile');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to update profile';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

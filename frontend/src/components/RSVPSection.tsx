@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 import type { Guest } from '../types';
+import { isAxiosError } from '../utils/errors';
 
 interface RSVPSectionProps {
   guestEmail?: string | null;
@@ -97,8 +98,10 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
         setShowForm(false);
         onRSVPSubmit?.();
       } catch (error: unknown) {
-        const isTimeout = error.code === 'ECONNABORTED';
-        const isNetworkError = !error.response;
+        const errorCode = isAxiosError(error) ? error.code : undefined;
+        const isTimeout = errorCode === 'ECONNABORTED';
+        const hasResponse = isAxiosError(error) ? !!error.response : false;
+        const isNetworkError = !hasResponse;
 
         // Retry on timeout/network errors (backend may be cold-starting)
         if ((isTimeout || isNetworkError) && retryCount < 2) {
@@ -109,8 +112,9 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
         if (isNetworkError) {
           toast.error('Could not reach the server. Please check your connection and try again.');
         } else {
-          const serverMsg = typeof error.response?.data === 'object' ? error.response.data.error : undefined;
-          toast.error(serverMsg || 'Failed to submit RSVP. Please try again.');
+          const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+          const serverMsg = (data?.error as string) || 'Failed to submit RSVP. Please try again.';
+          toast.error(serverMsg);
         }
       }
     };

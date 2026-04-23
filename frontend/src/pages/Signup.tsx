@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -23,7 +24,9 @@ const Signup = () => {
       toast.success('Account created successfully!');
       navigate('/dashboard');
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Signup failed');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Signup failed';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

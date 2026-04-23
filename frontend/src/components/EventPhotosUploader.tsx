@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 export interface EventPhoto {
   id?: number;
@@ -90,7 +91,9 @@ const EventPhotosUploader = ({
       }
     } catch (error: unknown) {
       console.error('Upload error:', error);
-      toast.error(error.response?.data?.error || 'Failed to upload photos');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to upload photos';
+      toast.error(errorMsg);
     } finally {
       setUploading(false);
       if (fileInputRef.current) {

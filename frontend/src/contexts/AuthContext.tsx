@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AuthResponse } from '../types';
 import api from '../utils/api';
+import { isAxiosError } from '../utils/errors';
 
 interface AuthContextType {
   user: User | null;
@@ -32,7 +33,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(JSON.parse(savedUser));
       } catch (error: unknown) {
         // Only clear token if it's a 401 (unauthorized) - keep it for network errors
-        if (error.response?.status === 401) {
+        const status = isAxiosError(error) ? error.response?.status : undefined;
+        if (status === 401) {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           setUser(null);

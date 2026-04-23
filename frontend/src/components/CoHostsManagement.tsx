@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { CoHost } from '../types';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 interface CoHostsManagementProps {
   eventId: number;
@@ -26,7 +27,8 @@ const CoHostsManagement = ({ eventId }: CoHostsManagementProps) => {
       const response = await api.get<CoHost[]>(`/co-hosts/event/${eventId}`);
       setCoHosts(response.data);
     } catch (error: unknown) {
-      if (error.response?.status !== 403) {
+      const status = isAxiosError(error) ? error.response?.status : undefined;
+      if (status !== 403) {
         toast.error('Failed to load co-hosts');
       }
     } finally {
@@ -45,7 +47,9 @@ const CoHostsManagement = ({ eventId }: CoHostsManagementProps) => {
       setFormData({ email: '', name: '' });
       fetchCoHosts();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to add co-host');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to add co-host';
+      toast.error(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -61,7 +65,9 @@ const CoHostsManagement = ({ eventId }: CoHostsManagementProps) => {
       toast.success('Co-host removed');
       fetchCoHosts();
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to remove co-host');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = data?.error as string || 'Failed to remove co-host';
+      toast.error(errorMsg);
     }
   };
 

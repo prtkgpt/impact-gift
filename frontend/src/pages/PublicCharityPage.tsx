@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 interface PublicCharityPageData {
   user: {
@@ -51,7 +52,8 @@ const PublicCharityPage = () => {
       const response = await api.get(`/charity-page/${slug}`);
       setData(response.data);
     } catch (error: unknown) {
-      if (error.response?.status === 404) {
+      const status = isAxiosError(error) ? error.response?.status : undefined;
+      if (status === 404) {
         toast.error('Charity page not found');
       } else {
         toast.error('Failed to load charity page');
@@ -101,7 +103,9 @@ const PublicCharityPage = () => {
       });
       setSelectedCharity(null);
     } catch (error: unknown) {
-      toast.error(error.response?.data?.error || 'Failed to record commitment');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to record commitment';
+      toast.error(errorMsg);
     } finally {
       setSubmitting(false);
     }

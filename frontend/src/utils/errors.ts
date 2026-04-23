@@ -19,7 +19,8 @@ export function isError(error: unknown): error is Error {
  */
 export function getErrorMessage(error: unknown): string {
   if (isAxiosError(error)) {
-    return error.response?.data?.error || error.message || 'Request failed';
+    const data = error.response?.data as Record<string, unknown> | undefined;
+    return (data?.error as string) || error.message || 'Request failed';
   }
   if (isError(error)) {
     return error.message;
@@ -27,8 +28,8 @@ export function getErrorMessage(error: unknown): string {
   if (typeof error === 'string') {
     return error;
   }
-  if (error && typeof error === 'object' && 'message' in error) {
-    return String(error.message);
+  if (error && typeof error === 'object' && 'message' in error && typeof (error as Record<string, unknown>).message === 'string') {
+    return (error as Record<string, unknown>).message as string;
   }
   return 'An unknown error occurred';
 }
@@ -38,8 +39,9 @@ export function getErrorMessage(error: unknown): string {
  */
 export function getApiErrorDetails(error: unknown): { message: string; status?: number } {
   if (isAxiosError(error)) {
+    const data = error.response?.data as Record<string, unknown> | undefined;
     return {
-      message: error.response?.data?.error || error.message,
+      message: (data?.error as string) || error.message,
       status: error.response?.status
     };
   }

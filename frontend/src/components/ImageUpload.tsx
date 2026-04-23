@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { isAxiosError } from '../utils/errors';
 
 interface ImageUploadProps {
   onImageUploaded: (imageUrl: string, publicId: string) => void;
@@ -55,7 +56,9 @@ const ImageUpload = ({ onImageUploaded, currentImageUrl, label, helpText }: Imag
       }
     } catch (error: unknown) {
       console.error('Upload error:', error);
-      toast.error(error.response?.data?.error || 'Failed to upload image');
+      const data = isAxiosError(error) ? (error.response?.data as Record<string, unknown> | undefined) : undefined;
+      const errorMsg = (data?.error as string) || 'Failed to upload image';
+      toast.error(errorMsg);
       setPreview(currentImageUrl || null);
     } finally {
       setUploading(false);
