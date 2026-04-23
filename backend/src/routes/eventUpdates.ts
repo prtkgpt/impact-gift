@@ -60,7 +60,7 @@ router.get('/event/:eventId', async (req: Request, res: Response) => {
     const { eventId } = req.params;
 
     const result = await query(
-      `SELECT * FROM event_updates
+      `SELECT id, event_id, update_message, target_filters, sent_count, created_at FROM event_updates
        WHERE event_id = $1
        ORDER BY created_at DESC`,
       [eventId]

@@ -146,7 +146,7 @@ router.patch('/requests/:id/approve', authenticate, requireAdmin, async (req: Au
 
     // Get the request details
     const requestResult = await query(
-      'SELECT * FROM charity_requests WHERE id = $1',
+      'SELECT id, charity_name, ein, website, description, category, email, requestor_name, status, created_at, reviewed_at FROM charity_requests WHERE id = $1',
       [id]
     );
 
@@ -219,7 +219,7 @@ router.patch('/requests/:id/reject', authenticate, requireAdmin, async (req: Aut
 
     // Check if request exists
     const requestResult = await query(
-      'SELECT * FROM charity_requests WHERE id = $1',
+      'SELECT id, charity_name, ein, website, description, category, email, requestor_name, status, created_at, reviewed_at FROM charity_requests WHERE id = $1',
       [id]
     );
 

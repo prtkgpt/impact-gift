@@ -46,7 +46,7 @@ router.post(
 
       // Verify charity exists
       const charityResult = await query(
-        'SELECT * FROM charities WHERE id = $1',
+        'SELECT id, name, donation_url, payment_instructions FROM charities WHERE id = $1',
         [charity_id]
       );
 
@@ -206,7 +206,7 @@ router.put(
       if (source === 'event') {
         // Update donations table
         const donationResult = await query(
-          'SELECT * FROM donations WHERE id = $1 AND donor_email = $2',
+          'SELECT id, event_id, charity_id, donor_name, donor_email, amount, message, donation_method, created_at FROM donations WHERE id = $1 AND donor_email = $2',
           [id, donor_email]
         );
 

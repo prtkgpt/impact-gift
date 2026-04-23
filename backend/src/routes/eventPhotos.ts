@@ -107,7 +107,7 @@ router.get('/event/:eventId', async (req, res: Response) => {
     const { category } = req.query;
 
     let queryText = `
-      SELECT * FROM event_photos
+      SELECT id, event_id, photo_url, photo_public_id, category, caption, uploaded_at FROM event_photos
       WHERE event_id = $1
     `;
     const queryParams: any[] = [eventId];

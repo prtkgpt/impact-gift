@@ -7,7 +7,7 @@ const router = Router();
 router.get('/', async (req: Request, res: Response) => {
   try {
     const result = await query(
-      `SELECT * FROM event_themes
+      `SELECT id, name, display_name, description, color_scheme, gradient_from, gradient_to, text_color, accent_color, icon, is_active, sort_order FROM event_themes
        WHERE is_active = true
        ORDER BY sort_order ASC, display_name ASC`
     );
@@ -23,7 +23,7 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/free', async (req: Request, res: Response) => {
   try {
     const result = await query(
-      `SELECT * FROM event_themes
+      `SELECT id, name, display_name, description, color_scheme, gradient_from, gradient_to, text_color, accent_color, icon, is_active, sort_order FROM event_themes
        WHERE is_active = true AND is_premium = false
        ORDER BY sort_order ASC, display_name ASC`
     );
@@ -41,7 +41,7 @@ router.get('/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const result = await query(
-      'SELECT * FROM event_themes WHERE id = $1',
+      'SELECT id, name, display_name, description, color_scheme, gradient_from, gradient_to, text_color, accent_color, icon, is_active, sort_order FROM event_themes WHERE id = $1',
       [id]
     );
 

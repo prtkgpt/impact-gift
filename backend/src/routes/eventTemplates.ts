@@ -7,7 +7,7 @@ const router = Router();
 router.get('/', async (req: Request, res: Response) => {
   try {
     const result = await query(
-      `SELECT * FROM event_templates
+      `SELECT id, name, display_name, description, event_type, icon, default_title_template, default_description_template, suggested_charities, sort_order, is_active FROM event_templates
        WHERE is_active = true
        ORDER BY sort_order ASC, display_name ASC`
     );
@@ -25,7 +25,7 @@ router.get('/by-type/:eventType', async (req: Request, res: Response) => {
     const { eventType } = req.params;
 
     const result = await query(
-      `SELECT * FROM event_templates
+      `SELECT id, name, display_name, description, event_type, icon, default_title_template, default_description_template, suggested_charities, sort_order, is_active FROM event_templates
        WHERE is_active = true AND event_type = $1
        ORDER BY sort_order ASC`,
       [eventType]
@@ -44,7 +44,7 @@ router.get('/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const result = await query(
-      'SELECT * FROM event_templates WHERE id = $1',
+      'SELECT id, name, display_name, description, event_type, icon, default_title_template, default_description_template, suggested_charities, sort_order, is_active FROM event_templates WHERE id = $1',
       [id]
     );
 

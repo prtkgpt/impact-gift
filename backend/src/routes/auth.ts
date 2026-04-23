@@ -59,7 +59,7 @@ router.post(
         return res.status(500).json({ error: 'Server configuration error - please contact support' });
       }
 
-      const existingUser = await query('SELECT * FROM users WHERE email = $1', [email]);
+      const existingUser = await query('SELECT id FROM users WHERE email = $1', [email]);
       if (existingUser.rows.length > 0) {
         console.log('Email already exists:', email);
         return res.status(400).json({ error: 'Email already registered' });
@@ -183,7 +183,7 @@ router.post(
 
       const { email } = req.body;
 
-      const result = await query('SELECT * FROM users WHERE email = $1', [email]);
+      const result = await query('SELECT id, email, first_name FROM users WHERE email = $1', [email]);
 
       // Always return success to prevent email enumeration
       if (result.rows.length === 0) {
@@ -302,7 +302,7 @@ router.post(
       const { token, password } = req.body;
 
       const result = await query(
-        'SELECT * FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()',
+        'SELECT id FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()',
         [token]
       );
 
