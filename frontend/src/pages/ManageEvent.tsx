@@ -106,13 +106,10 @@ const ManageEvent = () => {
       setLoading(false);
       return;
     }
-    console.log('ManageEvent: Loading event data for slug:', slug);
     fetchEventData();
   }, [slug]);
 
   useEffect(() => {
-    console.log('Active tab changed to:', activeTab);
-    console.log('Current state:', { guests: guests.length, donations: donations.length });
   }, [activeTab, guests, donations]);
 
   // Fetch filter counts when communication tab is active
@@ -138,11 +135,9 @@ const ManageEvent = () => {
       return;
     }
 
-    console.log(`ManageEvent: fetchEventData called for slug: ${slug} (attempt ${retryCount + 1})`);
     try {
       setLoading(true);
       setError(null);
-      console.log('ManageEvent: Fetching event data...');
 
       // Fetch event and charities list in parallel (charities doesn't depend on event ID)
       const [eventRes, charitiesResult] = await Promise.all([
@@ -157,7 +152,6 @@ const ManageEvent = () => {
 
       setEvent(eventRes.data);
       setCharities(charitiesResult.data.charities);
-      console.log('ManageEvent: Event loaded successfully:', eventRes.data);
 
       // Now fetch all event-specific data in parallel using event ID
       const [guestsRes, donationsRes, rsvpSummaryRes, attireResult, pendingCommitmentsRes] = await Promise.all([
@@ -193,9 +187,6 @@ const ManageEvent = () => {
         setAttirePhotos(attireResult.data.photos);
       }
 
-      console.log('Guests loaded:', guestsRes.data.length);
-      console.log('Donations loaded:', donationsRes.data.length);
-      console.log('RSVP Summary loaded:', rsvpSummaryRes.data);
 
       // Populate form data for Event Details tab
       setFormData({
@@ -245,13 +236,11 @@ const ManageEvent = () => {
 
       if ((isTimeout || isNetworkError) && retryCount < 2) {
         const delay = (retryCount + 1) * 2000; // 2s, 4s
-        console.log(`ManageEvent: Retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         return fetchEventData(retryCount + 1);
       }
 
       const errorMessage = error.response?.data?.error || error.message || 'Failed to load event';
-      console.log('ManageEvent: Setting error message:', errorMessage);
       setError(errorMessage);
       if (error.response?.status === 404 || error.response?.status === 403) {
         toast.error('Event not found or you do not have permission');
@@ -260,7 +249,6 @@ const ManageEvent = () => {
         toast.error(errorMessage);
       }
     } finally {
-      console.log('ManageEvent: Setting loading to false');
       setLoading(false);
     }
   };
@@ -479,11 +467,8 @@ const ManageEvent = () => {
   };
 
   const resendInvitation = async (guestId: number) => {
-    console.log(`[RESEND FRONTEND] Resending invitation for guest ID: ${guestId}`);
     try {
-      console.log(`[RESEND FRONTEND] Making API call to /invitations/resend/${guestId}`);
       const response = await api.post(`/invitations/resend/${guestId}`);
-      console.log(`[RESEND FRONTEND] API response:`, response.data);
       toast.success(response.data.message);
       await fetchEventData();
     } catch (error: any) {
@@ -648,10 +633,8 @@ const ManageEvent = () => {
     }
   };
 
-  console.log('ManageEvent: Rendering - loading:', loading, 'error:', error, 'event:', !!event);
 
   if (loading) {
-    console.log('ManageEvent: Showing loading state');
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
@@ -663,7 +646,6 @@ const ManageEvent = () => {
   }
 
   if (error || !event) {
-    console.log('ManageEvent: Showing error state - error:', error, 'event:', !!event);
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
@@ -683,7 +665,6 @@ const ManageEvent = () => {
     );
   }
 
-  console.log('ManageEvent: Rendering main content');
 
   const pendingInvites = guests.filter(g => !g.invitation_sent).length;
   const totalDonations = donations.reduce((sum, d) => sum + Number(d.amount), 0);
@@ -798,9 +779,7 @@ const ManageEvent = () => {
               <button
                 key={tab}
                 onClick={() => {
-                  console.log('Tab clicked:', tab);
                   setActiveTab(tab);
-                  console.log('Active tab set to:', tab);
                 }}
                 className={`py-3 px-2 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === tab

@@ -43,15 +43,12 @@ const MyCommitments = () => {
   };
 
   useEffect(() => {
-    console.log('MyCommitments component mounted');
     Promise.all([fetchCommitments(), fetchMyCommitments()]);
   }, []);
 
   const fetchCommitments = async () => {
-    console.log('Fetching commitments...');
     try {
       const response = await api.get('/charity-commitments/my-page');
-      console.log('Commitments response:', response.data);
       setData(response.data);
       setError(null);
     } catch (error: any) {
@@ -64,12 +61,8 @@ const MyCommitments = () => {
   };
 
   const fetchMyCommitments = async () => {
-    console.log('Fetching my commitments...');
     try {
       const response = await api.get('/charity-commitments/made-by-me');
-      console.log('My commitments response:', response.data);
-      console.log('Commitments array:', response.data.commitments);
-      console.log('Number of commitments:', response.data.commitments?.length);
       setMyCommitments(response.data.commitments || []);
     } catch (error: any) {
       console.error('Failed to load my commitments:', error);
@@ -99,7 +92,6 @@ const MyCommitments = () => {
     }
   };
 
-  console.log('MyCommitments render - loading:', loading, 'error:', error, 'data:', data);
 
   if (loading) {
     return (

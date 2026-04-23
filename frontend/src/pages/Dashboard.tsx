@@ -85,7 +85,6 @@ const Dashboard = () => {
 
       // Retry on timeout or network errors (backend may be waking up from cold start)
       if ((isTimeout || isNetworkError) && retryCount < 2) {
-        console.log(`Dashboard fetchDashboardSummary retry ${retryCount + 1}`);
         await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
         return fetchDashboardSummary(retryCount + 1);
       }
@@ -119,7 +118,6 @@ const Dashboard = () => {
 
       // Retry on timeout or network errors (backend may be waking up from cold start)
       if ((isTimeout || isNetworkError) && retryCount < 2) {
-        console.log(`Dashboard fetchEvents retry ${retryCount + 1}`);
         await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
         return fetchEvents(retryCount + 1);
       }
@@ -149,7 +147,6 @@ const Dashboard = () => {
       const isNetworkError = !error.response && error.message === 'Network Error';
 
       if ((isTimeout || isNetworkError) && retryCount < 2) {
-        console.log(`Dashboard fetchInvitations retry ${retryCount + 1}`);
         await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
         return fetchInvitations(retryCount + 1);
       }

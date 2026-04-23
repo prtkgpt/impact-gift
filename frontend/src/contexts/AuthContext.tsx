@@ -33,7 +33,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } catch (error: any) {
         // Only clear token if it's a 401 (unauthorized) - keep it for network errors
         if (error.response?.status === 401) {
-          console.log('Token is invalid, clearing session');
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           setUser(null);

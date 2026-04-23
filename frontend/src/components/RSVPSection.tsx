@@ -47,7 +47,6 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
       }
     } catch (error: any) {
       // Guest not found is fine in guest mode - they'll create a new record
-      console.log('Guest lookup:', error.response?.status === 404 ? 'not found' : 'error');
     } finally {
       setLoading(false);
     }
@@ -103,7 +102,6 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
 
         // Retry on timeout/network errors (backend may be cold-starting)
         if ((isTimeout || isNetworkError) && retryCount < 2) {
-          console.log(`RSVP retry ${retryCount + 1}: ${isTimeout ? 'timeout' : 'network error'}`);
           await new Promise(resolve => setTimeout(resolve, 3000 * (retryCount + 1)));
           return submitWithRetry(retryCount + 1);
         }
