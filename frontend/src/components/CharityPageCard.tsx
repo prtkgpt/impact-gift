@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { retryGet } from '../utils/apiRetry';
 
 interface CharityPageStats {
   has_charity_page: boolean;
@@ -19,21 +19,11 @@ const CharityPageCard = () => {
     fetchStats();
   }, []);
 
-  const fetchStats = async (retryCount = 0) => {
+  const fetchStats = async () => {
     try {
-      const response = await api.get('/charity-commitments/my-page/stats', {
-        timeout: retryCount === 0 ? 15000 : 20000,
-      });
+      const response = await retryGet('/charity-commitments/my-page/stats');
       setStats(response.data);
     } catch (error: unknown) {
-      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
-      const isNetworkError = !error.response && error.message === 'Network Error';
-
-      if ((isTimeout || isNetworkError) && retryCount < 2) {
-        await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
-        return fetchStats(retryCount + 1);
-      }
-
       console.error('Failed to load charity page stats:', error);
     } finally {
       setLoading(false);
