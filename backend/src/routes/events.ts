@@ -63,11 +63,14 @@ router.post(
 
       // Verify all charities exist (only if charities were provided)
       if (charityList.length > 0) {
-        for (const cid of charityList) {
-          const charityCheck = await query('SELECT id FROM charities WHERE id = $1', [cid]);
-          if (charityCheck.rows.length === 0) {
-            return res.status(400).json({ error: `Invalid charity ID: ${cid}` });
-          }
+        const charityCheck = await query(
+          'SELECT id FROM charities WHERE id = ANY($1)',
+          [charityList]
+        );
+        if (charityCheck.rows.length !== charityList.length) {
+          const foundIds = charityCheck.rows.map((r: any) => r.id);
+          const missingIds = charityList.filter(id => !foundIds.includes(id));
+          return res.status(400).json({ error: `Invalid charity ID(s): ${missingIds.join(', ')}` });
         }
       }
 
@@ -109,14 +112,13 @@ router.post(
 
       // Add charities to event_charities junction table (only if charities were provided)
       if (charityList.length > 0) {
-        for (const cid of charityList) {
-          await query(
-            `INSERT INTO event_charities (event_id, charity_id)
-             VALUES ($1, $2)
-             ON CONFLICT (event_id, charity_id) DO NOTHING`,
-            [newEvent.id, cid]
-          );
-        }
+        const values = charityList.map((_, i) => `($1, $${i + 2})`).join(', ');
+        await query(
+          `INSERT INTO event_charities (event_id, charity_id)
+           VALUES ${values}
+           ON CONFLICT (event_id, charity_id) DO NOTHING`,
+          [newEvent.id, ...charityList]
+        );
       }
 
       // Fetch the complete event with charities
@@ -805,11 +807,15 @@ router.post('/:identifier/duplicate', authenticate, async (req: AuthRequest, res
       [originalEvent.id]
     );
 
-    for (const charity of charitiesResult.rows) {
+    if (charitiesResult.rows.length > 0) {
+      const charityValues = charitiesResult.rows
+        .map((_, i) => `($1, $${i * 2 + 2}, $${i * 2 + 3})`)
+        .join(', ');
+      const charityParams = charitiesResult.rows.flatMap((c: any) => [c.charity_id, c.custom_instructions]);
       await query(
         `INSERT INTO event_charities (event_id, charity_id, custom_instructions)
-         VALUES ($1, $2, $3)`,
-        [newEvent.id, charity.charity_id, charity.custom_instructions]
+         VALUES ${charityValues}`,
+        [newEvent.id, ...charityParams]
       );
     }
 
@@ -820,11 +826,15 @@ router.post('/:identifier/duplicate', authenticate, async (req: AuthRequest, res
       [originalEvent.id]
     );
 
-    for (const coHost of coHostsResult.rows) {
+    if (coHostsResult.rows.length > 0) {
+      const coHostValues = coHostsResult.rows
+        .map((_, i) => `($1, $${i * 2 + 2}, $${i * 2 + 3}, CURRENT_TIMESTAMP)`)
+        .join(', ');
+      const coHostParams = coHostsResult.rows.flatMap((c: any) => [c.email, c.name]);
       await query(
         `INSERT INTO co_hosts (event_id, email, name, invited_at)
-         VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
-        [newEvent.id, coHost.email, coHost.name]
+         VALUES ${coHostValues}`,
+        [newEvent.id, ...coHostParams]
       );
     }
 
@@ -836,11 +846,20 @@ router.post('/:identifier/duplicate', authenticate, async (req: AuthRequest, res
         [originalEvent.id]
       );
 
-      for (const item of itemsResult.rows) {
+      if (itemsResult.rows.length > 0) {
+        const itemValues = itemsResult.rows
+          .map((_, i) => `($1, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4}, $${i * 4 + 5}, true)`)
+          .join(', ');
+        const itemParams = itemsResult.rows.flatMap((item: any) => [
+          item.item_name,
+          item.quantity,
+          item.category,
+          item.notes
+        ]);
         await query(
           `INSERT INTO potluck_items (event_id, item_name, quantity, category, notes, is_suggested)
-           VALUES ($1, $2, $3, $4, $5, true)`,
-          [newEvent.id, item.item_name, item.quantity, item.category, item.notes]
+           VALUES ${itemValues}`,
+          [newEvent.id, ...itemParams]
         );
       }
     }
