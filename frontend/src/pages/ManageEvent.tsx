@@ -1229,7 +1229,9 @@ const ManageEvent = () => {
             {guests.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No guests added yet. Add some above!</p>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              {/* Desktop Table - hidden on mobile */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -1397,6 +1399,137 @@ const ManageEvent = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* Mobile Cards - visible only on mobile */}
+              <div className="md:hidden space-y-4">
+                {guests.map((guest) => (
+                  <div key={guest.id} className={`card-interactive ${editingGuestId === guest.id ? 'ring-2 ring-primary-500' : ''}`}>
+                    <div className="space-y-3">
+                      {editingGuestId === guest.id ? (
+                        /* Edit mode */
+                        <>
+                          <div>
+                            <label className="label text-xs">Email</label>
+                            <input
+                              type="email"
+                              className="input text-sm"
+                              value={editEmail}
+                              onChange={(e) => setEditEmail(e.target.value)}
+                              placeholder="Email"
+                            />
+                          </div>
+                          <div>
+                            <label className="label text-xs">Name</label>
+                            <input
+                              type="text"
+                              className="input text-sm"
+                              value={editName}
+                              onChange={(e) => setEditName(e.target.value)}
+                              placeholder="Name"
+                            />
+                          </div>
+                          <div className="flex gap-2 pt-2">
+                            <button
+                              onClick={() => updateGuest(guest.id)}
+                              className="btn btn-primary btn-sm flex-1"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={cancelEdit}
+                              className="btn btn-secondary btn-sm flex-1"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        /* View mode */
+                        <>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-neutral-900 truncate">{guest.email}</div>
+                              <div className="text-sm text-neutral-600">{guest.name || 'No name'}</div>
+                            </div>
+                            <span className={`badge ${
+                              guest.invitation_sent
+                                ? 'badge-success'
+                                : 'badge-warning'
+                            } flex-shrink-0`}>
+                              {guest.invitation_sent ? 'Invited' : 'Pending'}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <div className="text-xs text-neutral-500 mb-1">RSVP Status</div>
+                              <div className={`font-medium ${
+                                guest.rsvp_status === 'attending' ? 'text-green-600' :
+                                guest.rsvp_status === 'not_attending' ? 'text-red-600' :
+                                guest.rsvp_status === 'maybe' ? 'text-yellow-600' :
+                                'text-neutral-400'
+                              }`}>
+                                {guest.rsvp_status === 'attending' && 'Attending'}
+                                {guest.rsvp_status === 'not_attending' && 'Not Attending'}
+                                {guest.rsvp_status === 'maybe' && 'Maybe'}
+                                {guest.rsvp_status === 'no_response' && 'No Response'}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-neutral-500 mb-1">Additional Guests</div>
+                              <div className="font-medium text-primary-600">
+                                {guest.rsvp_status === 'attending' || guest.rsvp_status === 'maybe' ? (
+                                  guest.additional_guests || 0 > 0 ? `+${guest.additional_guests}` : '-'
+                                ) : '-'}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-neutral-500 mb-1">Donated</div>
+                              <div className="font-medium">
+                                {guest.has_donated ? (
+                                  <span className="text-green-600">${Number(guest.donated_amount || 0).toFixed(2)}</span>
+                                ) : (
+                                  <span className="text-neutral-400">-</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {guest.rsvp_comment && (
+                            <div className="text-xs text-neutral-600 italic bg-neutral-50 p-2 rounded">
+                              "{guest.rsvp_comment}"
+                            </div>
+                          )}
+
+                          <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-200">
+                            {guest.invitation_sent && (
+                              <button
+                                onClick={() => resendInvitation(guest.id)}
+                                className="btn btn-secondary btn-sm flex-1"
+                              >
+                                Resend
+                              </button>
+                            )}
+                            <button
+                              onClick={() => startEditGuest(guest)}
+                              className="btn btn-secondary btn-sm flex-1"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => removeGuest(guest.id)}
+                              className="btn btn-secondary btn-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </>
             )}
           </div>
         </div>
