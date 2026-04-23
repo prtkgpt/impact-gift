@@ -4,11 +4,15 @@ import Papa from 'papaparse';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { Event, Guest, Donation, RSVPSummaryResponse, Charity } from '../types';
-import CoHostsManagement from '../components/CoHostsManagement';
-import PotluckManagement from '../components/PotluckManagement';
-import RequestCharityModal from '../components/RequestCharityModal';
-import EventPhotosUploader, { EventPhoto } from '../components/EventPhotosUploader';
-import EventImageSelector from '../components/EventImageSelector';
+import { EventPhoto } from '../components/EventPhotosUploader';
+import DetailsTab from '../components/manage-event/DetailsTab';
+import CharitiesTab from '../components/manage-event/CharitiesTab';
+import GuestsTab from '../components/manage-event/GuestsTab';
+import RSVPTab from '../components/manage-event/RSVPTab';
+import CommunicationTab from '../components/manage-event/CommunicationTab';
+import CoHostsTab from '../components/manage-event/CoHostsTab';
+import PotluckTab from '../components/manage-event/PotluckTab';
+import ProgressTab from '../components/manage-event/ProgressTab';
 
 const ManageEvent = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -1433,113 +1437,7 @@ const ManageEvent = () => {
 
       {/* RSVP Summary Tab */}
       {activeTab === 'rsvp' && (
-        <div className="space-y-6">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="card bg-green-50 border-green-200">
-              <div className="text-sm text-green-700 font-medium mb-1">Attending</div>
-              <div className="text-3xl font-bold text-green-600">
-                {rsvpSummary?.summary.attending_count || 0}
-              </div>
-              <div className="text-xs text-green-600 mt-1">
-                Total Headcount: {rsvpSummary?.summary.total_attending_headcount || 0}
-              </div>
-            </div>
-            <div className="card bg-yellow-50 border-yellow-200">
-              <div className="text-sm text-yellow-700 font-medium mb-1">Maybe</div>
-              <div className="text-3xl font-bold text-yellow-600">
-                {rsvpSummary?.summary.maybe_count || 0}
-              </div>
-              <div className="text-xs text-yellow-600 mt-1">
-                Potential Headcount: {rsvpSummary?.summary.total_maybe_headcount || 0}
-              </div>
-            </div>
-            <div className="card bg-red-50 border-red-200">
-              <div className="text-sm text-red-700 font-medium mb-1">Not Attending</div>
-              <div className="text-3xl font-bold text-red-600">
-                {rsvpSummary?.summary.not_attending_count || 0}
-              </div>
-            </div>
-            <div className="card bg-gray-50 border-gray-200">
-              <div className="text-sm text-gray-700 font-medium mb-1">No Response</div>
-              <div className="text-3xl font-bold text-gray-600">
-                {rsvpSummary?.summary.no_response_count || 0}
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Guests Summary */}
-          {rsvpSummary && rsvpSummary.summary.total_additional_guests > 0 && (
-            <div className="card bg-primary-50 border-primary-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-primary-900">Additional Guests</h3>
-                  <p className="text-sm text-primary-700 mt-1">
-                    Total of <span className="font-bold">{rsvpSummary.summary.total_additional_guests}</span> additional guest(s) are coming
-                  </p>
-                </div>
-                <div className="text-4xl font-bold text-primary-600">
-                  +{rsvpSummary.summary.total_additional_guests}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Detailed Attendee List */}
-          <div className="card">
-            <h3 className="text-lg font-semibold mb-4">Confirmed & Potential Attendees</h3>
-            {!rsvpSummary || rsvpSummary.attendingGuests.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No RSVPs yet</p>
-            ) : (
-              <div className="space-y-3">
-                {rsvpSummary.attendingGuests.map((guest) => (
-                  <div key={guest.id} className="flex items-start justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-lg ${
-                          guest.rsvp_status === 'attending' ? '' : 'opacity-50'
-                        }`}>
-                          {guest.rsvp_status === 'attending' ? '✅' : '🤔'}
-                        </span>
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {guest.name || guest.email.split('@')[0]}
-                          </div>
-                          <div className="text-sm text-gray-600">{guest.email}</div>
-                        </div>
-                      </div>
-                      {guest.rsvp_comment && (
-                        <p className="text-sm text-gray-600 mt-2 italic">"{guest.rsvp_comment}"</p>
-                      )}
-                      {guest.rsvp_at && (
-                        <p className="text-xs text-gray-400 mt-1">
-                          RSVP'd on {new Date(guest.rsvp_at).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                    <div className="text-right ml-4">
-                      <div className={`text-sm font-medium ${
-                        guest.rsvp_status === 'attending' ? 'text-green-600' : 'text-yellow-600'
-                      }`}>
-                        {guest.rsvp_status === 'attending' ? 'Attending' : 'Maybe'}
-                      </div>
-                      {guest.additional_guests && guest.additional_guests > 0 && (
-                        <div className="mt-1">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                            +{guest.additional_guests} guest{guest.additional_guests > 1 ? 's' : ''}
-                          </span>
-                        </div>
-                      )}
-                      <div className="text-xs text-gray-500 mt-1">
-                        Total: {1 + (guest.additional_guests || 0)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <RSVPTab rsvpSummary={rsvpSummary} />
       )}
 
       {/* Communication Tab */}
@@ -1751,96 +1649,23 @@ const ManageEvent = () => {
 
       {/* Co-Hosts Tab */}
       {activeTab === 'cohosts' && (
-        <div className="space-y-6">
-          <CoHostsManagement eventId={event.id} />
-        </div>
+        <CoHostsTab eventId={event.id} />
       )}
 
       {/* Potluck Tab */}
       {activeTab === 'potluck' && (
-        <div className="space-y-6">
-          {event.potluck_enabled ? (
-            <PotluckManagement eventId={event.id} />
-          ) : (
-            <div className="card">
-              <div className="text-center py-8">
-                <div className="text-4xl mb-4">🍽️</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Potluck Not Enabled</h3>
-                <p className="text-gray-600 mb-4">
-                  Enable the potluck feature to let guests sign up to bring food and drinks.
-                </p>
-                <button
-                  onClick={() => setActiveTab('details')}
-                  className="btn btn-primary"
-                >
-                  Go to Event Details
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        <PotluckTab event={event} onSwitchToDetails={() => setActiveTab('details')} />
       )}
 
       {/* Progress Tab */}
       {activeTab === 'progress' && (
-        <div className="space-y-6">
-          <div className="card">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Donation Progress</h3>
-              {pendingCommitments > 0 && (
-                <button
-                  onClick={sendDonationReminders}
-                  disabled={sendingReminders}
-                  className="btn btn-secondary text-sm"
-                >
-                  {sendingReminders ? 'Sending...' : `📧 Send Reminders (${pendingCommitments})`}
-                </button>
-              )}
-            </div>
-
-            {event.goal_amount && (
-              <div className="mb-6">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="font-medium">Goal: ${Number(event.goal_amount).toFixed(2)}</span>
-                  <span className="font-medium">${totalDonations.toFixed(2)} raised</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-4">
-                  <div
-                    className="bg-primary-600 h-4 rounded-full transition-all"
-                    style={{ width: `${Math.min((totalDonations / Number(event.goal_amount)) * 100, 100)}%` }}
-                  />
-                </div>
-                <div className="text-center text-sm text-gray-600 mt-2">
-                  {((totalDonations / Number(event.goal_amount)) * 100).toFixed(1)}% of goal
-                </div>
-              </div>
-            )}
-
-            {donations.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No donations yet. Share your event link with guests!</p>
-            ) : (
-              <div className="space-y-3">
-                {donations.map((donation) => (
-                  <div key={donation.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex-1">
-                      <div className="font-medium">{donation.donor_name}</div>
-                      <div className="text-sm text-gray-600">{donation.donor_email}</div>
-                      {donation.message && (
-                        <div className="text-sm text-gray-700 mt-1 italic">"{donation.message}"</div>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-green-600">${Number(donation.amount).toFixed(2)}</div>
-                      <div className="text-xs text-gray-500">
-                        {new Date(donation.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <ProgressTab
+          event={event}
+          donations={donations}
+          pendingCommitments={pendingCommitments}
+          sendingReminders={sendingReminders}
+          onSendReminders={sendDonationReminders}
+        />
       )}
 
       {/* Cancel Event Modal */}
