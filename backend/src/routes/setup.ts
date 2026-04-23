@@ -3,7 +3,20 @@ import { query } from '../database/db';
 
 const router = Router();
 
+/**
+ * Database initialization endpoint - DEVELOPMENT ONLY
+ * This endpoint is disabled in production for security reasons.
+ * Use database migrations instead: backend/src/database/migrations/
+ */
 router.get('/init-database', async (req: Request, res: Response) => {
+  // SECURITY: Only allow in development environment
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({
+      error: 'Database initialization is disabled in production',
+      message: 'Use database migrations instead'
+    });
+  }
+
   try {
     // Create users table
     await query(`

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../database/db';
-import { AuthRequest, authenticate } from '../middleware/auth';
+import { AuthRequest, authenticate, requireAdmin } from '../middleware/auth';
 
 const router = Router();
 
@@ -30,9 +30,9 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-// Get all charity requests (for admin view - should add auth middleware)
+// Get all charity requests (admin only)
 // IMPORTANT: This must come BEFORE /:id route to avoid matching "requests" as an ID
-router.get('/requests', async (req: Request, res: Response) => {
+router.get('/requests', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { status } = req.query;
 
@@ -137,8 +137,8 @@ router.post('/request', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// Approve a charity request (admin only - should add auth middleware)
-router.patch('/requests/:id/approve', async (req: AuthRequest, res: Response) => {
+// Approve a charity request (admin only)
+router.patch('/requests/:id/approve', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { admin_notes } = req.body;
@@ -210,8 +210,8 @@ router.patch('/requests/:id/approve', async (req: AuthRequest, res: Response) =>
   }
 });
 
-// Reject a charity request (admin only - should add auth middleware)
-router.patch('/requests/:id/reject', async (req: AuthRequest, res: Response) => {
+// Reject a charity request (admin only)
+router.patch('/requests/:id/reject', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { admin_notes } = req.body;
@@ -315,7 +315,7 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // Admin endpoint to update all charity logos to use Clearbit Logo API
-router.post('/admin/update-logos', async (req: Request, res: Response) => {
+router.post('/admin/update-logos', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const logoMappings = [
       { name: 'Red Cross', domain: 'redcross.org' },

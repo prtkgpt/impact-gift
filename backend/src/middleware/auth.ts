@@ -23,3 +23,30 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
+
+/**
+ * Middleware to check if authenticated user is an admin
+ * Admins are defined by ADMIN_EMAILS environment variable (comma-separated)
+ * Example: ADMIN_EMAILS=admin@example.com,owner@example.com
+ */
+export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+
+  if (adminEmails.length === 0) {
+    console.error('SECURITY WARNING: No admin emails configured in ADMIN_EMAILS environment variable');
+    return res.status(403).json({ error: 'Admin access not configured' });
+  }
+
+  const userEmail = req.user.email.toLowerCase();
+
+  if (!adminEmails.includes(userEmail)) {
+    console.warn(`Unauthorized admin access attempt by: ${userEmail}`);
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
+  next();
+};

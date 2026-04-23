@@ -31,6 +31,27 @@ import dashboardRoutes from './routes/dashboard';
 
 dotenv.config();
 
+// CRITICAL: Validate required environment variables on startup
+const requiredEnvVars = ['JWT_SECRET'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+  console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.error('❌ STARTUP ERROR: Missing required environment variables:');
+  missingEnvVars.forEach(varName => console.error(`   - ${varName}`));
+  console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  process.exit(1); // Fail fast - do not start server without critical config
+}
+
+// Warn about recommended environment variables
+const recommendedEnvVars = ['ADMIN_EMAILS', 'DATABASE_URL', 'RESEND_API_KEY'];
+const missingRecommended = recommendedEnvVars.filter(varName => !process.env[varName]);
+
+if (missingRecommended.length > 0) {
+  console.warn('⚠️  WARNING: Missing recommended environment variables:');
+  missingRecommended.forEach(varName => console.warn(`   - ${varName}`));
+}
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 

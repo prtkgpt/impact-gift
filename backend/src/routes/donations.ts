@@ -5,6 +5,7 @@ import {
   sendDonationNotificationToOrganizer,
   sendThankYouEmail
 } from '../services/email';
+import { AuthRequest, authenticate, requireAdmin } from '../middleware/auth';
 
 const router = Router();
 
@@ -157,8 +158,8 @@ router.get('/event/:eventId/stats', async (req: Request, res: Response) => {
   }
 });
 
-// Get all donations (for admin/debugging)
-router.get('/all', async (req: Request, res: Response) => {
+// Get all donations (admin only - for debugging and oversight)
+router.get('/all', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const result = await query(
       `SELECT d.*, e.slug, e.title as event_title, c.name as charity_name
