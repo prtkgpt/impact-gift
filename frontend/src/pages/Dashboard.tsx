@@ -79,7 +79,7 @@ const Dashboard = () => {
       });
       setCommitmentsLoading(false);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
       const isNetworkError = !error.response && error.message === 'Network Error';
 
@@ -112,7 +112,7 @@ const Dashboard = () => {
         timeout: retryCount === 0 ? 15000 : 20000,
       });
       setEvents(response.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
       const isNetworkError = !error.response && error.message === 'Network Error';
 
@@ -142,7 +142,7 @@ const Dashboard = () => {
         timeout: retryCount === 0 ? 15000 : 20000,
       });
       setInvitations(response.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
       const isNetworkError = !error.response && error.message === 'Network Error';
 

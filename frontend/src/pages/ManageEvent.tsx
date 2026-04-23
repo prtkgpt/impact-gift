@@ -229,7 +229,7 @@ const ManageEvent = () => {
           publicId: eventRes.data.event_image_public_id || ''
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('ManageEvent: Error fetching event data:', error);
       console.error('ManageEvent: Error response:', error.response);
       console.error('ManageEvent: Error status:', error.response?.status);
@@ -272,7 +272,7 @@ const ManageEvent = () => {
       setTimeout(() => {
         navigate(`/event/${response.data.event.slug}/manage`);
       }, 1000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to duplicate event');
     }
   };
@@ -292,7 +292,7 @@ const ManageEvent = () => {
 
       // Refresh event data to show cancelled status
       await fetchEventData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to cancel event');
     } finally {
       setCancelling(false);
@@ -305,7 +305,7 @@ const ManageEvent = () => {
     try {
       const response = await api.get('/guests/master-list');
       setMasterGuestList(response.data.guests || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Failed to load guest list');
     } finally {
       setMasterListLoading(false);
@@ -353,7 +353,7 @@ const ManageEvent = () => {
           });
           setGuests(prev => [...prev, response.data]);
           addedCount++;
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error(`Failed to add ${guest.email}:`, error);
         }
       }
@@ -362,7 +362,7 @@ const ManageEvent = () => {
       setShowMasterListModal(false);
       setSelectedMasterGuests(new Set());
       setMasterListSearch('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Failed to import guests');
     }
   };
@@ -382,7 +382,7 @@ const ManageEvent = () => {
       setGuestEmail('');
       setGuestName('');
       toast.success('Guest added successfully!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to add guest');
     }
   };
@@ -410,7 +410,7 @@ const ManageEvent = () => {
       await fetchEventData();
       setBulkEmails('');
       toast.success(response.data.message);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to add guests');
     }
   };
@@ -447,7 +447,7 @@ const ManageEvent = () => {
           } else {
             toast.success(`✅ Imported ${imported} guest${imported !== 1 ? 's' : ''}${skipped > 0 ? `, skipped ${skipped} duplicate${skipped !== 1 ? 's' : ''}` : ''}`);
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           toast.error(error.response?.data?.error || 'Failed to upload CSV');
         }
       },
@@ -465,7 +465,7 @@ const ManageEvent = () => {
       await api.delete(`/guests/${guestId}`);
       setGuests(guests.filter(g => g.id !== guestId));
       toast.success('Guest removed');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to remove guest');
     }
   };
@@ -475,7 +475,7 @@ const ManageEvent = () => {
       const response = await api.post(`/invitations/resend/${guestId}`);
       toast.success(response.data.message);
       await fetchEventData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`[RESEND FRONTEND] Error resending invitation:`, error);
       console.error(`[RESEND FRONTEND] Error response:`, error.response?.data);
       toast.error(error.response?.data?.error || 'Failed to resend invitation');
@@ -506,7 +506,7 @@ const ManageEvent = () => {
       setEditEmail('');
       setEditName('');
       toast.success('Guest updated successfully!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to update guest');
     }
   };
@@ -529,7 +529,7 @@ const ManageEvent = () => {
 
       toast.success(response.data.message);
       await fetchEventData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to send invitations');
     }
   };
@@ -552,7 +552,7 @@ const ManageEvent = () => {
       toast.success(response.data.message);
       // Refresh pending count
       await fetchEventData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to send reminders');
     } finally {
       setSendingReminders(false);
@@ -630,7 +630,7 @@ const ManageEvent = () => {
 
       // Refresh event data
       await fetchEventData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to update event');
     } finally {
       setSaveLoading(false);
@@ -1551,7 +1551,7 @@ const ManageEvent = () => {
                       toast.success(response.data.message);
                       setUpdateMessage('');
                       setUpdateFilters(['all']);
-                    } catch (error: any) {
+                    } catch (error: unknown) {
                       toast.error(error.response?.data?.error || 'Failed to send message');
                     }
                   }}

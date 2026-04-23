@@ -59,7 +59,7 @@ export async function deleteImage(publicId: string): Promise<{ success: boolean;
       console.warn('Image deletion result:', result);
       return { success: false, error: result.result };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to delete image:', error);
     return { success: false, error: error.message };
   }

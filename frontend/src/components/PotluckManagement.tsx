@@ -49,7 +49,7 @@ const PotluckManagement = ({ eventId }: PotluckManagementProps) => {
         notes: ''
       });
       fetchItems();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to add suggested item');
     } finally {
       setSubmitting(false);
@@ -63,7 +63,7 @@ const PotluckManagement = ({ eventId }: PotluckManagementProps) => {
       await api.delete(`/potluck/event/${eventId}/suggested-items/${itemId}`);
       toast.success('Suggested item deleted');
       fetchItems();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to delete item');
     }
   };

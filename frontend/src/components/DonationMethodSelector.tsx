@@ -84,7 +84,7 @@ const DonationMethodSelector = ({ event, onCancel, onSuccess, showCloseButton = 
       if (onSuccess) {
         setTimeout(() => onSuccess(), 1000);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to record donation');
     } finally {
       setLoading(false);

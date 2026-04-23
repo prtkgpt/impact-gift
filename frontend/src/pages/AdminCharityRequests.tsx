@@ -39,7 +39,7 @@ const AdminCharityRequests = () => {
       const params = filter !== 'all' ? `?status=${filter}` : '';
       const response = await api.get(`/charities/requests${params}`);
       setRequests(response.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Failed to load charity requests');
       console.error(error);
     } finally {
@@ -61,7 +61,7 @@ const AdminCharityRequests = () => {
       setSelectedRequest(null);
       setAdminNotes('');
       fetchRequests();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to approve request');
     } finally {
       setProcessing(false);
@@ -87,7 +87,7 @@ const AdminCharityRequests = () => {
       setSelectedRequest(null);
       setAdminNotes('');
       fetchRequests();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to reject request');
     } finally {
       setProcessing(false);

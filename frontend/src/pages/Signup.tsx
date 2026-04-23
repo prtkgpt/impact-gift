@@ -22,7 +22,7 @@ const Signup = () => {
       await signup(formData.email, formData.password, formData.firstName, formData.lastName);
       toast.success('Account created successfully!');
       navigate('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Signup failed');
     } finally {
       setLoading(false);

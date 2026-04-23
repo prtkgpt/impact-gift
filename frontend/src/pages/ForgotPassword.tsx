@@ -22,7 +22,7 @@ const ForgotPassword = () => {
       if (response.data.resetUrl) {
         setResetUrl(response.data.resetUrl);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to send reset email');
     } finally {
       setLoading(false);

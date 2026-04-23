@@ -29,7 +29,7 @@ router.post('/upload', authenticate, upload.single('image'), async (req: AuthReq
       publicId: file.filename,
       message: 'Image uploaded successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Image upload error:', error);
     res.status(500).json({
       error: error.message || 'Failed to upload image'
@@ -80,7 +80,7 @@ router.put('/event/:eventId', authenticate, async (req: AuthRequest, res: Respon
       success: true,
       message: 'Event image updated successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Update event image error:', error);
     res.status(500).json({
       error: error.message || 'Failed to update event image'
@@ -126,7 +126,7 @@ router.delete('/event/:eventId', authenticate, async (req: AuthRequest, res: Res
       success: true,
       message: 'Event image removed successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Delete event image error:', error);
     res.status(500).json({
       error: error.message || 'Failed to delete event image'

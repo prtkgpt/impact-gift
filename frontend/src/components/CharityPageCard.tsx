@@ -25,7 +25,7 @@ const CharityPageCard = () => {
         timeout: retryCount === 0 ? 15000 : 20000,
       });
       setStats(response.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
       const isNetworkError = !error.response && error.message === 'Network Error';
 

@@ -32,7 +32,7 @@ router.post('/upload', authenticate, upload.array('images', 10), async (req: Aut
       photos: uploadedPhotos,
       message: `${uploadedPhotos.length} image(s) uploaded successfully`
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Image upload error:', error);
     res.status(500).json({
       error: error.message || 'Failed to upload images'
@@ -89,7 +89,7 @@ router.post('/event/:eventId', authenticate, async (req: AuthRequest, res: Respo
       photos: insertedPhotos,
       message: 'Photos added to event successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Add event photos error:', error);
     res.status(500).json({
       error: error.message || 'Failed to add photos to event'
@@ -125,7 +125,7 @@ router.get('/event/:eventId', async (req, res: Response) => {
       success: true,
       photos: result.rows
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Get event photos error:', error);
     res.status(500).json({
       error: error.message || 'Failed to get event photos'
@@ -172,7 +172,7 @@ router.delete('/:photoId', authenticate, async (req: AuthRequest, res: Response)
       success: true,
       message: 'Photo deleted successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Delete photo error:', error);
     res.status(500).json({
       error: error.message || 'Failed to delete photo'
@@ -218,7 +218,7 @@ router.put('/reorder', authenticate, async (req: AuthRequest, res: Response) => 
       success: true,
       message: 'Photo order updated successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Reorder photos error:', error);
     res.status(500).json({
       error: error.message || 'Failed to reorder photos'
@@ -259,7 +259,7 @@ router.put('/:photoId/caption', authenticate, async (req: AuthRequest, res: Resp
       success: true,
       message: 'Caption updated successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Update caption error:', error);
     res.status(500).json({
       error: error.message || 'Failed to update caption'

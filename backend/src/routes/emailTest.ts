@@ -80,7 +80,7 @@ router.post('/test', authenticate, async (req: AuthRequest, res: Response) => {
         error: result.error || 'Failed to send email'
       });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Test email error:', error);
     res.status(500).json({ error: error.message });
   }

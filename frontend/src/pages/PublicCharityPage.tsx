@@ -50,7 +50,7 @@ const PublicCharityPage = () => {
     try {
       const response = await api.get(`/charity-page/${slug}`);
       setData(response.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.response?.status === 404) {
         toast.error('Charity page not found');
       } else {
@@ -100,7 +100,7 @@ const PublicCharityPage = () => {
         commitment_amount: ''
       });
       setSelectedCharity(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to record commitment');
     } finally {
       setSubmitting(false);

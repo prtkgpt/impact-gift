@@ -48,7 +48,7 @@ const EventUpdates: React.FC<EventUpdatesProps> = ({ eventId, isOwner, initialUp
       setFormData({ title: '', content: '' });
       setShowForm(false);
       fetchUpdates();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to post update');
     } finally {
       setLoading(false);

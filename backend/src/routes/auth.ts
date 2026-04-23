@@ -93,7 +93,7 @@ router.post(
           charity_page_slug: user.charity_page_slug
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Signup error details:', {
         message: error.message,
         code: error.code,

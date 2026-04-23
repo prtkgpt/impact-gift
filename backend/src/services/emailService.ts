@@ -95,7 +95,7 @@ export async function sendEmail({ to, subject, html, from }: SendEmailParams) {
 
     console.log('[sendEmail] Email sent successfully! ID:', result.data?.id);
     return { success: true, id: result.data?.id };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[sendEmail] Exception caught:', error);
     console.error('[sendEmail] Error details:', {
       message: error.message,

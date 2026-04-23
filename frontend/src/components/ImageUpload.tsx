@@ -53,7 +53,7 @@ const ImageUpload = ({ onImageUploaded, currentImageUrl, label, helpText }: Imag
         onImageUploaded(response.data.imageUrl, response.data.publicId);
         toast.success('Image uploaded successfully!');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Upload error:', error);
       toast.error(error.response?.data?.error || 'Failed to upload image');
       setPreview(currentImageUrl || null);

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Event } from '../../types';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/errors';
 
 interface CommunicationTabProps {
   event: Event;
@@ -33,8 +34,8 @@ const CommunicationTab = ({ event, filterCounts }: CommunicationTabProps) => {
       toast.success(response.data.message);
       setUpdateMessage('');
       setUpdateFilters(['all']);
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to send message');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     }
   };
 

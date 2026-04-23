@@ -50,7 +50,7 @@ const FavoriteCharities = () => {
         timeout: retryCount === 0 ? 15000 : 20000,
       });
       setFavorites(response.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
       const isNetworkError = !error.response && error.message === 'Network Error';
 
@@ -71,7 +71,7 @@ const FavoriteCharities = () => {
         timeout: retryCount === 0 ? 15000 : 20000,
       });
       setCharities(response.data.charities);
-    } catch (error: any) {
+    } catch (error: unknown) {
       const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
       const isNetworkError = !error.response && error.message === 'Network Error';
 
@@ -96,7 +96,7 @@ const FavoriteCharities = () => {
       toast.success('Favorite charity added!');
       fetchFavorites();
       resetForm();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to add favorite charity');
     }
   };
@@ -127,7 +127,7 @@ const FavoriteCharities = () => {
       setEditingId(null);
       setEditingCharityId(null);
       resetForm();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to update charity');
     }
   };
@@ -139,7 +139,7 @@ const FavoriteCharities = () => {
       await api.delete(`/favorite-charities/${id}`);
       toast.success('Charity removed from favorites');
       fetchFavorites();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to remove');
     }
   };

@@ -49,7 +49,7 @@ const RequestCharityModal = ({ onClose, onSuccess }: RequestCharityModalProps) =
         if (onSuccess) onSuccess();
         onClose();
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to submit charity request');
     } finally {
       setLoading(false);

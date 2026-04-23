@@ -131,7 +131,7 @@ router.post('/request', async (req: AuthRequest, res: Response) => {
       message: 'Charity request submitted successfully! We will review it and add it to our platform if approved.',
       request: result.rows[0]
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error submitting charity request:', error);
     res.status(500).json({ error: 'Failed to submit charity request' });
   }
@@ -204,7 +204,7 @@ router.patch('/requests/:id/approve', authenticate, requireAdmin, async (req: Au
       charity: charity,
       request_id: id
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error approving charity request:', error);
     res.status(500).json({ error: 'Failed to approve charity request' });
   }
@@ -253,7 +253,7 @@ router.patch('/requests/:id/reject', authenticate, requireAdmin, async (req: Aut
       message: 'Charity request rejected',
       request_id: id
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error rejecting charity request:', error);
     res.status(500).json({ error: 'Failed to reject charity request' });
   }
@@ -308,7 +308,7 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
       message: 'Charity updated successfully',
       charity: result.rows[0]
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating charity:', error);
     res.status(500).json({ error: 'Failed to update charity' });
   }

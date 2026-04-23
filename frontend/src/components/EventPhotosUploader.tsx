@@ -88,7 +88,7 @@ const EventPhotosUploader = ({
         onChange([...photos, ...uploadedPhotos]);
         toast.success(`${validFiles.length} photo(s) uploaded successfully!`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Upload error:', error);
       toast.error(error.response?.data?.error || 'Failed to upload photos');
     } finally {
@@ -107,7 +107,7 @@ const EventPhotosUploader = ({
       try {
         await api.delete(`/event-photos/${photo.id}`);
         toast.success('Photo deleted successfully');
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Delete error:', error);
         toast.error('Failed to delete photo');
         return;

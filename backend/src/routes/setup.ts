@@ -107,7 +107,7 @@ router.get('/init-database', async (req: Request, res: Response) => {
       tables: ['users', 'charities', 'events', 'donations'],
       charities: 8
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Database initialization error:', error);
     res.status(500).json({
       success: false,
@@ -128,7 +128,7 @@ router.get('/complete-pending-donations', async (req: Request, res: Response) =>
       message: `Completed ${result.rows.length} pending donation(s)`,
       donations: result.rows
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error completing donations:', error);
     res.status(500).json({
       success: false,
@@ -168,7 +168,7 @@ router.get('/add-new-features', async (req: Request, res: Response) => {
       message: 'New features added successfully!',
       features: ['employer_matching', 'event_updates', 'tax_receipts']
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error adding new features:', error);
     res.status(500).json({
       success: false,
@@ -201,7 +201,7 @@ router.get('/add-google-oauth', async (req: Request, res: Response) => {
       message: 'Google OAuth support added successfully!',
       changes: ['google_id column', 'profile_picture column', 'password_hash nullable']
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error adding Google OAuth:', error);
     res.status(500).json({
       success: false,
@@ -228,7 +228,7 @@ router.get('/add-password-reset', async (req: Request, res: Response) => {
       message: 'Password reset support added successfully!',
       changes: ['reset_token column', 'reset_token_expires column', 'reset_token index']
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error adding password reset:', error);
     res.status(500).json({
       success: false,
@@ -379,7 +379,7 @@ router.get('/migrate-phase1', async (req: Request, res: Response) => {
       ],
       changes
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Phase 1 migration error:', error);
     res.status(500).json({
       success: false,
@@ -413,7 +413,7 @@ router.get('/migrate-phase2-direct-donations', async (req: Request, res: Respons
       message: 'Phase 2 direct donations migration completed successfully!',
       changes
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Phase 2 migration error:', error);
     res.status(500).json({
       success: false,
@@ -572,7 +572,7 @@ router.get('/add-curated-charities', async (req: Request, res: Response) => {
       total_charities: charities.length,
       added: addedCount
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error adding curated charities:', error);
     res.status(500).json({
       success: false,
@@ -619,7 +619,7 @@ router.get('/create-charity-requests-table', async (req: Request, res: Response)
         'created_charity_id', 'created_at', 'reviewed_at', 'reviewed_by'
       ]
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating charity_requests table:', error);
     res.status(500).json({
       success: false,
@@ -735,7 +735,7 @@ router.get('/migrate-phase3-templates-themes', async (req: Request, res: Respons
         columns_added: ['events.theme_id', 'events.template_id', 'events.custom_colors']
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Phase 3 migration error:', error);
     res.status(500).json({
       success: false,
@@ -772,7 +772,7 @@ router.get('/migrate-phase4-custom-images', async (req: Request, res: Response) 
         feature: 'Event creators can now upload custom images (photos, graphics, etc.)'
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Phase 4 migration error:', error);
     res.status(500).json({
       success: false,
@@ -864,7 +864,7 @@ router.get('/migrate-phase5-event-details', async (req: Request, res: Response) 
         ]
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Phase 5 migration error:', error);
     res.status(500).json({
       success: false,
@@ -894,7 +894,7 @@ router.get('/fix-charity-requests-table', async (req: Request, res: Response) =>
       message: 'Charity requests table fixed successfully!',
       changes
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fixing charity_requests table:', error);
     res.status(500).json({
       success: false,

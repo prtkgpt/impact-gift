@@ -59,7 +59,7 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
         notes: ''
       });
       fetchItems();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to add item');
     } finally {
       setSubmitting(false);
@@ -79,7 +79,7 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
       await api.delete(`/potluck/items/${itemId}`, { data: { email } });
       toast.success('Item removed from potluck');
       fetchItems();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to remove item');
     }
   };
@@ -100,7 +100,7 @@ const PotluckItems = ({ eventId }: PotluckItemsProps) => {
         guest_email: ''
       });
       fetchItems();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to claim item');
     } finally {
       setSubmitting(false);

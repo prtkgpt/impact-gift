@@ -45,7 +45,7 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
           setAdditionalGuests(matchedGuest.additional_guests || 0);
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Guest not found is fine in guest mode - they'll create a new record
     } finally {
       setLoading(false);
@@ -96,7 +96,7 @@ const RSVPSection = ({ guestEmail, eventId, onRSVPSubmit }: RSVPSectionProps) =>
         toast.success('RSVP submitted successfully!');
         setShowForm(false);
         onRSVPSubmit?.();
-      } catch (error: any) {
+      } catch (error: unknown) {
         const isTimeout = error.code === 'ECONNABORTED';
         const isNetworkError = !error.response;
 

@@ -51,7 +51,7 @@ const MyCommitments = () => {
       const response = await api.get('/charity-commitments/my-page');
       setData(response.data);
       setError(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to load commitments:', error);
       setError(error.response?.data?.error || 'Failed to load commitments');
       toast.error('Failed to load commitments');
@@ -64,7 +64,7 @@ const MyCommitments = () => {
     try {
       const response = await api.get('/charity-commitments/made-by-me');
       setMyCommitments(response.data.commitments || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to load my commitments:', error);
       console.error('Error response:', error.response?.data);
     } finally {
@@ -86,7 +86,7 @@ const MyCommitments = () => {
       );
 
       toast.success(newStatus === 'completed' ? 'Marked as donated!' : 'Status updated');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to update status:', error);
       toast.error(error.response?.data?.error || 'Failed to update status');
     }

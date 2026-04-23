@@ -44,7 +44,7 @@ const ManualDonationForm = ({ event, onSuccess, onCancel }: ManualDonationFormPr
       setTimeout(() => {
         onSuccess();
       }, 5000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to submit donation info');
     } finally {
       setLoading(false);

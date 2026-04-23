@@ -25,7 +25,7 @@ const CoHostsManagement = ({ eventId }: CoHostsManagementProps) => {
     try {
       const response = await api.get<CoHost[]>(`/co-hosts/event/${eventId}`);
       setCoHosts(response.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.response?.status !== 403) {
         toast.error('Failed to load co-hosts');
       }
@@ -44,7 +44,7 @@ const CoHostsManagement = ({ eventId }: CoHostsManagementProps) => {
       setShowAddModal(false);
       setFormData({ email: '', name: '' });
       fetchCoHosts();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to add co-host');
     } finally {
       setSubmitting(false);
@@ -60,7 +60,7 @@ const CoHostsManagement = ({ eventId }: CoHostsManagementProps) => {
       await api.delete(`/co-hosts/${coHostId}`);
       toast.success('Co-host removed');
       fetchCoHosts();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to remove co-host');
     }
   };

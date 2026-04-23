@@ -77,7 +77,7 @@ router.put(
       );
 
       res.json(result.rows[0]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating user profile:', error);
       if (error.code === '23505') { // Unique constraint violation
         return res.status(400).json({ error: 'This charity page URL is already taken' });

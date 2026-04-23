@@ -105,7 +105,7 @@ const CreateEvent = () => {
 
       // Navigate to manage event page with Guest List tab active
       navigate(`/event/${response.data.slug}/manage`, { state: { tab: 'guests' } });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Event creation error:', error);
       console.error('Error response:', error.response);
       console.error('Error response data:', error.response?.data);

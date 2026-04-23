@@ -89,7 +89,7 @@ async function runMigrations() {
 
         console.log(`✅ Successfully applied ${filename}`);
         appliedCount++;
-      } catch (error: any) {
+      } catch (error: unknown) {
         await pool.query('ROLLBACK');
         console.error(`❌ Failed to apply ${filename}:`, error.message);
         throw error;
@@ -102,7 +102,7 @@ async function runMigrations() {
       console.log(`✅ Successfully applied ${appliedCount} migration(s)`);
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Migration error:', error.message);
     process.exit(1);
   } finally {

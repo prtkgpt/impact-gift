@@ -163,7 +163,7 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
         }
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching dashboard summary:', error);
     console.error('Error details:', {
       message: error.message,

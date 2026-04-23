@@ -37,7 +37,7 @@ const AcceptCoHostInvitation = () => {
       setEventTitle(event.title);
       setEventOwner(`${event.first_name} ${event.last_name}`);
       setEventDate(event.event_date);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching event details:', error);
       setError('Could not load event details');
     } finally {
@@ -58,7 +58,7 @@ const AcceptCoHostInvitation = () => {
       setTimeout(() => {
         navigate(`/event/${slug}`);
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.response?.data?.error === 'Invitation already accepted') {
         setAlreadyAccepted(true);
         toast.error('This invitation has already been accepted');

@@ -108,7 +108,7 @@ router.post(
         charity,
         message: 'Donation committed successfully. You will be redirected to the charity\'s donation page.'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error committing donation:', error);
       res.status(500).json({ error: 'Server error' });
     }
@@ -241,7 +241,7 @@ router.put(
         success: true,
         message: 'Status updated successfully'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[STATUS UPDATE] Error:', error);
       console.error('[STATUS UPDATE] Error message:', error.message);
       console.error('[STATUS UPDATE] Error stack:', error.stack);

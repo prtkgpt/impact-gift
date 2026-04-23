@@ -30,7 +30,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Validate token by making a quick API call
         await api.get('/auth/me');
         setUser(JSON.parse(savedUser));
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Only clear token if it's a 401 (unauthorized) - keep it for network errors
         if (error.response?.status === 401) {
           localStorage.removeItem('token');

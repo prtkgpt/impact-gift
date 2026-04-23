@@ -69,7 +69,7 @@ const EventPage = () => {
       if (memoriesResult.status === 'fulfilled' && memoriesResult.value.data.success) {
         setEventMemoriesPhotos(memoriesResult.value.data.photos);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       const is404 = error.response?.status === 404;
       const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
       const isNetworkError = !error.response && error.message === 'Network Error';

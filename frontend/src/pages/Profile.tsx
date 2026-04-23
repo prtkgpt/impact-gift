@@ -51,7 +51,7 @@ const Profile = () => {
       await api.put('/users/profile', updateData);
       toast.success('Profile updated successfully!');
       await fetchProfile(); // Refresh to get the updated data
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.error || 'Failed to update profile');
     } finally {
       setLoading(false);

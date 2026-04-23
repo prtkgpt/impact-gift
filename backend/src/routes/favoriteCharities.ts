@@ -73,7 +73,7 @@ router.post(
       );
 
       res.status(201).json(favoriteWithCharity.rows[0]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding favorite charity:', error);
       res.status(500).json({ error: 'Server error' });
     }

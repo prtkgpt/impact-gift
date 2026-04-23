@@ -411,7 +411,7 @@ router.post(
 
       console.log(`✅ Guest ${guestId} RSVP'd: ${rsvp_status} with ${additional_guests || 0} additional guest(s)`);
       res.json(result.rows[0]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error submitting RSVP:', error);
       console.error('Error stack:', error.stack);
       res.status(500).json({
@@ -485,7 +485,7 @@ router.post(
 
       console.log(`Guest self-RSVP: ${email} -> ${rsvp_status} for event ${event_id}`);
       res.status(201).json(result.rows[0]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error in guest self-RSVP:', error.message, error.stack);
       res.status(500).json({
         error: 'Server error while submitting RSVP.',
@@ -518,7 +518,7 @@ router.get('/find-by-email/:eventId/:email', async (req, res: Response) => {
 
     console.log(`✅ Guest found - ID: ${result.rows[0].id}, Email: ${decodedEmail}`);
     res.json(result.rows[0]);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error finding guest by email:', error);
     console.error('Error stack:', error.stack);
     res.status(500).json({
