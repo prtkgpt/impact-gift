@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Eagerly load critical pages for optimal performance
 import EventPage from './pages/EventPage';
@@ -45,8 +46,9 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   return (
     <HelmetProvider>
-      <AuthProvider>
-        <Router>
+      <ErrorBoundary>
+        <AuthProvider>
+          <Router>
           <div className="min-h-screen bg-gray-50">
             <Navbar />
             <Toaster position="top-right" />
@@ -121,8 +123,9 @@ function App() {
             </Routes>
             </Suspense>
           </div>
-        </Router>
-      </AuthProvider>
+          </Router>
+        </AuthProvider>
+      </ErrorBoundary>
     </HelmetProvider>
   );
 }
