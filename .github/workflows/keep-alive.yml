@@ -8,6 +8,10 @@ on:
   # Allow manual trigger
   workflow_dispatch:
 
+# Explicit permissions (read-only, no repository access needed)
+permissions:
+  contents: read
+
 jobs:
   keep-alive:
     runs-on: ubuntu-latest
