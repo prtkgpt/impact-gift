@@ -21,24 +21,26 @@ jobs:
         run: |
           echo "🔄 Pinging backend at $(date -u)"
 
-          # Use the actual deployed backend URL
-          BACKEND_URL="https://giftwithimpact.com"
+          # Render backend URL (not the Vercel frontend)
+          BACKEND_URL="https://impact-gift-backend.onrender.com"
 
-          # Ping health endpoint
-          response=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/api/health" || echo "000")
+          # Ping health endpoint and measure response time
+          response=$(curl -s -o /dev/null -w "%{http_code}|%{time_total}" --max-time 60 "$BACKEND_URL/api/health" || echo "000|0")
+          http_code=$(echo "$response" | cut -d'|' -f1)
+          time_total=$(echo "$response" | cut -d'|' -f2)
 
-          if [ "$response" -eq 200 ]; then
-            echo "✅ Backend is alive (HTTP $response)"
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Backend is alive (HTTP $http_code in ${time_total}s)"
           else
-            echo "⚠️ Backend returned HTTP $response"
+            echo "⚠️ Backend returned HTTP $http_code (took ${time_total}s)"
           fi
 
       - name: Ping Main API Endpoint
         run: |
-          echo "🔄 Pinging main API endpoint..."
+          echo "🔄 Pinging main API endpoint to keep database warm..."
 
-          # Also ping a lightweight endpoint to keep database warm
-          curl -s "https://giftwithimpact.com/api/charities?limit=1" > /dev/null || true
+          # Warm database connection with a lightweight query
+          curl -s --max-time 60 "https://impact-gift-backend.onrender.com/api/charities?limit=1" > /dev/null || true
 
           echo "✅ Keep-alive ping completed"
 
